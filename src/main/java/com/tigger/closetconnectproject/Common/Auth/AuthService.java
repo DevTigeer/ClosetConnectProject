@@ -9,11 +9,14 @@ import com.tigger.closetconnectproject.User.Entity.UserStatus;
 import com.tigger.closetconnectproject.User.Entity.Users;
 import com.tigger.closetconnectproject.User.Repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -45,7 +48,7 @@ public class AuthService {
         Users user = usersRepository.findByEmail(req.email())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 계정입니다."));
         if (!passwordEncoder.matches(req.password(), user.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new BadCredentialsException("아이디나 비밀번호가 올바르지 않습니다.");
         }
         String token = jwt.createToken(
                 user.getEmail(),

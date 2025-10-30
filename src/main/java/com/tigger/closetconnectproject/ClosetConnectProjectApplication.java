@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
+@EnableJpaAuditing //CreatedDate 동작
 public class ClosetConnectProjectApplication {
 
     public static void main(String[] args) {
