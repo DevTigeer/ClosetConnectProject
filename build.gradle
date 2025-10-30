@@ -40,6 +40,12 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-validation'// 유효성검사 2.3이상 필수
 
+    dependencies { //테스트코드
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.springframework.security:spring-security-test'
+    }
+
+
     //스프링 시큐리티 추가
     implementation 'org.springframework.boot:spring-boot-starter-security'
 }
