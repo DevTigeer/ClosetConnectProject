@@ -1,4 +1,4 @@
-package com.tigger.User.Dto;
+package com.tigger.closetconnectproject.User.Dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

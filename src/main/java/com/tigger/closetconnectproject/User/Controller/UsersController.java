@@ -1,8 +1,8 @@
-package com.tigger.User.Controller;
+package com.tigger.closetconnectproject.User.Controller;
 
-import com.tigger.Common.Auth.AuthService;
-import com.tigger.Common.Security.AppUserDetails;
-import com.tigger.User.Dto.UserSummary;
+import com.tigger.closetconnectproject.Common.Auth.AuthService;
+import com.tigger.closetconnectproject.Common.Security.AppUserDetails;
+import com.tigger.closetconnectproject.User.Dto.UserSummary;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;

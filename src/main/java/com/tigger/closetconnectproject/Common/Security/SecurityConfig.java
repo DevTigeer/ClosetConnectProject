@@ -1,11 +1,10 @@
-package com.tigger.Common.Security;
+package com.tigger.closetconnectproject.Common.Security;
 
-import com.tigger.Common.Jwt.JwtAuthenticationFilter;
-import com.tigger.Common.Jwt.JwtTokenProvider;
+import com.tigger.closetconnectproject.Common.Jwt.JwtAuthenticationFilter;
+import com.tigger.closetconnectproject.Common.Jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.*;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.*;
@@ -28,6 +27,7 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable()) // formLogin 설정
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()

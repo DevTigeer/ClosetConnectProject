@@ -1,4 +1,4 @@
-package com.tigger.Common.Jwt;
+package com.tigger.closetconnectproject.Common.Jwt;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -14,10 +14,10 @@ import java.util.Map;
 public class JwtTokenProvider {
 
     @Value("${jwt.secret}")
-    private String secret;
+    public String secret;
 
     @Value("${jwt.access-token-validity-seconds}")
-    private long validitySeconds;
+    public long validitySeconds;
 
     private Key key;
 

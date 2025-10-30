@@ -1,6 +1,6 @@
-package com.tigger.User.Repository;
+package com.tigger.closetconnectproject.User.Repository;
 
-import com.tigger.User.Entity.Users;
+import com.tigger.closetconnectproject.User.Entity.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,6 +1,6 @@
-package com.tigger.Common.Security;
-import com.tigger.User.Entity.Users;
-import com.tigger.User.Repository.UsersRepository;
+package com.tigger.closetconnectproject.Common.Security;
+import com.tigger.closetconnectproject.User.Entity.Users;
+import com.tigger.closetconnectproject.User.Repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;

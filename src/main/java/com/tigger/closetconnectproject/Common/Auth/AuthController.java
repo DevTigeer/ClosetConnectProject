@@ -1,9 +1,9 @@
-package com.tigger.Common.Auth;
+package com.tigger.closetconnectproject.Common.Auth;
 
-import com.tigger.User.Dto.LoginRequest;
-import com.tigger.User.Dto.SignUpRequest;
-import com.tigger.User.Dto.TokenResponse;
-import com.tigger.User.Dto.UserSummary;
+import com.tigger.closetconnectproject.User.Dto.LoginRequest;
+import com.tigger.closetconnectproject.User.Dto.SignUpRequest;
+import com.tigger.closetconnectproject.User.Dto.TokenResponse;
+import com.tigger.closetconnectproject.User.Dto.UserSummary;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,6 +1,6 @@
-package com.tigger.Common.Security;
+package com.tigger.closetconnectproject.Common.Security;
 
-import com.tigger.User.Entity.Users;
+import com.tigger.closetconnectproject.User.Entity.Users;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;

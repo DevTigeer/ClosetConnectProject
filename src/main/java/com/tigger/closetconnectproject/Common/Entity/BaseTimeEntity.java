@@ -1,4 +1,4 @@
-package com.tigger.Common.Entity;
+package com.tigger.closetconnectproject.Common.Entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;

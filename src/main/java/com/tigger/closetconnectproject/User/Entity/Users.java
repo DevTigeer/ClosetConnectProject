@@ -1,6 +1,6 @@
-package com.tigger.User.Entity;
+package com.tigger.closetconnectproject.User.Entity;
 
-import com.tigger.Common.Entity.BaseTimeEntity;
+import com.tigger.closetconnectproject.Common.Entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

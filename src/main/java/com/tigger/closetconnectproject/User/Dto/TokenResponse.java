@@ -1,4 +1,4 @@
-package com.tigger.User.Dto;
+package com.tigger.closetconnectproject.User.Dto;
 
 public record TokenResponse(
         String accessToken,
