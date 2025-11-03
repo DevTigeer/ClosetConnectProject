@@ -1,9 +1,9 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<!doctype html>
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>회원가입 | ClosetConnect</title>
-    <link rel="stylesheet" th:href="@{/css/closet.css}">
+    <link rel="stylesheet" href="/css/closet.css">
     <style>
         .auth-wrap { max-width: 460px; margin: 70px auto; background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.05); }
         .auth-title { font-size: 20px; margin-bottom: 18px; }
@@ -14,6 +14,7 @@
         .auth-helper { margin-top: 14px; font-size: 13px; text-align: right; }
         .auth-helper a { color: #5f5b5b; text-decoration: none; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
 <div class="auth-wrap">
@@ -31,32 +32,45 @@
             <label for="nickname">닉네임</label>
             <input id="nickname" name="nickname" type="text" required>
         </div>
+        <!-- 너 서비스가 name 도 받으면 여기 필드 하나 더 -->
+
+        <div class="auth-field">
+          <label for="name">이름</label>
+          <input id="name" name="name" type="text">
+        </div>
+
         <button type="submit" class="auth-submit">가입하기</button>
     </form>
     <div class="auth-helper">
-        <a th:href="@{/auth/login}">이미 계정이 있나요?</a>
+        <a href="/auth/login.html">이미 계정이 있나요?</a>
     </div>
 </div>
 
 <script>
-    document.querySelector('#signupForm').addEventListener('submit', async (e) => {
+    const API_BASE = '/api/v1';
+
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.querySelector('#email').value;
-        const password = document.querySelector('#password').value;
-        const nickname = document.querySelector('#nickname').value;
 
-        const res = await fetch('/auth/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, nickname })
-        });
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const nickname = document.getElementById('nickname').value;
+        // const name = document.getElementById('name').value;
 
-        if (res.ok) {
+        try {
+            await axios.post(`${API_BASE}/auth/signup`, {
+                email,
+                password,
+                nickname
+                // name
+            });
+
             alert('회원가입 성공. 로그인 해주세요.');
-            window.location.href = '/auth/login';
-        } else {
-            const txt = await res.text();
-            alert('회원가입 실패: ' + txt);
+            window.location.href = '/auth/login.html';
+        } catch (err) {
+            console.error(err);
+            const msg = err.response?.data?.message || '회원가입 실패';
+            alert(msg);
         }
     });
 </script>

@@ -1,9 +1,10 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<!doctype html>
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>로그인 | ClosetConnect</title>
-    <link rel="stylesheet" th:href="@{/css/closet.css}">
+    <!-- 정적 css (원하면 지워도 됨) -->
+    <link rel="stylesheet" href="/css/closet.css">
     <style>
         .auth-wrap { max-width: 420px; margin: 80px auto; background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.05); }
         .auth-title { font-size: 20px; margin-bottom: 18px; }
@@ -14,12 +15,14 @@
         .auth-helper { margin-top: 14px; font-size: 13px; text-align: right; }
         .auth-helper a { color: #5f5b5b; text-decoration: none; }
     </style>
+    <!-- axios CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
 <div class="auth-wrap">
     <h1 class="auth-title">로그인</h1>
-    <!-- 이 폼은 현재는 백엔드 form-login 안쓰고, 우리가 만든 /auth/login REST 호출로 쓸 거니까 일단 표시만 -->
-    <form method="post" th:action="@{/auth/login}">
+    <!-- action/form은 그냥 모양만, 실제로는 JS로 막음 -->
+    <form id="loginForm">
         <div class="auth-field">
             <label for="email">이메일</label>
             <input id="email" name="email" type="email" placeholder="you@example.com" required>
@@ -31,32 +34,38 @@
         <button type="submit" class="auth-submit">로그인</button>
     </form>
     <div class="auth-helper">
-        <a th:href="@{/auth/signup}">아직 계정이 없나요?</a>
+        <a href="/auth/signup.html">아직 계정이 없나요?</a>
     </div>
 </div>
-</body>
-</html>
+
 <script>
-    const form = document.querySelector('form');
-    form.addEventListener('submit', async (e) => {
+    const API_BASE = '/api/v1';
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.querySelector('#email').value;
-        const password = document.querySelector('#password').value;
 
-        const res = await fetch('/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
 
-        if (res.ok) {
-            const data = await res.json();
-            // JWT를 localStorage 에 임시로 저장 (지금은 프론트 테스트용)
-            localStorage.setItem('accessToken', data.accessToken);
-            alert('로그인 성공');
-            window.location.href = '/closet';
-        } else {
-            alert('로그인 실패');
+        try {
+            // 우리가 만든 REST 엔드포인트
+            const res = await axios.post(`${API_BASE}/auth/login`, {
+                email,
+                password
+            });
+
+            // TokenResponse(token, user) 구조라고 가정
+            const token = res.data.accessToken;
+            localStorage.setItem('accessToken', token);
+
+            // 로그인 후에 프론트 테스트할 페이지 (원하면 바꿔)
+            window.location.href = '/user/me.html';
+        } catch (err) {
+            console.error(err);
+            const msg = err.response?.data?.message || '로그인 실패';
+            alert(msg);
         }
     });
 </script>
+</body>
+</html>
