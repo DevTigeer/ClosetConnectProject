@@ -122,6 +122,6 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.login(req))
                 .isInstanceOf(BadCredentialsException.class)
-                .hasMessageContaining("아이디나 비밀번호가 올바르지 않습니다.");
+                .hasMessageContaining("비밀번호가 일치하지 않습니다");
     }
 }
