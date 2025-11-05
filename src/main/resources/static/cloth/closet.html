@@ -1,277 +1,249 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8"/>
-    <title>Closet | ClosetConnect</title>
-    <link rel="stylesheet" href="/css/closet.css">
-    <style>
-        body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#fafafa;}
-        .wrap{display:grid;grid-template-columns:220px 1fr 420px; gap:24px; max-width:1280px; margin:40px auto;}
-        .sidebar{background:#eee;border-radius:12px;padding:16px;height:calc(100vh - 120px);position:sticky;top:40px}
-        .section{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 6px 18px rgba(0,0,0,.05);margin-bottom:18px}
-        .slot{display:flex;align-items:center;gap:18px;padding:16px 0;border-bottom:1px solid #f0f0f0}
-        .slot:last-child{border-bottom:0}
-        .arrow{width:44px;height:44px;border-radius:50%;border:1px solid #ddd;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:#fff}
-        .thumb{width:120px;height:120px;border-radius:10px;object-fit:cover;background:#f6f6f6;border:1px solid #eee}
-        .right{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 6px 18px rgba(0,0,0,.05)}
-        .preview{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;border:1px solid #eee;background:#f8f8f8}
-        .btn{padding:10px 14px;border:0;border-radius:8px;background:#222;color:#fff;cursor:pointer}
-        .muted{color:#666;font-size:12px}
-        /* 미니 팝업(드롭오버) */
-        .popover{position:absolute;z-index:50;background:#fff;border:1px solid #e6e6e6;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.12);padding:12px;display:none}
-        .grid{display:grid;grid-template-columns:repeat(4, 90px); gap:10px}
-        .item{display:flex;flex-direction:column;gap:6px;cursor:pointer}
-        .item img{width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid #eee;background:#f7f7f7}
-        .topbar{grid-column:1/-1;display:flex;gap:8px;margin-bottom:6px}
-        .tab{padding:8px 10px;border:1px solid #ddd;background:#fafafa;border-radius:8px;cursor:pointer;font-size:12px}
-        .tab.active{background:#222;color:#fff;border-color:#222}
-    </style>
+    <meta charset="UTF-8" />
+    <title>Closet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root { --gap:14px; --card:160px; }
+        *{box-sizing:border-box}
+        body{margin:0;background:#fafafa;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#222}
+        header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid #eee;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+        h1{margin:0;font-size:18px}
+        .btn{padding:8px 10px;border:1px solid #ddd;background:#fff;border-radius:8px;cursor:pointer}
+        .btn:hover{background:#f6f6f6}
+        .btn-row{display:flex;gap:8px}
+        main{padding:18px}
+        .section{margin-bottom:28px}
+        .sec-title{font-weight:600;margin:0 0 10px 4px}
+        .row{position:relative;background:#fff;border:1px solid #eee;border-radius:12px;padding:14px}
+        .strip{display:flex;gap:var(--gap);overflow:hidden;scroll-behavior:smooth}
+        .card{min-width:var(--card);max-width:var(--card);border:1px solid #eee;border-radius:10px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.05);position:relative;cursor:pointer}
+        .thumb{width:100%;aspect-ratio:1/1;object-fit:cover;background:#f0f0f0;border-top-left-radius:10px;border-top-right-radius:10px}
+        .meta{padding:8px 10px;font-size:12px;color:#444;display:flex;justify-content:space-between}
+        .arrow{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:1px solid #e6e6e6;background:#f3f3f3;cursor:pointer;display:flex;align-items:center;justify-content:center}
+        .arrow:hover{background:#ececec}
+        .left{left:8px} .right{right:8px}
+        /* 삭제모드 체크박스 */
+        .check{position:absolute;top:8px;left:8px;transform:scale(1.3);display:none}
+        .delete-mode .check{display:block}
+        /* 모달 */
+        .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);align-items:center;justify-content:center}
+        .modal{background:#fff;border-radius:12px;max-width:440px;width:92%;padding:18px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+        .modal h3{margin:8px 0}
+        .modal img{width:100%;border-radius:8px;margin-bottom:8px}
+        .close{float:right;border:none;background:#eee;border-radius:8px;padding:6px 10px;cursor:pointer}
+        form label{display:block;margin:8px 0 4px;font-size:13px}
+        form input,form select{width:100%;padding:8px;border:1px solid #ccc;border-radius:8px}
+    </style>
 </head>
 <body>
-<div class="wrap">
-    <!-- 왼쪽 사이드 -->
-    <aside class="sidebar">
-        <div style="font-weight:700;margin-bottom:12px">Menu</div>
-        <div class="muted">Logo</div>
-        <div class="muted" style="margin-top:8px">Closet</div>
-        <div class="muted" style="margin-top:8px">Suggest</div>
-        <div class="muted" style="margin-top:8px">Community</div>
-        <div class="muted" style="margin-top:8px">myPage</div>
-        <hr style="margin:12px 0;border:none;border-top:1px solid #ddd"/>
-        <button class="btn" id="logoutBtn">로그아웃</button>
-    </aside>
+<header>
+    <h1>Cloth</h1>
+    <div class="btn-row">
+        <button id="wearBtn" class="btn">Wear</button>
+        <button id="deleteBtn" class="btn">Delete</button>
+        <button id="addBtn" class="btn">Add</button>
+    </div>
+</header>
 
-    <!-- 중앙: 카테고리 슬롯 -->
-    <main>
-        <div class="section">
-            <div style="display:flex;gap:8px;margin-bottom:12px">
-                <button class="tab active" data-tab="OOTD">OOTD</button>
-                <button class="tab" data-tab="Today">Today Weather</button>
-                <button class="tab" data-tab="Matched">Matched Item</button>
-            </div>
+<main id="root"></main>
 
-            <!-- Suggest/ACC -->
-            <div class="slot" data-category="ACC">
-                <button class="arrow" data-dir="prev">←</button>
-                <img class="thumb" alt="ACC" src="" />
-                <button class="arrow" data-dir="next">→</button>
-                <div class="muted">Acc</div>
-            </div>
-
-            <!-- TOP -->
-            <div class="slot" data-category="TOP">
-                <button class="arrow" data-dir="prev">←</button>
-                <img class="thumb" alt="TOP" src="" />
-                <button class="arrow" data-dir="next">→</button>
-                <div class="muted">Top</div>
-            </div>
-
-            <!-- BOTTOM -->
-            <div class="slot" data-category="BOTTOM">
-                <button class="arrow" data-dir="prev">←</button>
-                <img class="thumb" alt="BOTTOM" src="" />
-                <button class="arrow" data-dir="next">→</button>
-                <div class="muted">Bottom</div>
-            </div>
-
-            <!-- SHOES -->
-            <div class="slot" data-category="SHOES">
-                <button class="arrow" data-dir="prev">←</button>
-                <img class="thumb" alt="SHOES" src="" />
-                <button class="arrow" data-dir="next">→</button>
-                <div class="muted">Shoes</div>
-            </div>
-        </div>
-    </main>
-
-    <!-- 오른쪽: 미리보기 패널 -->
-    <aside class="right">
-        <div class="muted">Suggest Item</div>
-        <img id="previewImage" class="preview" alt="preview"/>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-            <div id="previewName" class="muted">선택된 항목 없음</div>
-            <button id="okBtn" class="btn" disabled>OK</button>
-        </div>
-    </aside>
+<!-- 상세 모달 -->
+<div id="detailModal" class="modal-bg">
+    <div class="modal">
+        <button class="close" onclick="closeModal('detailModal')">닫기</button>
+        <img id="dImg" src="" alt="">
+        <h3 id="dName"></h3>
+        <p>카테고리: <span id="dCat"></span></p>
+        <p>등록일: <span id="dDate"></span></p>
+    </div>
 </div>
 
-<!-- 미니 팝업 템플릿 -->
-<div id="popover" class="popover">
-    <div class="grid">
-        <!-- JS로 썸네일 주입 -->
+<!-- 추가 모달 -->
+<div id="addModal" class="modal-bg">
+    <div class="modal">
+        <button class="close" onclick="closeModal('addModal')">닫기</button>
+        <h3>상품 추가</h3>
+        <form id="addForm">
+            <label>이름</label><input name="name" required />
+            <label>카테고리</label>
+            <select name="category" required>
+                <option value="TOP">TOP</option>
+                <option value="BOTTOM">BOTTOM</option>
+                <option value="OUTER">OUTER</option>
+                <option value="ONEPIECE">ONEPIECE</option>
+                <option value="SHOES">SHOES</option>
+                <option value="BAG">BAG</option>
+                <option value="ACCESSORY">ACCESSORY</option>
+                <option value="ETC">ETC</option>
+            </select>
+            <label>이미지 URL</label><input name="imageUrl" placeholder="/uploads/..." required />
+            <button class="btn" type="submit" style="margin-top:10px">등록</button>
+        </form>
     </div>
 </div>
 
 <script>
-    // 공통 axios 인스턴스
-    window.API_BASE = '/api/v1';
+    function getAuthHeader() {
+        const raw = localStorage.getItem('accessToken') || '';
+        if (!raw) return '';                               // 토큰 없음
+        return raw.startsWith('Bearer ') ? raw : `Bearer ${raw}`;
+    }
 
-    window.api = axios.create({
-        baseURL: API_BASE,
-        headers: { 'Content-Type': 'application/json' }
-    });
-
-    // 요청 인터셉터: 토큰 부착
-    api.interceptors.request.use((cfg) => {
-        const t = localStorage.getItem('accessToken');
-        if (t) cfg.headers.Authorization = `Bearer ${t}`;
+    // 모든 요청에 자동으로 Authorization 주입
+    axios.interceptors.request.use(cfg => {
+        const auth = getAuthHeader();
+        if (auth) cfg.headers.Authorization = auth;
         return cfg;
     });
 
-    // 응답 인터셉터: 401 → 로그인으로
-    api.interceptors.response.use(
-        (res) => res,
-        (err) => {
-            if (err.response?.status === 401) {
-                alert('다시 로그인 해주세요.');
-                location.href = '/auth/login.html';
-            }
-            return Promise.reject(err);
-        }
-    );
-</script>
-
-<script>
-    // ------- 상태 -------
-    const CATEGORIES = ['ACC','TOP','BOTTOM','SHOES'];
-    const state = {
-        cursor: { ACC:0, TOP:0, BOTTOM:0, SHOES:0 },
-        items:  { ACC:[], TOP:[], BOTTOM:[], SHOES:[] },
-        preview: null,           // {id,name,imageUrl,category,...}
-        previewCategory: null
+    // 페이지 진입 시 토큰 없으면 안내(원하면 로그인 페이지로 이동)
+    if (!getAuthHeader()) {
+        alert('로그인이 필요합니다. 토큰이 비어있어요.');
+        // window.location.href = '/login.html'; // 사용 중인 로그인 페이지 있으면 주석 해제
+    }
+    const API = 'http://localhost:8080';
+    const PAGE_SIZE_FOR_FETCH_ALL = 1000; // 한 번에 다 가져오기
+    const DISPLAY_NAME = {
+        TOP:'Top', BOTTOM:'Bottom', OUTER:'Outer', ONEPIECE:'Onepiece',
+        SHOES:'Shoes', BAG:'Bag', ACCESSORY:'Acc', ETC:'Etc'
     };
 
-    const $popover = document.getElementById('popover');
-    const $grid    = $popover.querySelector('.grid');
-    const $preview = document.getElementById('previewImage');
-    const $name    = document.getElementById('previewName');
-    const $ok      = document.getElementById('okBtn');
+    let deleteMode = false;
 
-    // ------- 초기 로드: 각 카테고리 1페이지 프리페치 -------
-    async function loadFirstPage(category){
-        const res = await api.get('/cloth', { params: { category, size:12, page:0 }});
-        state.items[category] = res.data?.content ?? res.data ?? []; // 둘 중 하나 형태 대응
-        // 첫 이미지 썸네일 반영
-        const first = state.items[category][0];
-        const slotImg = document.querySelector(`.slot[data-category="${category}"] .thumb`);
-        if (first && slotImg){
-            slotImg.src = first.imageUrl || '';
-            slotImg.dataset.id = first.id;
-            slotImg.dataset.name = first.name || '';
-        }
+    function token(){ return localStorage.getItem('token') || ''; }
+    function abs(url){ return url?.startsWith('http') ? url : `${API}${url}`; }
+
+    async function fetchAll() {
+        const res = await axios.get(`${API}/api/v1/cloth`, {
+            headers:{ Authorization:`Bearer ${token()}` },
+            params:{ page:0, size: PAGE_SIZE_FOR_FETCH_ALL }
+        });
+        return res.data.content || [];
     }
-    (async () => {
-        for (const c of CATEGORIES) {
-            try { await loadFirstPage(c); } catch(e){ console.warn(c, e); }
-        }
-    })();
 
-    // ------- 팝업 열기 -------
-    function openPopover(anchorBtn, category){
-        // 위치 계산
-        const rect = anchorBtn.getBoundingClientRect();
-        $popover.style.left = (window.scrollX + rect.right + 8) + 'px';
-        $popover.style.top  = (window.scrollY + rect.top   - 6) + 'px';
-        // 그리드 채우기
-        $grid.innerHTML = '';
-        const list = state.items[category] || [];
-        list.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'item';
-            div.dataset.id = item.id;
-            div.dataset.category = category;
-            div.innerHTML = `
-        <img src="${item.imageUrl || ''}" alt="">
-        <div class="muted" style="font-size:11px">${item.name || ''}</div>
-      `;
-            // hover → 우측 미리보기
-            div.addEventListener('mouseenter', () => selectPreview(item, category));
-            // click → 확정 후보로 세팅 후 OK 활성
-            div.addEventListener('click', () => {
-                selectPreview(item, category);
-                $ok.disabled = false;
+    function groupByCategory(items){
+        const map = {TOP:[],BOTTOM:[],OUTER:[],ONEPIECE:[],SHOES:[],BAG:[],ACCESSORY:[],ETC:[]};
+        items.forEach(it => { (map[it.category] ??= []).push(it); });
+        return map;
+    }
+
+    function makeSection(cat, items){
+        const sec = document.createElement('section');
+        sec.className = 'section';
+        sec.innerHTML = `<h3 class="sec-title">${DISPLAY_NAME[cat]}</h3>`;
+        const row = document.createElement('div');
+        row.className = 'row';
+        const strip = document.createElement('div');
+        strip.className = 'strip';
+        strip.dataset.cat = cat;
+
+        items.forEach(it=>{
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+          <input type="checkbox" class="check" data-id="${it.id}">
+          <img class="thumb" src="${abs(it.imageUrl)}" alt="">
+          <div class="meta"><span>${it.name ?? ''}</span><span style="color:#888">${it.category}</span></div>
+        `;
+            card.addEventListener('click', e=>{
+                if(deleteMode) return;
+                openDetail(it);
             });
-            $grid.appendChild(div);
+            strip.appendChild(card);
         });
-        $popover.style.display = 'block';
-        state.previewCategory = category;
+
+        // 좌우 화살표
+        const left = document.createElement('button');
+        left.className = 'arrow left'; left.textContent = '‹';
+        left.onclick = () => slide(strip, -1);
+
+        const right = document.createElement('button');
+        right.className = 'arrow right'; right.textContent = '›';
+        right.onclick = () => slide(strip, +1);
+
+        row.appendChild(left);
+        row.appendChild(strip);
+        row.appendChild(right);
+        sec.appendChild(row);
+        return sec;
     }
 
-    // ------- 팝업 닫기 -------
-    function closePopover(){
-        $popover.style.display = 'none';
+    function slide(strip, dir){
+        // 카드 하나 폭 + gap 만큼만 이동
+        const card = strip.querySelector('.card');
+        if(!card) return;
+        const gap = parseFloat(getComputedStyle(strip).columnGap || getComputedStyle(strip).gap || 14);
+        const step = card.getBoundingClientRect().width + gap;
+        strip.scrollBy({ left: dir * step, behavior:'smooth' });
     }
-    document.addEventListener('click', (e)=>{
-        if (!$popover.contains(e.target) && !e.target.classList.contains('arrow')) {
-            closePopover();
+
+    function renderAll(grouped){
+        const root = document.getElementById('root');
+        root.innerHTML = '';
+        Object.keys(DISPLAY_NAME).forEach(cat=>{
+            const arr = grouped[cat] || [];
+            if(arr.length === 0) return;
+            root.appendChild(makeSection(cat, arr));
+        });
+        document.body.classList.toggle('delete-mode', deleteMode);
+    }
+
+    // 상세
+    function openDetail(it){
+        document.getElementById('dImg').src = abs(it.imageUrl);
+        document.getElementById('dName').textContent = it.name ?? '';
+        document.getElementById('dCat').textContent  = it.category ?? '';
+        document.getElementById('dDate').textContent = (it.createdAt||'').split('T')[0] || '';
+        document.getElementById('detailModal').style.display='flex';
+    }
+    function closeModal(id){ document.getElementById(id).style.display='none'; }
+
+    // 버튼들
+    document.getElementById('wearBtn').onclick = ()=> alert('Wear는 추후 연결할게!');
+
+    document.getElementById('deleteBtn').onclick = async ()=>{
+        if(!deleteMode){
+            deleteMode = true;
+            document.body.classList.add('delete-mode');
+            document.getElementById('deleteBtn').textContent = 'Delete Selected';
+            return;
         }
-    });
+        // 선택 삭제 실행
+        const ids = [...document.querySelectorAll('.check:checked')].map(c=>c.dataset.id);
+        if(ids.length===0){ deleteMode=false; document.body.classList.remove('delete-mode'); document.getElementById('deleteBtn').textContent='Delete'; return; }
+        if(!confirm(`${ids.length}개 삭제할까요?`)) return;
+        for(const id of ids){
+            await axios.delete(`${API}/api/v1/cloth/${id}`, { headers:{ Authorization:`Bearer ${token()}` } });
+        }
+        deleteMode=false;
+        document.body.classList.remove('delete-mode');
+        document.getElementById('deleteBtn').textContent='Delete';
+        await boot(); // 새로고침
+    };
 
-    // ------- 미리보기 선택 -------
-    function selectPreview(item, category){
-        state.preview = item;
-        $preview.src = item.imageUrl || '';
-        $name.textContent = (item.name || '') + (category ? ` · ${category}` : '');
+    document.getElementById('addBtn').onclick = ()=> document.getElementById('addModal').style.display='flex';
+    document.getElementById('addForm').onsubmit = async (e)=>{
+        e.preventDefault();
+        const f = e.target;
+        const data = { name: f.name.value, category: f.category.value, imageUrl: f.imageUrl.value };
+        try{
+            await axios.post(`${API}/api/v1/cloth`, data, {
+                headers:{ Authorization:`Bearer ${token()}`, 'Content-Type':'application/json' }
+            });
+            f.reset(); closeModal('addModal'); await boot();
+        }catch(err){ alert('등록 실패'); }
+    };
+
+    async function boot(){
+        const items = await fetchAll(); // 한 번에 전부
+        const grouped = groupByCategory(items);
+        renderAll(grouped);
     }
 
-    // ------- OK: 썸네일 교체만 (서버 확정 API 아직 없으니 로컬 반영) -------
-    $ok.addEventListener('click', ()=>{
-        if (!state.preview || !state.previewCategory) return;
-        const { preview, previewCategory:cat } = state;
-        const slotImg = document.querySelector(`.slot[data-category="${cat}"] .thumb`);
-        if (slotImg){
-            slotImg.src = preview.imageUrl || '';
-            slotImg.dataset.id = preview.id;
-            slotImg.dataset.name = preview.name || '';
-        }
-        $ok.disabled = true;
-        closePopover();
-    });
-
-    // ------- 좌/우 버튼 동작 -------
-    document.querySelectorAll('.slot .arrow').forEach(btn=>{
-        btn.addEventListener('click', async (e)=>{
-            const slot = e.currentTarget.closest('.slot');
-            const category = slot.dataset.category;
-            const dir = e.currentTarget.dataset.dir;
-
-            // 데이터 없으면 로드
-            if (!state.items[category] || state.items[category].length === 0) {
-                await loadFirstPage(category);
-            }
-
-            if (dir === 'prev') {
-                // 캐러셀 이전
-                const list = state.items[category];
-                if (list.length === 0) return;
-                state.cursor[category] = (state.cursor[category] - 1 + list.length) % list.length;
-                const cur = list[state.cursor[category]];
-                const img = slot.querySelector('.thumb');
-                img.src = cur.imageUrl || '';
-                img.dataset.id = cur.id;
-                img.dataset.name = cur.name || '';
-                // 우측 미리보기는 건드리지 않음
-            } else {
-                // 다음(추천/후보 보기) → 팝업 오픈
-                openPopover(e.currentTarget, category);
-            }
-        });
-    });
-
-    // 탭(현재는 표시만)
-    document.querySelectorAll('.tab').forEach(t=>{
-        t.addEventListener('click', ()=>{
-            document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-            t.classList.add('active');
-        });
-    });
-
-    // 로그아웃
-    document.getElementById('logoutBtn').addEventListener('click', ()=>{
-        localStorage.removeItem('accessToken');
-        location.href = '/auth/login.html';
-    });
+    boot();
 </script>
 </body>
 </html>

@@ -59,7 +59,7 @@
             localStorage.setItem('accessToken', token);
 
             // 로그인 후에 프론트 테스트할 페이지 (원하면 바꿔)
-            window.location.href = '/user/me.html';
+            window.location.href = '/cloth/closet.html';
         } catch (err) {
             console.error(err);
             const msg = err.response?.data?.message || '로그인 실패';
