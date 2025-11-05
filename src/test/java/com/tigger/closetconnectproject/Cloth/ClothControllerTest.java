@@ -61,11 +61,11 @@ class ClothControllerTest {
     @DisplayName("인증된 사용자는 옷을 등록할 수 있다")
     void create_success() throws Exception {
         ClothCreateRequest req = new ClothCreateRequest(
-                "블랙 티셔츠", Category.TOP, "BLACK", "UNIQLO", "http://img/1"
+                "블랙 티셔츠", Category.TOP,  "http://img/1"
         );
 
         ClothResponse res = new ClothResponse(
-                1L, "블랙 티셔츠", Category.TOP, "BLACK", "UNIQLO", "http://img/1"
+                1L, "블랙 티셔츠", Category.TOP, "http://img/1"
         );
 
         given(clothService.create(anyLong(), any(ClothCreateRequest.class)))
@@ -90,7 +90,7 @@ class ClothControllerTest {
     @DisplayName("비로그인 사용자는 옷 등록 시 401이 발생한다")
     void create_unauthorized() throws Exception {
         ClothCreateRequest req = new ClothCreateRequest(
-                "블랙 티셔츠", Category.TOP, "BLACK", "UNIQLO", "http://img/1"
+                "블랙 티셔츠", Category.TOP,  "http://img/1"
         );
 
         mockMvc.perform(
@@ -106,7 +106,7 @@ class ClothControllerTest {
     @DisplayName("인증된 사용자는 특정 옷을 조회할 수 있다")
     void getCloth_success() throws Exception {
         ClothResponse res = new ClothResponse(
-                1L, "블랙 티셔츠", Category.TOP, "BLACK", "UNIQLO", "http://img/1"
+                1L, "블랙 티셔츠", Category.TOP,  "http://img/1"
         );
 
         // ✅ principal(userId=10L) + id=1L 로 스텁

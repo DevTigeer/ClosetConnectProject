@@ -31,8 +31,6 @@ public class ClothService {
                         .user(owner)
                         .name(req.name())
                         .category(req.category())
-                        .color(req.color())
-                        .brand(req.brand())
                         .imageUrl(req.imageUrl())
                         .build()
         );
@@ -69,7 +67,7 @@ public class ClothService {
 
     private ClothResponse toDto(Cloth c) {
         return new ClothResponse(
-                c.getId(), c.getName(), c.getCategory(), c.getColor(), c.getBrand(), c.getImageUrl()
+                c.getId(), c.getName(), c.getCategory(), c.getImageUrl()
         );
     }
 }

@@ -7,7 +7,5 @@ import jakarta.validation.constraints.NotNull;
 public record ClothCreateRequest(
         @NotBlank String name,
         @NotNull  Category category,
-        String color,
-        String brand,
         String imageUrl
 ) {}

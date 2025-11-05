@@ -30,12 +30,6 @@ public class Cloth {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(length = 60)
-    private String color;
-
-    @Column(length = 60)
-    private String brand;
-
     @Column(length = 512)
     private String imageUrl;
 
