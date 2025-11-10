@@ -1,0 +1,136 @@
+<!-- src/main/resources/static/admin-boards.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin Boards</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body{margin:0;background:#fafafa;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
+        header{position:sticky;top:0;background:#fff;border-bottom:1px solid #eee;padding:12px 16px;display:flex;align-items:center;gap:8px}
+        .wrap{padding:16px;max-width:1000px;margin:0 auto}
+        .grid{display:grid;grid-template-columns:1fr 1fr; gap:14px}
+        .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:14px}
+        input,select{padding:8px;border:1px solid #ddd;border-radius:8px;width:100%}
+        .row{display:flex;gap:8px;align-items:center}
+        .btn{padding:8px 10px;border:1px solid #ddd;background:#fff;border-radius:8px;cursor:pointer}
+        table{width:100%; border-collapse: collapse}
+        th,td{border-bottom:1px solid #eee; padding:8px; text-align:left; font-size:14px}
+    </style>
+</head>
+<body>
+<header>
+    <a class="btn" href="/community.html">← 커뮤니티</a>
+    <strong>관리자 · 보드 관리</strong>
+</header>
+
+<main class="wrap grid">
+    <section class="card">
+        <h3>보드 목록</h3>
+        <table>
+            <thead><tr><th>ID</th><th>Name</th><th>Slug</th><th>Type</th><th>Vis</th><th>Sort</th><th>Act</th></tr></thead>
+            <tbody id="boardTbody"></tbody>
+        </table>
+    </section>
+
+    <section class="card">
+        <h3>보드 생성</h3>
+        <div class="row"><input id="name" placeholder="name"></div>
+        <div class="row"><input id="slug" placeholder="slug (a-z0-9-)"></div>
+        <div class="row">
+            <select id="type">
+                <option>FREE</option><option>ITEM</option><option>PROMO</option><option>OOTD</option><option>SELECT</option><option>MARKET</option>
+            </select>
+            <select id="visibility">
+                <option>PUBLIC</option><option>PRIVATE</option><option>HIDDEN</option><option>ARCHIVED</option>
+            </select>
+            <select id="system">
+                <option value="false">system=false</option>
+                <option value="true">system=true</option>
+            </select>
+            <input id="sortOrder" type="number" placeholder="sortOrder" value="0">
+        </div>
+        <div class="row" style="justify-content:flex-end"><button id="createBtn" class="btn">생성</button></div>
+    </section>
+</main>
+
+<script>
+    (function(){
+        const q = (s,p=document)=>p.querySelector(s);
+        const api = axios.create({ baseURL: '', withCredentials: true });
+        // api.interceptors.request.use(cfg => { const t=localStorage.getItem('accessToken'); if(t) cfg.headers.Authorization=`Bearer ${t}`; return cfg; });
+
+        const adminListBoards = ()=>api.get('/api/v1/admin/community/boards').then(r=>r.data);
+        const adminCreateBoard = (payload)=>api.post('/api/v1/admin/community/boards', payload).then(r=>r.data);
+        const adminUpdateBoard = (id, payload)=>api.patch(`/api/v1/admin/community/boards/${id}`, payload).then(r=>r.data);
+        const adminChangeVisibility = (id, visibility)=>api.patch(`/api/v1/admin/community/boards/${id}/visibility`, { visibility }).then(r=>r.data);
+        const adminDeleteBoard = (id)=>api.delete(`/api/v1/admin/community/boards/${id}`);
+
+        async function load(){
+            const boards = await adminListBoards();
+            q('#boardTbody').innerHTML = boards.map(b => `
+      <tr>
+        <td>${b.id}</td>
+        <td>${b.name}</td>
+        <td>${b.slug}</td>
+        <td>${b.type}</td>
+        <td>${b.visibility}</td>
+        <td>${b.sortOrder ?? ''}</td>
+        <td class="row">
+          <button class="btn" data-act="edit" data-id="${b.id}">수정</button>
+          <button class="btn" data-act="vis" data-id="${b.id}">공개범위</button>
+          <button class="btn" data-act="del" data-id="${b.id}">삭제</button>
+        </td>
+      </tr>
+    `).join('');
+        }
+
+        document.addEventListener('click', async (e)=>{
+            const btn = e.target.closest('button[data-act]');
+            if(!btn) return;
+            const id = Number(btn.dataset.id);
+            const act = btn.dataset.act;
+
+            try{
+                if(act==='edit'){
+                    const name = prompt('새 이름(빈칸이면 건너뜀)');
+                    const sort = prompt('새 sortOrder(빈칸이면 건너뜀)');
+                    const payload = {};
+                    if(name && name.trim()) payload.name = name.trim();
+                    if(sort && sort.trim()) payload.sortOrder = Number(sort);
+                    if(Object.keys(payload).length) await adminUpdateBoard(id, payload);
+                } else if(act==='vis'){
+                    const vis = prompt('PUBLIC / PRIVATE / HIDDEN / ARCHIVED', 'HIDDEN');
+                    if(vis) await adminChangeVisibility(id, vis.trim().toUpperCase());
+                } else if(act==='del'){
+                    if(confirm('소프트 삭제하시겠습니까?')) await adminDeleteBoard(id);
+                }
+                await load();
+            }catch(err){
+                console.error(err); alert('요청 실패');
+            }
+        });
+
+        q('#createBtn').onclick = async ()=>{
+            const payload = {
+                name: q('#name').value.trim(),
+                slug: q('#slug').value.trim(),
+                type: q('#type').value,
+                visibility: q('#visibility').value,
+                system: q('#system').value === 'true',
+                sortOrder: Number(q('#sortOrder').value || 0)
+            };
+            if(!payload.name || !payload.slug){ alert('name/slug 필수'); return; }
+            try{
+                await adminCreateBoard(payload);
+                q('#name').value=''; q('#slug').value='';
+                await load();
+            }catch(e){ console.error(e); alert('생성 실패'); }
+        };
+
+        (async ()=>{ try{ await load(); }catch(e){ console.error(e); alert('목록 조회 실패'); } })();
+    })();
+</script>
+</body>
+</html>
