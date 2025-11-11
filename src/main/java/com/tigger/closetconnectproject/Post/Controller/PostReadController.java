@@ -76,4 +76,19 @@ public class PostReadController {
     ) throws Exception {
         return postService.uploadAttachment(postId, principal.getUser().getUserId(), file);
     }
+    @GetMapping("/{postId}/likes")
+    public java.util.Map<String, Object> getLikes(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal AppUserDetails principal
+    ) {
+        Long uid = (principal != null) ? principal.getUser().getUserId() : null;
+        long count = postService.likeCount(postId);
+        boolean liked = postService.likedBy(postId, uid);
+        return java.util.Map.of("count", count, "liked", liked);
+    }
+    @GetMapping("/{postId}/likes/count")
+    public java.util.Map<String, Object> getLikeCount(@PathVariable Long postId) {
+        long count = postService.likeCount(postId);
+        return java.util.Map.of("count", count);
+    }
 }

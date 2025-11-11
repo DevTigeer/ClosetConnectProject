@@ -34,32 +34,38 @@ public class PostDtos {
         private long size;
     }
 
-    @Getter @Builder
+    @Builder
+    @Getter
     public static class PostRes {
         private Long id;
-        private Long boardId;
         private String title;
         private String content;
         private String authorName;
-        private boolean likedByMe;
-        private long viewCount;
-        private long likeCount;
-        private List<AttachmentRes> attachments;
+        private Long authorId;
+        private Long likeCount;
+        private Long viewCount;
         private LocalDateTime createdAt;
+        private List<AttachmentRes> attachments;
+        private boolean liked;
 
         public static PostRes of(Post p, boolean liked, List<AttachmentRes> atts) {
+            String authorName = (p.getAuthor() != null && p.getAuthor().getNickname() != null)
+                    ? p.getAuthor().getNickname()
+                    : "익명";
+
             return PostRes.builder()
                     .id(p.getId())
-                    .boardId(p.getBoard().getId())
                     .title(p.getTitle())
                     .content(p.getContent())
-                    .authorName(p.getAuthor() != null ? p.getAuthor().getNickname() : "unknown")
-                    .likedByMe(liked)
-                    .viewCount(p.getViewCount())
+                    .authorId(p.getAuthor() != null ? p.getAuthor().getUserId() : null)
+                    .authorName(authorName)
                     .likeCount(p.getLikeCount())
-                    .attachments(atts)
+                    .viewCount(p.getViewCount())
                     .createdAt(p.getCreatedAt())
+                    .attachments(atts)
+                    .liked(liked)
                     .build();
         }
     }
+
 }

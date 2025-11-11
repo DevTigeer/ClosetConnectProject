@@ -27,5 +27,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @EntityGraph(attributePaths = {"attachments", "author"})
     Optional<Post> findById(Long id);
 
+    @Query("""
+        select p
+        from Post p
+        left join fetch p.author a
+        where p.id = :id
+    """)
+    Optional<Post> findByIdWithAuthor(@Param("id") Long id);
+
     long countByBoard_IdAndVisibilityAndStatus(Long boardId, Visibility visibility, PostStatus status);
 }

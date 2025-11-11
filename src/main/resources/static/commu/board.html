@@ -1,10 +1,7 @@
-<!-- src/main/resources/static/board.html -->
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8" />
-    <title>Board</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- src/main/resources/static/commu/board.html -->
+<!DOCTYPE html><html lang="ko"><head>
+    <meta charset="UTF-8"/><title>Board</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         body{margin:0;background:#fafafa;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
@@ -12,36 +9,19 @@
         .btn{padding:8px 10px;border:1px solid #ddd;background:#fff;border-radius:8px;cursor:pointer}
         .wrap{padding:16px;max-width:900px;margin:0 auto}
         .post{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px;margin-bottom:10px}
-        form{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px;margin:12px 0;display:grid;gap:8px}
-        input,textarea,select{padding:8px;border:1px solid #ddd;border-radius:8px}
         .row{display:flex;gap:8px;align-items:center}
     </style>
-</head>
-<body>
+</head><body>
 <header>
-    <a class="btn" href="/community.html">← 목록</a>
+    <a class="btn" href="/commu/community.html">← 목록</a>
     <strong id="boardName">Board</strong>
     <span id="boardMeta" style="color:#888"></span>
+    <button id="writeBtn" class="btn" style="margin-left:auto;display:none">글쓰기</button>
 </header>
 
 <main class="wrap">
-    <section>
-        <form id="createForm">
-            <div class="row">
-                <input id="title" placeholder="제목" style="flex:1" required />
-                <select id="visibility">
-                    <option value="PUBLIC">PUBLIC</option>
-                    <option value="PRIVATE">PRIVATE</option>
-                </select>
-                <button class="btn" type="submit">작성</button>
-            </div>
-            <textarea id="content" rows="5" placeholder="내용"></textarea>
-        </form>
-    </section>
-
     <section id="posts"></section>
-
-    <div class="row" style="justify-content:center; margin:12px 0">
+    <div class="row" style="justify-content:center;margin:12px 0">
         <button id="prev" class="btn">이전</button>
         <span id="pageInfo"></span>
         <button id="next" class="btn">다음</button>
@@ -50,61 +30,45 @@
 
 <script>
     (function(){
-        const q = (s,p=document)=>p.querySelector(s);
-        const qp = (k)=>new URLSearchParams(location.search).get(k);
-        const api = axios.create({ baseURL: '', withCredentials: true });
-        // api.interceptors.request.use(cfg => { const t=localStorage.getItem('accessToken'); if(t) cfg.headers.Authorization=`Bearer ${t}`; return cfg; });
+        const q=(s,p=document)=>p.querySelector(s);
+        const qp=(k)=>new URLSearchParams(location.search).get(k);
+        const api=axios.create({baseURL:'',withCredentials:true});
+        api.interceptors.request.use(cfg=>{const t=localStorage.getItem('accessToken'); if(t) cfg.headers.Authorization=`Bearer ${t}`; return cfg;});
 
-        const getBoardBySlug = (slug)=>api.get(`/api/v1/community/boards/${slug}`).then(r=>r.data);
-        const listPosts = ({boardId,page=0,size=20,sort='LATEST'})=>api.get(`/api/v1/boards/${boardId}/posts`,{params:{page,size,sort}}).then(r=>r.data);
-        const createPost = ({boardId,payload})=>api.post(`/api/v1/boards/${boardId}/posts`, payload).then(r=>r.data);
+        const getBoardBySlug=(slug)=>api.get(`/api/v1/community/boards/${slug}`).then(r=>r.data);
+        const listPosts=({boardId,page=0,size=10,sort='LATEST'})=>api.get(`/api/v1/boards/${boardId}/posts`,{params:{page,size,sort}}).then(r=>r.data);
 
-        (async ()=>{
-            const slug = qp('slug');
-            if(!slug){ alert('slug 누락'); location.href='/community.html'; return; }
-            try{
-                const board = await getBoardBySlug(slug);
-                q('#boardName').textContent = board.name;
-                q('#boardMeta').textContent = `${board.slug} · ${board.type} · ${board.visibility}`;
-                const boardId = board.id;
+        (async()=>{
+            const slug=qp('slug');
+            if(!slug){ alert('slug 누락'); location.href='/commu/community.html'; return; }
 
-                let page=0, size=10, sort='LATEST';
-                async function load(){
-                    const data = await listPosts({boardId,page,size,sort});
-                    q('#posts').innerHTML = data.content.map(p=>`
-          <article class="post">
-            <a href="/post.html?id=${p.id}" style="font-weight:600">${p.title}</a>
-            <div style="color:#888; font-size:12px">by ${p.authorName} · ${new Date(p.createdAt).toLocaleString()} · ❤️ ${p.likeCount} · 👁️ ${p.viewCount}</div>
-            <div style="margin-top:6px; white-space:pre-wrap; color:#333">${(p.content||'').slice(0,120)}</div>
-          </article>
-        `).join('');
-                    q('#pageInfo').textContent = `${data.number+1} / ${data.totalPages || 1}`;
-                    q('#prev').disabled = data.first;
-                    q('#next').disabled = data.last;
-                }
+            const board=await getBoardBySlug(slug);
+            q('#boardName').textContent=board.name;
+            q('#boardMeta').textContent=`${board.slug} · ${board.type} · ${board.visibility}`;
+            const boardId=board.id;
 
-                q('#prev').onclick = ()=>{ if(page>0){page--; load();} };
-                q('#next').onclick = ()=>{ page++; load(); };
-
-                await load();
-
-                q('#createForm').addEventListener('submit', async (e)=>{
-                    e.preventDefault();
-                    const payload = {
-                        title: q('#title').value.trim(),
-                        content: q('#content').value,
-                        visibility: q('#visibility').value
-                    };
-                    if(!payload.title){ alert('제목 필수'); return; }
-                    const created = await createPost({boardId,payload});
-                    alert('작성 완료');
-                    location.href = `/post.html?id=${created.id}`;
-                });
-            }catch(e){
-                console.error(e); alert('보드/게시글 요청 실패');
+            // 토큰 있으면 글쓰기 버튼 노출
+            if(localStorage.getItem('accessToken')){
+                q('#writeBtn').style.display='inline-block';
+                q('#writeBtn').onclick=()=>location.href=`/commu/post-new.html?slug=${encodeURIComponent(slug)}`;
             }
-        })();
+
+            let page=0, size=10, sort='LATEST';
+            async function load(){
+                const data=await listPosts({boardId,page,size,sort});
+                q('#posts').innerHTML=data.content.map(p=>`
+        <article class="post">
+          <a href="/commu/post.html?id=${p.id}" style="font-weight:600">${p.title}</a>
+          <div style="color:#888;font-size:12px">by ${p.authorName} · ${new Date(p.createdAt).toLocaleString()} · ❤️ ${p.likeCount} · 👁️ ${p.viewCount}</div>
+          <div style="margin-top:6px;white-space:pre-wrap;color:#333">${(p.content||'').slice(0,120)}</div>
+        </article>`).join('');
+                q('#pageInfo').textContent=`${data.number+1} / ${data.totalPages||1}`;
+                q('#prev').disabled=data.first; q('#next').disabled=data.last;
+            }
+            q('#prev').onclick=()=>{ if(page>0){page--; load();} };
+            q('#next').onclick=()=>{ page++; load(); };
+            await load();
+        })().catch(e=>{console.error(e); alert('보드/게시글 요청 실패');});
     })();
 </script>
-</body>
-</html>
+</body></html>

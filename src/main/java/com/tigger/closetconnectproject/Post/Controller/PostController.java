@@ -2,6 +2,7 @@ package com.tigger.closetconnectproject.Post.Controller;
 
 import com.tigger.closetconnectproject.Common.Security.AppUserDetails;
 import com.tigger.closetconnectproject.Post.Dto.PostDtos;
+import com.tigger.closetconnectproject.Post.Service.PostLikeService;
 import com.tigger.closetconnectproject.Post.Service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class PostController {
 
     private final PostService postService;
+    private final PostLikeService postLikeService; // ✅ 주입
 
     @GetMapping
     public Page<PostDtos.PostRes> list(
@@ -39,4 +41,6 @@ public class PostController {
         Long uid = principal.getUser().getUserId();
         return postService.create(boardId, uid, req);
     }
+
+
 }

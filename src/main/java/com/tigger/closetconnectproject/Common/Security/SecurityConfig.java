@@ -4,6 +4,7 @@ import com.tigger.closetconnectproject.Common.Jwt.JwtAuthenticationFilter;
 import com.tigger.closetconnectproject.Common.Jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.*;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -38,6 +39,10 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/users/**").authenticated()
                         .requestMatchers("/api/v1/cloth/**").authenticated()
+                        .requestMatchers("/api/v1/boards/**").authenticated()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/posts/**)").authenticated()
+                        .requestMatchers(HttpMethod.OPTIONS,"/**").permitAll()
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
