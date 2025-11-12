@@ -67,7 +67,7 @@
 
         document.getElementById('like-btn').addEventListener('click', async () => {
             try {
-                await axios.post(`/api/v1/posts/${postId}/likes`);
+                await axios.post(`/api/v1/posts/${postId}/like`);
                 await updateLikeCount();
                 alert('좋아요 완료!');
             } catch (err) {
@@ -78,7 +78,7 @@
 
         document.getElementById('delete-like-btn').addEventListener('click', async () => {
             try {
-                await axios.delete(`/api/v1/posts/${postId}/likes`);
+                await axios.delete(`/api/v1/posts/${postId}/like`);
                 await updateLikeCount();
                 alert('좋아요 취소 완료!');
             } catch (err) {

@@ -19,7 +19,7 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
     // ✅ MariaDB/MySQL용: INSERT IGNORE (PostgreSQL의 ON CONFLICT DO NOTHING 대체)
     @Modifying
-    @Query(value = "INSERT IGNORE INTO post_like(post_id, user_id) VALUES (?1, ?2)", nativeQuery = true)
+    @Query(value = "INSERT IGNORE INTO community_post_like(post_id, user_id) VALUES (?1, ?2)", nativeQuery = true)
     void insert(Long postId, Long userId);
 
     // ✅ 파생쿼리로 충분 (JPQL 수동작성 불필요)
