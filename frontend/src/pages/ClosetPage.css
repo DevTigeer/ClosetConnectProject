@@ -1,0 +1,89 @@
+.closet-page {
+  min-height: 100%;
+}
+
+.closet-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.closet-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  padding: 10px 16px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: #f6f6f6;
+}
+
+.btn-primary {
+  background: #222;
+  color: #fff;
+  border-color: #222;
+}
+
+.btn-primary:hover {
+  background: #444;
+}
+
+.closet-content {
+  padding: 24px;
+}
+
+.loading {
+  padding: 48px;
+  text-align: center;
+  color: #888;
+}
+
+.category-section {
+  margin-bottom: 40px;
+}
+
+.category-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px 4px;
+  color: #222;
+}
+
+.cloth-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.empty-state {
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.empty-state p {
+  color: #888;
+  margin-bottom: 16px;
+  font-size: 15px;
+}
