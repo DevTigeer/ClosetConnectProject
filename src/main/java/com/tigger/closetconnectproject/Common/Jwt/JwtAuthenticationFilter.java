@@ -1,6 +1,6 @@
 package com.tigger.closetconnectproject.Common.Jwt;
 
-import com.tigger.closetconnectproject.Common.Security.AppUserDetailsService;
+import com.tigger.closetconnectproject.Security.AppUserDetailsService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;

@@ -7,7 +7,7 @@ import com.tigger.closetconnectproject.Closet.Dto.ClothResponse;
 import com.tigger.closetconnectproject.Closet.Entity.Category;
 import com.tigger.closetconnectproject.Closet.Service.ClothService;
 import com.tigger.closetconnectproject.Common.Exception.GlobalExceptionHandler;
-import com.tigger.closetconnectproject.Common.Security.AppUserDetails;
+import com.tigger.closetconnectproject.Security.AppUserDetails;
 import com.tigger.closetconnectproject.User.Entity.UserRole;
 import com.tigger.closetconnectproject.User.Entity.UserStatus;
 import com.tigger.closetconnectproject.User.Entity.Users;

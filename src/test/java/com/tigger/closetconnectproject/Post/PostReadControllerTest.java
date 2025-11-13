@@ -1,7 +1,7 @@
 package com.tigger.closetconnectproject.Post;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tigger.closetconnectproject.Common.Security.AppUserDetails;
+import com.tigger.closetconnectproject.Security.AppUserDetails;
 import com.tigger.closetconnectproject.Post.Controller.PostReadController;
 import com.tigger.closetconnectproject.Post.Dto.PostDtos;
 import com.tigger.closetconnectproject.Post.Entity.Visibility;
@@ -10,7 +10,6 @@ import com.tigger.closetconnectproject.User.Entity.UserRole;
 import com.tigger.closetconnectproject.User.Entity.UserStatus;
 import com.tigger.closetconnectproject.User.Entity.Users;
 import org.junit.jupiter.api.*;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

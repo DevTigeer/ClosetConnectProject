@@ -1,6 +1,6 @@
 package com.tigger.closetconnectproject.Post.Controller;
 
-import com.tigger.closetconnectproject.Common.Security.AppUserDetails;
+import com.tigger.closetconnectproject.Security.AppUserDetails;
 import com.tigger.closetconnectproject.Post.Dto.CommentDtos;
 import com.tigger.closetconnectproject.Post.Service.CommentService;
 import lombok.RequiredArgsConstructor;

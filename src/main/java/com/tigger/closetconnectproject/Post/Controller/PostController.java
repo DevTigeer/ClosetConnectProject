@@ -1,6 +1,6 @@
 package com.tigger.closetconnectproject.Post.Controller;
 
-import com.tigger.closetconnectproject.Common.Security.AppUserDetails;
+import com.tigger.closetconnectproject.Security.AppUserDetails;
 import com.tigger.closetconnectproject.Post.Dto.PostDtos;
 import com.tigger.closetconnectproject.Post.Service.PostLikeService;
 import com.tigger.closetconnectproject.Post.Service.PostService;

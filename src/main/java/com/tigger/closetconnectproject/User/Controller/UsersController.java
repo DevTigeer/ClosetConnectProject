@@ -1,13 +1,12 @@
 package com.tigger.closetconnectproject.User.Controller;
 
 import com.tigger.closetconnectproject.Common.Auth.AuthService;
-import com.tigger.closetconnectproject.Common.Security.AppUserDetails;
+import com.tigger.closetconnectproject.Security.AppUserDetails;
 import com.tigger.closetconnectproject.User.Dto.UserSummary;
 import com.tigger.closetconnectproject.User.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;

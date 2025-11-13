@@ -1,6 +1,6 @@
 package com.tigger.closetconnectproject.Upload.Controller;
 
-import com.tigger.closetconnectproject.Common.Security.AppUserDetails;
+import com.tigger.closetconnectproject.Security.AppUserDetails;
 import com.tigger.closetconnectproject.Upload.Dto.UploadResponse;
 import com.tigger.closetconnectproject.Upload.Service.LocalStorageService;
 import lombok.RequiredArgsConstructor;

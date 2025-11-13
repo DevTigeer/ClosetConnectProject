@@ -1,4 +1,4 @@
-package com.tigger.closetconnectproject.Common.Security;
+package com.tigger.closetconnectproject.Security;
 
 import com.tigger.closetconnectproject.Common.Jwt.JwtAuthenticationFilter;
 import com.tigger.closetconnectproject.Common.Jwt.JwtTokenProvider;

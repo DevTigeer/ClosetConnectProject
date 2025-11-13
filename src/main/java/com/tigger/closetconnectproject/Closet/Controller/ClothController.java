@@ -4,7 +4,7 @@ import com.tigger.closetconnectproject.Closet.Dto.ClothCreateRequest;
 import com.tigger.closetconnectproject.Closet.Dto.ClothResponse;
 import com.tigger.closetconnectproject.Closet.Entity.Category;
 import com.tigger.closetconnectproject.Closet.Service.ClothService;
-import com.tigger.closetconnectproject.Common.Security.AppUserDetails;
+import com.tigger.closetconnectproject.Security.AppUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

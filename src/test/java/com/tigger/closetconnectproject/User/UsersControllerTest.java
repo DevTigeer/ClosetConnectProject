@@ -2,7 +2,7 @@ package com.tigger.closetconnectproject.User;
 
 import com.tigger.closetconnectproject.Common.Auth.AuthService;
 import com.tigger.closetconnectproject.Common.Exception.GlobalExceptionHandler;
-import com.tigger.closetconnectproject.Common.Security.AppUserDetails;
+import com.tigger.closetconnectproject.Security.AppUserDetails;
 import com.tigger.closetconnectproject.User.Controller.UsersController;
 import com.tigger.closetconnectproject.User.Dto.UserSummary;
 import com.tigger.closetconnectproject.User.Entity.UserRole;
@@ -16,7 +16,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.anyLong;

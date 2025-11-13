@@ -1,7 +1,7 @@
 package com.tigger.closetconnectproject.Post;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tigger.closetconnectproject.Common.Security.AppUserDetails;
+import com.tigger.closetconnectproject.Security.AppUserDetails;
 import com.tigger.closetconnectproject.Post.Controller.PostController;
 import com.tigger.closetconnectproject.Post.Dto.PostDtos;
 import com.tigger.closetconnectproject.Post.Entity.Visibility;
@@ -30,7 +30,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.springframework.security.test.context.support.WithMockUser.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 

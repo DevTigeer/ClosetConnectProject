@@ -1,4 +1,4 @@
-package com.tigger.closetconnectproject.Common.Security;
+package com.tigger.closetconnectproject.Security;
 
 import com.tigger.closetconnectproject.User.Entity.Users;
 import org.springframework.security.core.GrantedAuthority;
