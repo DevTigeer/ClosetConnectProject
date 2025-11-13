@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>내 정보 | ClosetConnect</title>
+    <link rel="stylesheet" href="/css/closet.css">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f8f8f8; }
+        .auth-wrap { max-width: 500px; margin: 80px auto; background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.05); }
+        .auth-title { font-size: 22px; margin-bottom: 20px; }
+        pre { background: #f3f3f3; padding: 15px; border-radius: 8px; font-size: 14px; overflow-x: auto; }
+        button { background: #5f5b5b; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+<div class="auth-wrap">
+    <h1 class="auth-title">내 정보 조회</h1>
+    <button id="loadMe">/api/v1/auth/me 호출</button>
+    <pre id="output">토큰을 이용해 내 정보를 불러옵니다...</pre>
+</div>
+
+<script>
+    const API_BASE = '/api/v1';
+
+    document.getElementById('loadMe').addEventListener('click', async () => {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            alert('토큰이 없습니다. 먼저 로그인하세요.');
+            window.location.href = '/auth/login.html';
+            return;
+        }
+
+        try {
+            const res = await axios.get(`${API_BASE}/users/me`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            document.getElementById('output').textContent =
+                JSON.stringify(res.data, null, 2);
+        } catch (err) {
+            console.error(err);
+            const msg = err.response?.data?.message || '요청 실패';
+            document.getElementById('output').textContent = msg;
+        }
+    });
+</script>
+</body>
+</html>

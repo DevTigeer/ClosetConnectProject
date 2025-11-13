@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Closet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root { --gap:14px; --card:160px; }
+        *{box-sizing:border-box}
+        body{margin:0;background:#fafafa;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#222}
+        header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid #eee;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+        h1{margin:0;font-size:18px}
+        .btn{padding:8px 10px;border:1px solid #ddd;background:#fff;border-radius:8px;cursor:pointer}
+        .btn:hover{background:#f6f6f6}
+        .btn-row{display:flex;gap:8px}
+        main{padding:18px}
+        .section{margin-bottom:28px}
+        .sec-title{font-weight:600;margin:0 0 10px 4px}
+        .row{position:relative;background:#fff;border:1px solid #eee;border-radius:12px;padding:14px}
+        .strip{display:flex;gap:var(--gap);overflow:hidden;scroll-behavior:smooth}
+        .card{min-width:var(--card);max-width:var(--card);border:1px solid #eee;border-radius:10px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.05);position:relative;cursor:pointer}
+        .thumb{width:100%;aspect-ratio:1/1;object-fit:cover;background:#f0f0f0;border-top-left-radius:10px;border-top-right-radius:10px}
+        .meta{padding:8px 10px;font-size:12px;color:#444;display:flex;justify-content:space-between}
+        .arrow{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:1px solid #e6e6e6;background:#f3f3f3;cursor:pointer;display:flex;align-items:center;justify-content:center}
+        .arrow:hover{background:#ececec}
+        .left{left:8px} .right{right:8px}
+        /* 삭제모드 체크박스 */
+        .check{position:absolute;top:8px;left:8px;transform:scale(1.3);display:none}
+        .delete-mode .check{display:block}
+        /* 모달 */
+        .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);align-items:center;justify-content:center}
+        .modal{background:#fff;border-radius:12px;max-width:440px;width:92%;padding:18px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+        .modal h3{margin:8px 0}
+        .modal img{width:100%;border-radius:8px;margin-bottom:8px}
+        .close{float:right;border:none;background:#eee;border-radius:8px;padding:6px 10px;cursor:pointer}
+        form label{display:block;margin:8px 0 4px;font-size:13px}
+        form input,form select{width:100%;padding:8px;border:1px solid #ccc;border-radius:8px}
+    </style>
+</head>
+<body>
+<header>
+    <h1>Cloth</h1>
+    <div class="btn-row">
+        <button id="wearBtn" class="btn">Wear</button>
+        <button id="deleteBtn" class="btn">Delete</button>
+        <button id="addBtn" class="btn">Add</button>
+    </div>
+</header>
+
+<main id="root"></main>
+
+<!-- 상세 모달 -->
+<div id="detailModal" class="modal-bg">
+    <div class="modal">
+        <button class="close" onclick="closeModal('detailModal')">닫기</button>
+        <img id="dImg" src="" alt="">
+        <h3 id="dName"></h3>
+        <p>카테고리: <span id="dCat"></span></p>
+        <p>등록일: <span id="dDate"></span></p>
+    </div>
+</div>
+
+<!-- 상품 추가 모달 -->
+<div id="addModal" class="modal-bg">
+    <div class="modal">
+        <button class="close" onclick="closeModal('addModal')">닫기</button>
+        <h3>상품 추가</h3>
+        <form id="addForm">
+            <label>이미지 파일</label>
+            <input type="file" id="uploadFile" accept="image/*" />
+
+            <img id="preview" style="width:100%;margin:8px 0;display:none;border-radius:8px;">
+
+            <label>이름</label>
+            <input name="name" required />
+
+            <label>카테고리</label>
+            <select name="category" required>
+                <option value="TOP">TOP</option>
+                <option value="BOTTOM">BOTTOM</option>
+                <option value="OUTER">OUTER</option>
+                <option value="ONEPIECE">ONEPIECE</option>
+                <option value="SHOES">SHOES</option>
+                <option value="BAG">BAG</option>
+                <option value="ACCESSORY">ACCESSORY</option>
+                <option value="ETC">ETC</option>
+            </select>
+
+            <button class="btn" type="submit" style="margin-top:10px">등록</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function getAuthHeader() {
+        const raw = localStorage.getItem('accessToken') || '';
+        if (!raw) return '';                               // 토큰 없음
+        return raw.startsWith('Bearer ') ? raw : `Bearer ${raw}`;
+    }
+
+    // 모든 요청에 자동으로 Authorization 주입
+    axios.interceptors.request.use(cfg => {
+        const auth = getAuthHeader();
+        if (auth) cfg.headers.Authorization = auth;
+        return cfg;
+    });
+
+    // 페이지 진입 시 토큰 없으면 안내(원하면 로그인 페이지로 이동)
+    if (!getAuthHeader()) {
+        alert('로그인이 필요합니다. 토큰이 비어있어요.');
+        // window.location.href = '/login.html'; // 사용 중인 로그인 페이지 있으면 주석 해제
+    }
+    const API = 'http://localhost:8080';
+    const PAGE_SIZE_FOR_FETCH_ALL = 1000; // 한 번에 다 가져오기
+    const DISPLAY_NAME = {
+        TOP:'Top', BOTTOM:'Bottom', OUTER:'Outer', ONEPIECE:'Onepiece',
+        SHOES:'Shoes', BAG:'Bag', ACCESSORY:'Acc', ETC:'Etc'
+    };
+
+    let deleteMode = false;
+    let currentImageUrl = ''; // 업로드된 이미지 URL 저장
+
+         document.getElementById('uploadFile').addEventListener('change', async (e) => {
+           const file = e.target.files[0];
+           if (!file) return;
+           const form = new FormData();
+           form.append('file', file);
+           try {
+             const res = await axios.post(`${API}/api/v1/uploads`, form, {
+               headers: { 'Content-Type': 'multipart/form-data' } // Authorization은 인터셉터가 자동 주입
+             });
+             currentImageUrl = res.data.imageUrl;
+             const prev = document.getElementById('preview');
+             prev.src = `${API}${currentImageUrl}`;
+             prev.style.display = 'block';
+           } catch (err) {
+             console.error(err.response?.data || err);
+             alert('이미지 업로드에 실패했습니다.');
+           }
+         });
+
+function token(){ return localStorage.getItem('token') || ''; }
+    function abs(url){ return url?.startsWith('http') ? url : `${API}${url}`; }
+
+    async function fetchAll() {
+        const res = await axios.get(`${API}/api/v1/cloth`, {
+            headers:{ Authorization:`Bearer ${token()}` },
+            params:{ page:0, size: PAGE_SIZE_FOR_FETCH_ALL }
+        });
+        return res.data.content || [];
+    }
+
+    function groupByCategory(items){
+        const map = {TOP:[],BOTTOM:[],OUTER:[],ONEPIECE:[],SHOES:[],BAG:[],ACCESSORY:[],ETC:[]};
+        items.forEach(it => { (map[it.category] ??= []).push(it); });
+        return map;
+    }
+
+    function makeSection(cat, items){
+        const sec = document.createElement('section');
+        sec.className = 'section';
+        sec.innerHTML = `<h3 class="sec-title">${DISPLAY_NAME[cat]}</h3>`;
+        const row = document.createElement('div');
+        row.className = 'row';
+        const strip = document.createElement('div');
+        strip.className = 'strip';
+        strip.dataset.cat = cat;
+
+        items.forEach(it=>{
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+          <input type="checkbox" class="check" data-id="${it.id}">
+          <img class="thumb" src="${abs(it.imageUrl)}" alt="">
+          <div class="meta"><span>${it.name ?? ''}</span><span style="color:#888">${it.category}</span></div>
+        `;
+            card.addEventListener('click', e=>{
+                if(deleteMode) return;
+                openDetail(it);
+            });
+            strip.appendChild(card);
+        });
+
+        // 좌우 화살표
+        const left = document.createElement('button');
+        left.className = 'arrow left'; left.textContent = '‹';
+        left.onclick = () => slide(strip, -1);
+
+        const right = document.createElement('button');
+        right.className = 'arrow right'; right.textContent = '›';
+        right.onclick = () => slide(strip, +1);
+
+        row.appendChild(left);
+        row.appendChild(strip);
+        row.appendChild(right);
+        sec.appendChild(row);
+        return sec;
+    }
+
+    function slide(strip, dir){
+        // 카드 하나 폭 + gap 만큼만 이동
+        const card = strip.querySelector('.card');
+        if(!card) return;
+        const gap = parseFloat(getComputedStyle(strip).columnGap || getComputedStyle(strip).gap || 14);
+        const step = card.getBoundingClientRect().width + gap;
+        strip.scrollBy({ left: dir * step, behavior:'smooth' });
+    }
+
+    function renderAll(grouped){
+        const root = document.getElementById('root');
+        root.innerHTML = '';
+        Object.keys(DISPLAY_NAME).forEach(cat=>{
+            const arr = grouped[cat] || [];
+            if(arr.length === 0) return;
+            root.appendChild(makeSection(cat, arr));
+        });
+        document.body.classList.toggle('delete-mode', deleteMode);
+    }
+
+    // 상세
+    function openDetail(it){
+        document.getElementById('dImg').src = abs(it.imageUrl);
+        document.getElementById('dName').textContent = it.name ?? '';
+        document.getElementById('dCat').textContent  = it.category ?? '';
+        document.getElementById('dDate').textContent = (it.createdAt||'').split('T')[0] || '';
+        document.getElementById('detailModal').style.display='flex';
+    }
+    function closeModal(id){ document.getElementById(id).style.display='none'; }
+
+    // 버튼들
+    document.getElementById('wearBtn').onclick = ()=> alert('Wear는 추후 연결할게!');
+
+    document.getElementById('deleteBtn').onclick = async ()=>{
+        if(!deleteMode){
+            deleteMode = true;
+            document.body.classList.add('delete-mode');
+            document.getElementById('deleteBtn').textContent = 'Delete Selected';
+            return;
+        }
+        // 선택 삭제 실행
+        const ids = [...document.querySelectorAll('.check:checked')].map(c=>c.dataset.id);
+        if(ids.length===0){ deleteMode=false; document.body.classList.remove('delete-mode'); document.getElementById('deleteBtn').textContent='Delete'; return; }
+        if(!confirm(`${ids.length}개 삭제할까요?`)) return;
+        for(const id of ids){
+            await axios.delete(`${API}/api/v1/cloth/${id}`, { headers:{ Authorization:`Bearer ${token()}` } });
+        }
+        deleteMode=false;
+        document.body.classList.remove('delete-mode');
+        document.getElementById('deleteBtn').textContent='Delete';
+        await boot(); // 새로고침
+    };
+
+    document.getElementById('addBtn').onclick = ()=> document.getElementById('addModal').style.display='flex';
+    document.getElementById('addForm').onsubmit = async (e)=>{
+        e.preventDefault();
+        const f = e.target;
+        if (!currentImageUrl) { alert('이미지를 먼저 업로드해주세요.'); return; }
+        const data = { name: f.name.value, category: f.category.value, imageUrl: currentImageUrl };
+        try{
+            await axios.post(`${API}/api/v1/cloth`, data, {
+                headers:{ Authorization:`Bearer ${token()}`, 'Content-Type':'application/json' }
+            });
+            f.reset();
+            currentImageUrl = '';
+            const prev = document.getElementById('preview');
+            prev.style.display = 'none';
+            closeModal('addModal');
+            await boot();
+        }catch(err){ alert('등록 실패'); }
+    };
+
+    async function boot(){
+        const items = await fetchAll(); // 한 번에 전부
+        const grouped = groupByCategory(items);
+        renderAll(grouped);
+    }
+
+    boot();
+</script>
+</body>
+</html>
