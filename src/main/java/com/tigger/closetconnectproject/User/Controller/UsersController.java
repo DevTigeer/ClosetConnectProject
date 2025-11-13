@@ -11,6 +11,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * 사용자 정보 조회 API Controller
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
@@ -18,19 +21,28 @@ public class UsersController {
 
     private final AuthService authService;
     private final UserService userService;
-    // 1) 방금 생성된 유저 포함, 특정 유저 조회
+
+    /**
+     * 설명: 특정 사용자 정보 조회 (공개 정보)
+     * @param id 조회할 사용자 ID
+     * @return 사용자 요약 정보 (UserSummary)
+     */
     @GetMapping("/{id}")
     public ResponseEntity<UserSummary> getUser(@PathVariable Long id) {
         UserSummary user = userService.getUserById(id);
         return ResponseEntity.ok(user);
     }
 
+    /**
+     * 설명: 현재 로그인한 사용자 자신의 정보 조회
+     * @param principal 인증된 사용자 정보 (Spring Security가 자동 주입)
+     * @return 현재 사용자의 요약 정보
+     */
     @GetMapping("/me")
     public UserSummary me(@AuthenticationPrincipal AppUserDetails principal) {
-        System.out.println("hihi");
-        System.out.println(principal.getUsername());
+        // SecurityConfig에서 /users/**는 authenticated() 처리되므로
+        // principal == null인 경우는 발생하지 않음
         if (principal == null) {
-            // 테스트에서 인증 안 넣거나, 실제 요청에서 토큰 없으면 여기로 들어옴
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
         }
 
