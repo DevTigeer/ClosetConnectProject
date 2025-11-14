@@ -8,6 +8,7 @@ import BoardPage from './pages/BoardPage';
 import PostDetailPage from './pages/PostDetailPage';
 import CreatePostPage from './pages/CreatePostPage';
 import MyPage from './pages/MyPage';
+import AdminPage from './pages/AdminPage';
 import './App.css';
 
 // PrivateRoute: 인증이 필요한 페이지
@@ -57,6 +58,16 @@ function App() {
             element={
               <PrivateRoute>
                 <MyPage />
+              </PrivateRoute>
+            }
+          />
+
+          {/* 관리자 페이지 (인증 필요) */}
+          <Route
+            path="admin"
+            element={
+              <PrivateRoute>
+                <AdminPage />
               </PrivateRoute>
             }
           />

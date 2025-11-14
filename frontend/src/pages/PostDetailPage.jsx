@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { postAPI, commentAPI } from '../services/api';
+import { postAPI, boardAPI } from '../services/api';
 import CommentSection from '../components/CommentSection';
 import './PostDetailPage.css';
 
@@ -9,6 +9,7 @@ function PostDetailPage() {
   const navigate = useNavigate();
 
   const [post, setPost] = useState(null);
+  const [board, setBoard] = useState(null);
   const [likes, setLikes] = useState({ count: 0, liked: false });
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -43,10 +44,21 @@ function PostDetailPage() {
     }
   };
 
+  // 보드 정보 조회
+  const fetchBoard = async () => {
+    try {
+      const response = await boardAPI.getBySlug(slug);
+      setBoard(response.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
+    fetchBoard();
     fetchPost();
     fetchLikes();
-  }, [postId]);
+  }, [postId, slug]);
 
   // 좋아요 토글
   const handleLikeToggle = async () => {
@@ -187,7 +199,7 @@ function PostDetailPage() {
           </form>
         )}
 
-        <CommentSection postId={postId} />
+        <CommentSection postId={postId} isAnonymous={board?.type === 'ANONYMOUS'} />
       </div>
     </div>
   );
