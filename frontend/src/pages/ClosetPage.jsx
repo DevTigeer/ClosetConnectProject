@@ -3,6 +3,7 @@ import { clothAPI, uploadAPI } from '../services/api';
 import ClothCard from '../components/ClothCard';
 import ClothDetailModal from '../components/ClothDetailModal';
 import AddClothModal from '../components/AddClothModal';
+import WeatherRecommend from '../components/WeatherRecommend';
 import './ClosetPage.css';
 
 const CATEGORIES = {
@@ -23,6 +24,7 @@ function ClosetPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [recommendTab, setRecommendTab] = useState('weather'); // weather, personal, ai
 
   // 옷 목록 조회
   const fetchClothes = async () => {
@@ -119,6 +121,47 @@ function ClosetPage() {
         <div className="loading">로딩 중...</div>
       ) : (
         <div className="closet-content">
+          {/* 추천 섹션 */}
+          <section className="recommend-section">
+            <h2 className="section-title">오늘의 추천</h2>
+            <div className="recommend-tabs">
+              <button
+                className={`recommend-tab ${recommendTab === 'weather' ? 'active' : ''}`}
+                onClick={() => setRecommendTab('weather')}
+              >
+                🌤️ 오늘의 날씨
+              </button>
+              <button
+                className={`recommend-tab ${recommendTab === 'personal' ? 'active' : ''}`}
+                onClick={() => setRecommendTab('personal')}
+              >
+                ⭐ 나만의 추천
+              </button>
+              <button
+                className={`recommend-tab ${recommendTab === 'ai' ? 'active' : ''}`}
+                onClick={() => setRecommendTab('ai')}
+              >
+                🤖 AI 추천
+              </button>
+            </div>
+
+            <div className="recommend-content">
+              {recommendTab === 'weather' && <WeatherRecommend />}
+              {recommendTab === 'personal' && (
+                <div className="placeholder-recommend">
+                  <p>나만의 추천 기능은 곧 제공될 예정입니다.</p>
+                </div>
+              )}
+              {recommendTab === 'ai' && (
+                <div className="placeholder-recommend">
+                  <p>AI 추천 기능은 곧 제공될 예정입니다.</p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* 옷장 목록 */}
+          <h2 className="section-title">내 옷장</h2>
           {Object.entries(CATEGORIES).map(([category, label]) => {
             const items = groupedClothes[category] || [];
             if (items.length === 0) return null;

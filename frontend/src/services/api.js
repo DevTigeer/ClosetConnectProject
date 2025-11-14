@@ -185,4 +185,20 @@ export const adminPostAPI = {
   hardDelete: (postId) => api.delete(`/api/v1/admin/posts/${postId}/hard`),
 };
 
+// ========== Weather API ==========
+export const weatherAPI = {
+  // 도시 프리셋 목록
+  getCities: () => api.get('/api/v1/weather/cities'),
+
+  // 현재 위치 날씨
+  getCurrent: (latitude, longitude) =>
+    api.get('/api/v1/weather/current', { params: { latitude, longitude } }),
+
+  // 도시별 날씨
+  getByCity: (cityCode) => api.get(`/api/v1/weather/city/${cityCode}`),
+
+  // 기본 날씨 (서울)
+  getDefault: () => api.get('/api/v1/weather/default'),
+};
+
 export default api;
