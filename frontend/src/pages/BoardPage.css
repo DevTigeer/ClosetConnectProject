@@ -6,6 +6,9 @@
   background: #fff;
   border-bottom: 1px solid #eee;
   padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
 }
 
 .back-link {
@@ -32,11 +35,13 @@
 }
 
 .post-item {
+  display: block;
   background: #fff;
   border: 1px solid #eee;
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 12px;
+  text-decoration: none;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -69,6 +74,33 @@
 .page-info {
   font-size: 14px;
   color: #666;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: #f6f6f6;
+}
+
+.btn-primary {
+  background: #222;
+  color: #fff;
+  border-color: #222;
+}
+
+.btn-primary:hover {
+  background: #444;
 }
 
 .btn:disabled {

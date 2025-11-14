@@ -5,6 +5,8 @@ import SignupPage from './pages/SignupPage';
 import ClosetPage from './pages/ClosetPage';
 import CommunityPage from './pages/CommunityPage';
 import BoardPage from './pages/BoardPage';
+import PostDetailPage from './pages/PostDetailPage';
+import CreatePostPage from './pages/CreatePostPage';
 import MyPage from './pages/MyPage';
 import './App.css';
 
@@ -39,6 +41,15 @@ function App() {
           {/* 커뮤니티 */}
           <Route path="community" element={<CommunityPage />} />
           <Route path="community/:slug" element={<BoardPage />} />
+          <Route path="community/:slug/posts/:postId" element={<PostDetailPage />} />
+          <Route
+            path="community/:slug/new"
+            element={
+              <PrivateRoute>
+                <CreatePostPage />
+              </PrivateRoute>
+            }
+          />
 
           {/* 마이페이지 (인증 필요) */}
           <Route

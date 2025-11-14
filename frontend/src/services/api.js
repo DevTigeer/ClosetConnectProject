@@ -86,23 +86,64 @@ export const postAPI = {
   // 게시글 목록
   list: (boardId, params) => api.get(`/api/v1/boards/${boardId}/posts`, { params }),
 
-  // 게시글 조회
-  getOne: (boardId, postId) => api.get(`/api/v1/boards/${boardId}/posts/${postId}`),
+  // 게시글 단건 조회 (상세)
+  getOne: (postId) => api.get(`/api/v1/posts/${postId}`),
 
   // 게시글 작성
   create: (boardId, data) => api.post(`/api/v1/boards/${boardId}/posts`, data),
 
   // 게시글 수정
-  update: (boardId, postId, data) => api.put(`/api/v1/boards/${boardId}/posts/${postId}`, data),
+  update: (postId, data) => api.patch(`/api/v1/posts/${postId}`, data),
 
   // 게시글 삭제
-  delete: (boardId, postId) => api.delete(`/api/v1/boards/${boardId}/posts/${postId}`),
+  delete: (postId) => api.delete(`/api/v1/posts/${postId}`),
+
+  // 좋아요
+  like: (postId) => api.post(`/api/v1/posts/${postId}/like`),
+
+  // 좋아요 취소
+  unlike: (postId) => api.delete(`/api/v1/posts/${postId}/like`),
+
+  // 좋아요 정보 조회
+  getLikes: (postId) => api.get(`/api/v1/posts/${postId}/likes`),
+
+  // 좋아요 수 조회
+  getLikeCount: (postId) => api.get(`/api/v1/posts/${postId}/likes/count`),
+
+  // 첨부파일 업로드
+  uploadAttachment: (postId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/api/v1/posts/${postId}/attachments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+};
+
+// ========== Comment API ==========
+export const commentAPI = {
+  // 댓글 목록
+  list: (postId, params) => api.get(`/api/v1/posts/${postId}/comments`, { params }),
+
+  // 댓글 작성
+  create: (postId, data) => api.post(`/api/v1/posts/${postId}/comments`, data),
+
+  // 댓글 수정
+  update: (postId, commentId, data) => api.patch(`/api/v1/posts/${postId}/comments/${commentId}`, data),
+
+  // 댓글 삭제
+  delete: (postId, commentId) => api.delete(`/api/v1/posts/${postId}/comments/${commentId}`),
 };
 
 // ========== User API ==========
 export const userAPI = {
   // 내 정보 조회
   me: () => api.get('/api/v1/users/me'),
+
+  // 특정 사용자 정보 조회
+  getById: (id) => api.get(`/api/v1/users/${id}`),
 };
 
 export default api;

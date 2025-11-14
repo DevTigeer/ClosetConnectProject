@@ -62,6 +62,9 @@ function BoardPage() {
           </Link>
           <h1>{board.name}</h1>
         </div>
+        <Link to={`/community/${slug}/new`} className="btn btn-primary">
+          글쓰기
+        </Link>
       </header>
 
       {loading ? (
@@ -75,12 +78,16 @@ function BoardPage() {
           ) : (
             <>
               {posts.map((post) => (
-                <div key={post.id} className="post-item">
+                <Link
+                  key={post.id}
+                  to={`/community/${slug}/posts/${post.id}`}
+                  className="post-item"
+                >
                   <div className="post-title">{post.title}</div>
                   <div className="post-meta">
                     {post.authorNickname} · {post.createdAt?.split('T')[0]}
                   </div>
-                </div>
+                </Link>
               ))}
 
               {totalPages > 1 && (
