@@ -49,6 +49,10 @@ function Sidebar() {
                 옷장
               </NavLink>
 
+              <NavLink to="/recommend" className="nav-item">
+                추천
+              </NavLink>
+
               <NavLink to="/community" className="nav-item">
                 커뮤니티
               </NavLink>
