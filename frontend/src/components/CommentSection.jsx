@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { commentAPI } from '../services/api';
 import './CommentSection.css';
 
-function CommentSection({ postId }) {
+function CommentSection({ postId, isAnonymous = false }) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -111,10 +111,25 @@ function CommentSection({ postId }) {
           {comments.map((comment) => (
             <div key={comment.id} className="comment-item">
               <div className="comment-header">
-                <span className="comment-author">{comment.authorNickname}</span>
-                <span className="comment-date">
-                  {comment.createdAt ? comment.createdAt.split('T')[0] : ''}
+                <span className="comment-author">
+                  {isAnonymous ? '익명' : comment.authorNickname}
                 </span>
+                {!isAnonymous && (
+                  <>
+                    <span className="comment-separator">·</span>
+                    <span className="comment-date">
+                      {comment.createdAt
+                        ? new Date(comment.createdAt).toLocaleString('ko-KR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : ''}
+                    </span>
+                  </>
+                )}
               </div>
 
               {editingId === comment.id ? (

@@ -146,4 +146,73 @@ export const userAPI = {
   getById: (id) => api.get(`/api/v1/users/${id}`),
 };
 
+// ========== Admin Board API ==========
+export const adminBoardAPI = {
+  // 모든 보드 목록 (관리자)
+  listAll: () => api.get('/api/v1/admin/community/boards'),
+
+  // 보드 생성
+  create: (data) => api.post('/api/v1/admin/community/boards', data),
+
+  // 보드 수정
+  update: (id, data) => api.patch(`/api/v1/admin/community/boards/${id}`, data),
+
+  // 공개범위 변경
+  changeVisibility: (id, visibility) =>
+    api.patch(`/api/v1/admin/community/boards/${id}/visibility`, { visibility }),
+
+  // 보드 삭제
+  delete: (id) => api.delete(`/api/v1/admin/community/boards/${id}`),
+};
+
+// ========== Admin Post API ==========
+export const adminPostAPI = {
+  // 게시글 목록 (관리자)
+  list: (boardId, params) => api.get(`/api/v1/admin/boards/${boardId}/posts`, { params }),
+
+  // 게시글 상태 변경
+  updateStatus: (postId, status, reason) =>
+    api.patch(`/api/v1/admin/posts/${postId}/status`, { status, reason }),
+
+  // 게시글 핀 고정/해제
+  pin: (postId, pinned) => api.patch(`/api/v1/admin/posts/${postId}/pin`, { pinned }),
+
+  // 게시글 보드 이동
+  move: (postId, toBoardId) =>
+    api.patch(`/api/v1/admin/posts/${postId}/move`, { toBoardId }),
+
+  // 게시글 하드 삭제
+  hardDelete: (postId) => api.delete(`/api/v1/admin/posts/${postId}/hard`),
+};
+
+// ========== Weather API ==========
+export const weatherAPI = {
+  // 도시 프리셋 목록
+  getCities: () => api.get('/api/v1/weather/cities'),
+
+  // 현재 위치 날씨
+  getCurrent: (latitude, longitude) =>
+    api.get('/api/v1/weather/current', { params: { latitude, longitude } }),
+
+  // 도시별 날씨
+  getByCity: (cityCode) => api.get(`/api/v1/weather/city/${cityCode}`),
+
+  // 기본 날씨 (서울)
+  getDefault: () => api.get('/api/v1/weather/default'),
+
+  // 도시별 옷 추천
+  getRecommendationByCity: (cityCode) =>
+    api.get(`/api/v1/weather/recommendation/${cityCode}`),
+
+  // 현재 위치 옷 추천
+  getRecommendationByLocation: (latitude, longitude) =>
+    api.get('/api/v1/weather/recommendation', { params: { latitude, longitude } }),
+
+  // 커스텀 옷 추천
+  getCustomRecommendation: (temperature, weatherCondition, humidity) =>
+    api.get('/api/v1/weather/recommendation/custom', {
+      params: { temperature, weatherCondition, humidity },
+    }),
+};
+
 export default api;
