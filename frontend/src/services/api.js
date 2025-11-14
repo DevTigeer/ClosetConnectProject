@@ -199,6 +199,20 @@ export const weatherAPI = {
 
   // 기본 날씨 (서울)
   getDefault: () => api.get('/api/v1/weather/default'),
+
+  // 도시별 옷 추천
+  getRecommendationByCity: (cityCode) =>
+    api.get(`/api/v1/weather/recommendation/${cityCode}`),
+
+  // 현재 위치 옷 추천
+  getRecommendationByLocation: (latitude, longitude) =>
+    api.get('/api/v1/weather/recommendation', { params: { latitude, longitude } }),
+
+  // 커스텀 옷 추천
+  getCustomRecommendation: (temperature, weatherCondition, humidity) =>
+    api.get('/api/v1/weather/recommendation/custom', {
+      params: { temperature, weatherCondition, humidity },
+    }),
 };
 
 export default api;

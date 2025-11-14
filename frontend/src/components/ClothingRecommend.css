@@ -1,0 +1,177 @@
+.clothing-recommend {
+  width: 100%;
+}
+
+/* 위치 선택 섹션 */
+.clothing-recommend .location-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.clothing-recommend .location-section h3 {
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+  color: #333;
+}
+
+.clothing-recommend .city-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.clothing-recommend .city-btn {
+  padding: 10px 14px;
+  border: 2px solid #667eea;
+  background: white;
+  color: #667eea;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.clothing-recommend .city-btn:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.clothing-recommend .city-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+}
+
+.clothing-recommend .current-location-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.clothing-recommend .current-location-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* 날씨 요약 */
+.clothing-recommend .weather-summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.clothing-recommend .weather-emoji {
+  font-size: 3.5rem;
+}
+
+.clothing-recommend .weather-info {
+  flex: 1;
+}
+
+.clothing-recommend .current-temp {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.clothing-recommend .weather-description {
+  font-size: 1.1rem;
+  color: #666;
+}
+
+/* 옷 추천 카드 */
+.clothing-recommend .recommendation-card {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  color: white;
+}
+
+.clothing-recommend .recommendation-card h2 {
+  font-size: 1.4rem;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.clothing-recommend .feels-like {
+  text-align: center;
+  font-size: 1.05rem;
+  margin-bottom: 20px;
+  opacity: 0.95;
+}
+
+.clothing-recommend .clothing-items {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.clothing-recommend .clothing-item {
+  margin-bottom: 14px;
+}
+
+.clothing-recommend .clothing-item:last-child {
+  margin-bottom: 0;
+}
+
+.clothing-recommend .clothing-label {
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.clothing-recommend .clothing-value {
+  font-size: 0.95rem;
+  opacity: 0.95;
+  line-height: 1.5;
+  padding-left: 24px;
+}
+
+.clothing-recommend .recommendation-message {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 18px;
+  white-space: pre-line;
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+/* 로딩 및 에러 메시지 */
+.clothing-recommend .loading-message,
+.clothing-recommend .error-message {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.05rem;
+  color: #666;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.clothing-recommend .error-message {
+  color: #e74c3c;
+}

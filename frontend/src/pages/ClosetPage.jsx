@@ -4,6 +4,7 @@ import ClothCard from '../components/ClothCard';
 import ClothDetailModal from '../components/ClothDetailModal';
 import AddClothModal from '../components/AddClothModal';
 import WeatherRecommend from '../components/WeatherRecommend';
+import ClothingRecommend from '../components/ClothingRecommend';
 import './ClosetPage.css';
 
 const CATEGORIES = {
@@ -147,11 +148,7 @@ function ClosetPage() {
 
             <div className="recommend-content">
               {recommendTab === 'weather' && <WeatherRecommend />}
-              {recommendTab === 'personal' && (
-                <div className="placeholder-recommend">
-                  <p>나만의 추천 기능은 곧 제공될 예정입니다.</p>
-                </div>
-              )}
+              {recommendTab === 'personal' && <ClothingRecommend />}
               {recommendTab === 'ai' && (
                 <div className="placeholder-recommend">
                   <p>AI 추천 기능은 곧 제공될 예정입니다.</p>
