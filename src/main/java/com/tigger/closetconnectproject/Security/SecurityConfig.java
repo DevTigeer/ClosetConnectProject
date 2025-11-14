@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/v1/weather/**").permitAll() // 날씨 API 공개
                         .requestMatchers("/users/**").authenticated()
                         .requestMatchers("/api/v1/cloth/**").authenticated()
                         .requestMatchers("/api/v1/boards/**").authenticated()

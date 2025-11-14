@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>날씨 정보 - ClosetConnect</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        /* 위치 선택 섹션 */
+        .location-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .location-section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .city-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .city-btn {
+            padding: 12px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .city-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .city-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .current-location-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .current-location-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* 날씨 정보 카드 */
+        .weather-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .current-weather {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .current-city {
+            font-size: 1.5rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .current-temp {
+            font-size: 5rem;
+            font-weight: 700;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .weather-emoji {
+            font-size: 4rem;
+            margin: 10px 0;
+        }
+
+        .weather-description {
+            font-size: 1.5rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .temp-range {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .temp-item {
+            text-align: center;
+        }
+
+        .temp-label {
+            font-size: 0.9rem;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .temp-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .temp-max {
+            color: #e74c3c;
+        }
+
+        .temp-min {
+            color: #3498db;
+        }
+
+        /* 시간별 예보 */
+        .hourly-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .hourly-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .hourly-scroll {
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .hourly-items {
+            display: flex;
+            gap: 16px;
+            min-width: min-content;
+        }
+
+        .hourly-item {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 16px;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .hourly-time {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .hourly-temp {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin: 8px 0;
+        }
+
+        .hourly-rain {
+            font-size: 0.8rem;
+            color: #3498db;
+            margin-top: 4px;
+        }
+
+        /* 로딩 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        /* 에러 메시지 */
+        .error-message {
+            background: #e74c3c;
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ 날씨 정보</h1>
+
+        <!-- 에러 메시지 -->
+        <div id="error-message" class="error-message hidden"></div>
+
+        <!-- 위치 선택 -->
+        <div class="location-section">
+            <h2>📍 위치 선택</h2>
+            <div class="city-buttons" id="city-buttons">
+                <!-- JavaScript로 동적 생성 -->
+            </div>
+            <button class="current-location-btn" onclick="useCurrentLocation()">
+                📍 현재 위치 사용
+            </button>
+        </div>
+
+        <!-- 로딩 -->
+        <div id="loading" class="loading">
+            날씨 정보를 불러오는 중...
+        </div>
+
+        <!-- 현재 날씨 -->
+        <div id="weather-card" class="weather-card hidden">
+            <div class="current-weather">
+                <div class="current-city" id="current-city">서울</div>
+                <div class="weather-emoji" id="weather-emoji">☀️</div>
+                <div class="current-temp" id="current-temp">--°</div>
+                <div class="weather-description" id="weather-description">--</div>
+
+                <div class="temp-range">
+                    <div class="temp-item">
+                        <div class="temp-label">최고 기온</div>
+                        <div class="temp-value temp-max" id="temp-max">--°</div>
+                    </div>
+                    <div class="temp-item">
+                        <div class="temp-label">최저 기온</div>
+                        <div class="temp-value temp-min" id="temp-min">--°</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 시간별 예보 -->
+        <div id="hourly-section" class="hourly-section hidden">
+            <h2>⏰ 시간별 예보 (24시간)</h2>
+            <div class="hourly-scroll">
+                <div class="hourly-items" id="hourly-items">
+                    <!-- JavaScript로 동적 생성 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE = '/api/v1/weather';
+
+        // 현재 선택된 도시
+        let currentCity = null;
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadCityPresets();
+            await loadDefaultWeather();
+        });
+
+        /**
+         * 도시 프리셋 목록 로드
+         */
+        async function loadCityPresets() {
+            try {
+                const response = await fetch(`${API_BASE}/cities`);
+                const cities = await response.json();
+
+                const buttonsContainer = document.getElementById('city-buttons');
+                buttonsContainer.innerHTML = '';
+
+                cities.forEach(city => {
+                    const btn = document.createElement('button');
+                    btn.className = 'city-btn';
+                    btn.textContent = city.name;
+                    btn.onclick = () => loadWeatherByCity(city.code, city.name);
+                    btn.dataset.code = city.code;
+                    buttonsContainer.appendChild(btn);
+                });
+            } catch (error) {
+                showError('도시 목록을 불러올 수 없습니다.');
+                console.error(error);
+            }
+        }
+
+        /**
+         * 기본 날씨 로드 (서울)
+         */
+        async function loadDefaultWeather() {
+            await loadWeatherByCity('seoul', '서울');
+        }
+
+        /**
+         * 도시 코드로 날씨 조회
+         */
+        async function loadWeatherByCity(cityCode, cityName) {
+            showLoading();
+            hideError();
+
+            try {
+                const response = await fetch(`${API_BASE}/city/${cityCode}`);
+                if (!response.ok) throw new Error('날씨 정보를 가져올 수 없습니다.');
+
+                const data = await response.json();
+                displayWeather(data, cityName);
+                setActiveCity(cityCode);
+                currentCity = cityCode;
+            } catch (error) {
+                showError('날씨 정보를 가져올 수 없습니다.');
+                console.error(error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * 현재 위치 사용 (Geolocation API)
+         */
+        async function useCurrentLocation() {
+            if (!navigator.geolocation) {
+                showError('브라우저가 위치 정보를 지원하지 않습니다.');
+                return;
+            }
+
+            showLoading();
+            hideError();
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    try {
+                        const response = await fetch(`${API_BASE}/current?latitude=${lat}&longitude=${lon}`);
+                        if (!response.ok) throw new Error('날씨 정보를 가져올 수 없습니다.');
+
+                        const data = await response.json();
+                        displayWeather(data, '현재 위치');
+                        clearActiveCities();
+                        currentCity = null;
+                    } catch (error) {
+                        showError('날씨 정보를 가져올 수 없습니다.');
+                        console.error(error);
+                    } finally {
+                        hideLoading();
+                    }
+                },
+                (error) => {
+                    hideLoading();
+                    showError('현재 위치를 사용할 수 없어 기본 위치(서울)를 사용합니다.');
+                    loadDefaultWeather();
+                }
+            );
+        }
+
+        /**
+         * 날씨 정보 화면에 표시
+         */
+        function displayWeather(data, cityName) {
+            // 현재 날씨
+            document.getElementById('current-city').textContent = cityName || '알 수 없음';
+            document.getElementById('weather-emoji').textContent = data.current.weatherEmoji;
+            document.getElementById('current-temp').textContent = `${Math.round(data.current.temperature)}°`;
+            document.getElementById('weather-description').textContent = data.current.weatherDescription;
+
+            // 오늘 최고/최저 기온
+            document.getElementById('temp-max').textContent = `${Math.round(data.today.temperatureMax)}°`;
+            document.getElementById('temp-min').textContent = `${Math.round(data.today.temperatureMin)}°`;
+
+            // 시간별 예보
+            const hourlyContainer = document.getElementById('hourly-items');
+            hourlyContainer.innerHTML = '';
+
+            data.hourly.forEach(hour => {
+                const time = formatTime(hour.time);
+                const temp = Math.round(hour.temperature);
+                const rain = hour.precipitation > 0 ? `💧 ${hour.precipitation}mm` : '';
+
+                const item = document.createElement('div');
+                item.className = 'hourly-item';
+                item.innerHTML = `
+                    <div class="hourly-time">${time}</div>
+                    <div class="hourly-temp">${temp}°</div>
+                    <div class="hourly-rain">${rain}</div>
+                `;
+                hourlyContainer.appendChild(item);
+            });
+
+            // 카드 표시
+            document.getElementById('weather-card').classList.remove('hidden');
+            document.getElementById('hourly-section').classList.remove('hidden');
+        }
+
+        /**
+         * ISO8601 시간 → "HH시" 포맷 변환
+         */
+        function formatTime(isoTime) {
+            const date = new Date(isoTime);
+            const hour = date.getHours();
+            return `${hour}시`;
+        }
+
+        /**
+         * 활성 도시 버튼 표시
+         */
+        function setActiveCity(cityCode) {
+            document.querySelectorAll('.city-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.code === cityCode) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        /**
+         * 모든 도시 버튼 비활성화
+         */
+        function clearActiveCities() {
+            document.querySelectorAll('.city-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+
+        /**
+         * 로딩 표시
+         */
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('weather-card').classList.add('hidden');
+            document.getElementById('hourly-section').classList.add('hidden');
+        }
+
+        /**
+         * 로딩 숨김
+         */
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        /**
+         * 에러 메시지 표시
+         */
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
+        /**
+         * 에러 메시지 숨김
+         */
+        function hideError() {
+            document.getElementById('error-message').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
