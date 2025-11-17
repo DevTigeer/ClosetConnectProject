@@ -48,6 +48,12 @@ dependencies {
 
     //스프링 시큐리티 추가
     implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // WebSocket 추가
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 }
 
 tasks.named('test') {

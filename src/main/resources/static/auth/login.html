@@ -56,9 +56,14 @@
 
             // TokenResponse(token, user) 구조라고 가정
             const token = res.data.accessToken;
-            localStorage.setItem('accessToken', token);
+            localStorage.setItem('jwt_token', token); // Market 페이지와 동일한 키 사용
 
-            // 로그인 후에 프론트 테스트할 페이지 (원하면 바꿔)
+            // 사용자 정보도 저장
+            if (res.data.user) {
+                localStorage.setItem('user_info', JSON.stringify(res.data.user));
+            }
+
+            // 로그인 후 메인(옷장) 페이지로 이동
             window.location.href = '/cloth/closet.html';
         } catch (err) {
             console.error(err);

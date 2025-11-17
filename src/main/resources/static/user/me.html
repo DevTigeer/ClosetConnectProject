@@ -5,18 +5,29 @@
     <title>내 정보 | ClosetConnect</title>
     <link rel="stylesheet" href="/css/closet.css">
     <style>
-        body { font-family: Arial, sans-serif; background: #f8f8f8; }
+        body { font-family: Arial, sans-serif; background: #f8f8f8; margin:0 }
+        .nav-tabs{background:#fff;border-bottom:2px solid #eee;display:flex;justify-content:center;gap:16px;padding:12px}
+        .nav-tab{text-decoration:none;color:#666;font-weight:500;padding:8px 16px;border-radius:8px}
+        .nav-tab:hover{background:#f0f0f0}
+        .nav-tab.active{color:#667eea;font-weight:600}
         .auth-wrap { max-width: 500px; margin: 80px auto; background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.05); }
         .auth-title { font-size: 22px; margin-bottom: 20px; }
         pre { background: #f3f3f3; padding: 15px; border-radius: 8px; font-size: 14px; overflow-x: auto; }
-        button { background: #5f5b5b; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
+        button { background: #667eea; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
+<div class="nav-tabs">
+    <a class="nav-tab" href="/cloth/closet.html">👔 내 옷장</a>
+    <a class="nav-tab" href="/market-demo.html">🛒 중고거래</a>
+    <a class="nav-tab" href="/commu/community.html">💬 커뮤니티</a>
+    <a class="nav-tab" href="/weather-with-recommendation.html">🌤️ 날씨</a>
+    <a class="nav-tab active" href="/user/me.html">👤 내 정보</a>
+</div>
 <div class="auth-wrap">
-    <h1 class="auth-title">내 정보 조회</h1>
-    <button id="loadMe">/api/v1/auth/me 호출</button>
+    <h1 class="auth-title">👤 내 정보 조회</h1>
+    <button id="loadMe">내 정보 불러오기</button>
     <pre id="output">토큰을 이용해 내 정보를 불러옵니다...</pre>
 </div>
 
@@ -24,7 +35,7 @@
     const API_BASE = '/api/v1';
 
     document.getElementById('loadMe').addEventListener('click', async () => {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('jwt_token');
         if (!token) {
             alert('토큰이 없습니다. 먼저 로그인하세요.');
             window.location.href = '/auth/login.html';

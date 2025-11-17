@@ -59,7 +59,7 @@
     (function(){
         const q = (s,p=document)=>p.querySelector(s);
         const api = axios.create({ baseURL: '', withCredentials: true });
-        api.interceptors.request.use(cfg => { const t=localStorage.getItem('accessToken'); if(t) cfg.headers.Authorization=`Bearer ${t}`; return cfg; });
+        api.interceptors.request.use(cfg => { const t=localStorage.getItem('jwt_token'); if(t) cfg.headers.Authorization=`Bearer ${t}`; return cfg; });
 
         const adminListBoards = ()=>api.get('/api/v1/admin/community/boards').then(r=>r.data);
         const adminCreateBoard = (payload)=>api.post('/api/v1/admin/community/boards', payload).then(r=>r.data);

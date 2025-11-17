@@ -38,11 +38,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/v1/weather/**").permitAll() // 날씨 API 공개
+                        .requestMatchers(HttpMethod.GET, "/api/v1/market/**").permitAll() // Market 조회는 공개
+                        .requestMatchers(HttpMethod.POST, "/api/v1/market/payments/confirm").permitAll() // 결제 승인은 공개 (토스 리다이렉트)
+                        .requestMatchers("/api/v1/market/**").authenticated() // Market 등록/수정/삭제는 인증 필요
                         .requestMatchers("/users/**").authenticated()
                         .requestMatchers("/api/v1/cloth/**").authenticated()
                         .requestMatchers("/api/v1/boards/**").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/posts/**)").authenticated()
+                        .requestMatchers("/api/v1/posts/**").authenticated()
                         .requestMatchers(HttpMethod.OPTIONS,"/**").permitAll()
                         .anyRequest().permitAll()
                 )

@@ -35,7 +35,7 @@
 <script>
     (function(){
         'use strict';
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('jwt_token');
         const slug = new URLSearchParams(location.search).get('slug');
 
         if (!slug) { alert('slug 누락'); location.href = '/commu/'; return; }

@@ -31,7 +31,13 @@ public class Cloth {
     private String name;
 
     @Column(length = 512)
-    private String imageUrl;
+    private String imageUrl;  // 기존 호환성 유지 (deprecated 예정)
+
+    @Column(name = "original_image_url", length = 512)
+    private String originalImageUrl;  // 원본 이미지 URL
+
+    @Column(name = "removed_bg_image_url", length = 512)
+    private String removedBgImageUrl;  // 배경 제거된 이미지 URL
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

@@ -36,17 +36,32 @@
         .close{float:right;border:none;background:#eee;border-radius:8px;padding:6px 10px;cursor:pointer}
         form label{display:block;margin:8px 0 4px;font-size:13px}
         form input,form select{width:100%;padding:8px;border:1px solid #ccc;border-radius:8px}
+
+        /* 네비게이션 탭 */
+        .nav-tabs{background:#fff;border-bottom:2px solid #eee;display:flex;justify-content:center;gap:0;padding:0 16px;position:sticky;top:52px;z-index:9}
+        .nav-tab{padding:14px 24px;border:none;background:transparent;cursor:pointer;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;transition:all 0.2s}
+        .nav-tab:hover{color:#333;background:#f8f8f8}
+        .nav-tab.active{color:#667eea;border-bottom-color:#667eea}
     </style>
 </head>
 <body>
 <header>
-    <h1>Cloth</h1>
+    <h1>🏠 ClosetConnect</h1>
     <div class="btn-row">
         <button id="wearBtn" class="btn">Wear</button>
         <button id="deleteBtn" class="btn">Delete</button>
         <button id="addBtn" class="btn">Add</button>
     </div>
 </header>
+
+<!-- 네비게이션 탭 -->
+<nav class="nav-tabs">
+    <button class="nav-tab active" onclick="location.href='/cloth/closet.html'">👔 내 옷장</button>
+    <button class="nav-tab" onclick="location.href='/market-demo.html'">🛒 중고거래</button>
+    <button class="nav-tab" onclick="location.href='/commu/community.html'">💬 커뮤니티</button>
+    <button class="nav-tab" onclick="location.href='/weather-with-recommendation.html'">🌤️ 날씨</button>
+    <button class="nav-tab" onclick="location.href='/user/me.html'">👤 내 정보</button>
+</nav>
 
 <main id="root"></main>
 
@@ -94,7 +109,7 @@
 
 <script>
     function getAuthHeader() {
-        const raw = localStorage.getItem('accessToken') || '';
+        const raw = localStorage.getItem('jwt_token') || '';
         if (!raw) return '';                               // 토큰 없음
         return raw.startsWith('Bearer ') ? raw : `Bearer ${raw}`;
     }
@@ -119,25 +134,20 @@
     };
 
     let deleteMode = false;
-    let currentImageUrl = ''; // 업로드된 이미지 URL 저장
 
+         // 파일 선택 시 미리보기만 표시 (서버 업로드는 등록 시점에)
          document.getElementById('uploadFile').addEventListener('change', async (e) => {
            const file = e.target.files[0];
            if (!file) return;
-           const form = new FormData();
-           form.append('file', file);
-           try {
-             const res = await axios.post(`${API}/api/v1/uploads`, form, {
-               headers: { 'Content-Type': 'multipart/form-data' } // Authorization은 인터셉터가 자동 주입
-             });
-             currentImageUrl = res.data.imageUrl;
+
+           // 로컬 미리보기 표시
+           const reader = new FileReader();
+           reader.onload = (evt) => {
              const prev = document.getElementById('preview');
-             prev.src = `${API}${currentImageUrl}`;
+             prev.src = evt.target.result;
              prev.style.display = 'block';
-           } catch (err) {
-             console.error(err.response?.data || err);
-             alert('이미지 업로드에 실패했습니다.');
-           }
+           };
+           reader.readAsDataURL(file);
          });
 
 function token(){ return localStorage.getItem('token') || ''; }
@@ -255,19 +265,38 @@ function token(){ return localStorage.getItem('token') || ''; }
     document.getElementById('addForm').onsubmit = async (e)=>{
         e.preventDefault();
         const f = e.target;
-        if (!currentImageUrl) { alert('이미지를 먼저 업로드해주세요.'); return; }
-        const data = { name: f.name.value, category: f.category.value, imageUrl: currentImageUrl };
+        const fileInput = document.getElementById('uploadFile');
+
+        if (!fileInput.files || !fileInput.files[0]) {
+            alert('이미지를 선택해주세요.');
+            return;
+        }
+
+        // FormData 생성: image, name, category를 함께 전송
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+        formData.append('name', f.name.value);
+        formData.append('category', f.category.value);
+
         try{
-            await axios.post(`${API}/api/v1/cloth`, data, {
-                headers:{ Authorization:`Bearer ${token()}`, 'Content-Type':'application/json' }
+            // /upload 엔드포인트 사용 (자동 배경 제거 처리)
+            await axios.post(`${API}/api/v1/cloth/upload`, formData, {
+                headers:{
+                    Authorization:`Bearer ${token()}`,
+                    'Content-Type':'multipart/form-data'
+                }
             });
+
             f.reset();
-            currentImageUrl = '';
+            fileInput.value = '';
             const prev = document.getElementById('preview');
             prev.style.display = 'none';
             closeModal('addModal');
             await boot();
-        }catch(err){ alert('등록 실패'); }
+        }catch(err){
+            console.error(err.response?.data || err);
+            alert('등록 실패: ' + (err.response?.data?.message || err.message));
+        }
     };
 
     async function boot(){

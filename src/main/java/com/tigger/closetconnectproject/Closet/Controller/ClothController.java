@@ -2,6 +2,7 @@ package com.tigger.closetconnectproject.Closet.Controller;
 
 import com.tigger.closetconnectproject.Closet.Dto.ClothCreateRequest;
 import com.tigger.closetconnectproject.Closet.Dto.ClothResponse;
+import com.tigger.closetconnectproject.Closet.Dto.ClothUploadRequest;
 import com.tigger.closetconnectproject.Closet.Entity.Category;
 import com.tigger.closetconnectproject.Closet.Service.ClothService;
 import com.tigger.closetconnectproject.Security.AppUserDetails;
@@ -10,8 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 옷장 관리 API Controller
@@ -74,6 +77,41 @@ public class ClothController {
     ) {
         Long uid = principal.getUser().getUserId();
         return clothService.create(uid, req);
+    }
+
+    /**
+     * 설명: 이미지 업로드와 함께 옷 아이템 등록
+     * - 원본 이미지와 배경 제거(누끼) 이미지를 모두 저장
+     * - Python rembg 서버로 배경 제거 요청
+     * - 평균 처리 시간: 0.2~1초
+     *
+     * @param image 업로드할 이미지 파일 (최대 10MB)
+     * @param name 옷 이름
+     * @param category 카테고리 (TOP, BOTTOM, ACC, SHOES)
+     * @param principal 현재 로그인한 사용자
+     * @return 생성된 옷 아이템 정보 (원본/누끼 이미지 URL 포함)
+     * @example POST /api/v1/closet/upload
+     *          Content-Type: multipart/form-data
+     *          image: (파일)
+     *          name: "나이키 운동화"
+     *          category: "SHOES"
+     */
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public ClothResponse uploadWithImage(
+            @RequestParam("image") MultipartFile image,
+            @RequestParam("name") String name,
+            @RequestParam("category") Category category,
+            @AuthenticationPrincipal AppUserDetails principal
+    ) {
+        Long uid = principal.getUser().getUserId();
+
+        // DTO 생성
+        ClothUploadRequest req = new ClothUploadRequest();
+        req.setName(name);
+        req.setCategory(category);
+
+        return clothService.createWithImage(uid, image, req);
     }
 
     /**

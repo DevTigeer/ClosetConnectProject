@@ -33,7 +33,7 @@
 <script>
     (function () {
         'use strict';
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('jwt_token');
         const postId = new URLSearchParams(location.search).get('id');
 
         if (!postId) { alert('게시글 ID가 없습니다.'); history.back(); return; }
