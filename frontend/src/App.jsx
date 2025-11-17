@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ClosetPage from './pages/ClosetPage';
+import RecommendPage from './pages/RecommendPage';
 import CommunityPage from './pages/CommunityPage';
 import BoardPage from './pages/BoardPage';
 import PostDetailPage from './pages/PostDetailPage';
@@ -35,6 +36,16 @@ function App() {
             element={
               <PrivateRoute>
                 <ClosetPage />
+              </PrivateRoute>
+            }
+          />
+
+          {/* 추천 (인증 필요) */}
+          <Route
+            path="recommend"
+            element={
+              <PrivateRoute>
+                <RecommendPage />
               </PrivateRoute>
             }
           />
