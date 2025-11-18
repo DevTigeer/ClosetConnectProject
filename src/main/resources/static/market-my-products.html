@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 판매 상품 관리 - ClosetConnect Market</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .header-actions {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            background: #f0f0f0;
+        }
+
+        .products-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .product-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .product-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #f5f5f5;
+            flex-shrink: 0;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .product-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .product-meta {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .status-on-sale {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-reserved {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-sold {
+            background: #e0e0e0;
+            color: #616161;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-small:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-danger {
+            color: #c62828;
+            border-color: #c62828;
+        }
+
+        .btn-danger:hover {
+            background: #ffebee;
+        }
+
+        .loading, .error, .empty {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading {
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 8px;
+        }
+
+        .empty {
+            color: #666;
+        }
+
+        .empty a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 통일된 네비게이션 탭 -->
+        <nav style="background:#fff;border-bottom:2px solid #eee;display:flex;justify-content:center;gap:0;margin-bottom:20px;padding:0 16px;position:sticky;top:0;z-index:100;border-radius:16px">
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/cloth/closet.html">👔 내 옷장</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:600;color:#667eea;border-bottom:3px solid #667eea;text-decoration:none" href="/market.html">🛒 중고거래</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/commu/community.html">💬 커뮤니티</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/weather-with-recommendation.html">🌤️ 날씨</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/user/me.html">👤 내 정보</a>
+        </nav>
+        <h1>📦 내 판매 상품 관리</h1>
+
+        <div class="header-actions">
+            <a href="market-create.html" class="btn btn-primary">+ 새 상품 등록</a>
+            <a href="market.html" class="btn btn-primary" style="margin-left: 8px;">← 목록으로</a>
+        </div>
+
+        <div class="products-section">
+            <div id="productsContainer">
+                <div class="loading">판매 상품을 불러오는 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api/v1';
+
+        // JWT 토큰 가져오기
+        function getToken() {
+            return localStorage.getItem('jwt_token');
+        }
+
+        // JWT에서 userId 추출 (간단한 디코딩)
+        function getUserIdFromToken() {
+            const token = getToken();
+            if (!token) return null;
+
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload.uid; // JWT 토큰의 실제 키는 'uid'
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // 페이지 로드 시
+        window.onload = function() {
+            const token = getToken();
+            if (!token) {
+                document.getElementById('productsContainer').innerHTML =
+                    '<div class="error">로그인이 필요합니다.</div>';
+                return;
+            }
+
+            const userId = getUserIdFromToken();
+            if (!userId) {
+                document.getElementById('productsContainer').innerHTML =
+                    '<div class="error">사용자 정보를 찾을 수 없습니다.</div>';
+                return;
+            }
+
+            loadMyProducts(userId);
+        };
+
+        // 내 판매 상품 불러오기
+        async function loadMyProducts(userId) {
+            const token = getToken();
+            const container = document.getElementById('productsContainer');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/products/seller/${userId}?page=0&size=100`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('상품 목록을 불러올 수 없습니다.');
+
+                const data = await response.json();
+                displayProducts(data.content);
+            } catch (error) {
+                container.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+            }
+        }
+
+        // 상품 목록 표시
+        function displayProducts(products) {
+            const container = document.getElementById('productsContainer');
+
+            if (products.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        등록한 상품이 없습니다.<br><br>
+                        <a href="market-create.html">첫 상품 등록하기 →</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            products.forEach(product => {
+                const item = createProductItem(product);
+                container.appendChild(item);
+            });
+        }
+
+        // 상품 아이템 생성
+        function createProductItem(product) {
+            const item = document.createElement('div');
+            item.className = 'product-item';
+
+            const statusClass = `status-${product.status.toLowerCase().replace('_', '-')}`;
+            const statusText = {
+                'ON_SALE': '판매중',
+                'RESERVED': '예약중',
+                'SOLD': '거래완료'
+            }[product.status] || product.status;
+
+            item.innerHTML = `
+                ${product.thumbnailUrl ?
+                    `<img src="${product.thumbnailUrl}" class="product-image" alt="${product.title}">` :
+                    `<div class="product-image" style="display:flex;align-items:center;justify-content:center;color:#999;">이미지 없음</div>`
+                }
+                <div class="product-info">
+                    <div class="product-title">${product.title}</div>
+                    <div class="product-price">${product.price.toLocaleString()}원</div>
+                    <div class="product-meta">
+                        ${product.region || '지역미상'} · 조회 ${product.viewCount} · ❤️ ${product.likeCount}
+                    </div>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+
+                    <div class="product-actions">
+                        <button class="btn-small" onclick="viewDetail(${product.id})">상세보기</button>
+                        ${product.status === 'ON_SALE' ? `
+                            <button class="btn-small" onclick="changeStatus(${product.id}, 'RESERVED')">예약중으로 변경</button>
+                        ` : ''}
+                        ${product.status === 'RESERVED' ? `
+                            <button class="btn-small" onclick="changeStatus(${product.id}, 'SOLD')">거래완료로 변경</button>
+                            <button class="btn-small" onclick="changeStatus(${product.id}, 'ON_SALE')">판매중으로 되돌리기</button>
+                        ` : ''}
+                        ${product.status === 'SOLD' ? `
+                            <button class="btn-small" onclick="changeStatus(${product.id}, 'ON_SALE')">재판매하기</button>
+                        ` : ''}
+                        <button class="btn-small btn-danger" onclick="deleteProduct(${product.id}, '${product.title}')">삭제</button>
+                    </div>
+                </div>
+            `;
+
+            return item;
+        }
+
+        // 상세보기
+        function viewDetail(productId) {
+            location.href = `market-detail.html?id=${productId}`;
+        }
+
+        // 상태 변경
+        async function changeStatus(productId, newStatus) {
+            const token = getToken();
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+
+            const statusText = {
+                'ON_SALE': '판매중',
+                'RESERVED': '예약중',
+                'SOLD': '거래완료'
+            }[newStatus];
+
+            if (!confirm(`상품 상태를 "${statusText}"로 변경하시겠습니까?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/products/${productId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '상태 변경에 실패했습니다.');
+                }
+
+                alert('상품 상태가 변경되었습니다.');
+                location.reload();
+            } catch (error) {
+                alert(`❌ ${error.message}`);
+            }
+        }
+
+        // 상품 삭제
+        async function deleteProduct(productId, productTitle) {
+            const token = getToken();
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+
+            if (!confirm(`"${productTitle}" 상품을 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/products/${productId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || '상품 삭제에 실패했습니다.');
+                }
+
+                alert('상품이 삭제되었습니다.');
+                location.reload();
+            } catch (error) {
+                alert(`❌ ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

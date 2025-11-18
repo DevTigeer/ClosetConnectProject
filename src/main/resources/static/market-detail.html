@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상품 상세 - ClosetConnect Market</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .back-button {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .back-button:hover {
+            text-decoration: underline;
+        }
+
+        .product-section {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 20px;
+        }
+
+        .product-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .like-button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .like-button:hover {
+            background: #f5f5f5;
+        }
+
+        .like-button.liked {
+            background: #ffebee;
+            border-color: #e53935;
+            color: #e53935;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-button {
+            padding: 8px 16px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .chat-button:hover {
+            background: #5568d3;
+        }
+
+        .product-price {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .product-images {
+            margin-bottom: 24px;
+        }
+
+        .product-images img {
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .product-info-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .product-description {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            color: #333;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .status-on-sale {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-reserved {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-sold {
+            background: #e0e0e0;
+            color: #616161;
+        }
+
+        /* 댓글 섹션 */
+        .comments-section {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .comments-section h3 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .comment-form {
+            margin-bottom: 24px;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .comment-form button {
+            margin-top: 8px;
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .comment-form button:hover {
+            background: #5568d3;
+        }
+
+        .comment-item {
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .comment-author.seller {
+            color: #667eea;
+        }
+
+        .comment-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .comment-content {
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .comment-chat {
+            padding: 4px 12px;
+            background: transparent;
+            border: 1px solid #667eea;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #667eea;
+            margin-right: 8px;
+        }
+
+        .comment-chat:hover {
+            background: #f0f3ff;
+        }
+
+        .comment-delete {
+            padding: 4px 12px;
+            background: transparent;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #c62828;
+        }
+
+        .comment-delete:hover {
+            background: #ffebee;
+        }
+
+        .loading, .error {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 통일된 네비게이션 탭 -->
+        <nav style="background:#fff;border-bottom:2px solid #eee;display:flex;justify-content:center;gap:0;margin-bottom:20px;padding:0 16px;position:sticky;top:0;z-index:100;border-radius:16px">
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/cloth/closet.html">👔 내 옷장</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:600;color:#667eea;border-bottom:3px solid #667eea;text-decoration:none" href="/market.html">🛒 중고거래</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/commu/community.html">💬 커뮤니티</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/weather-with-recommendation.html">🌤️ 날씨</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/user/me.html">👤 내 정보</a>
+        </nav>
+        <a href="market.html" class="back-button">← 목록으로</a>
+
+        <div id="productContainer">
+            <div class="loading">상품 정보를 불러오는 중...</div>
+        </div>
+
+        <div class="comments-section" id="commentsSection" style="display: none;">
+            <h3>💬 문의하기</h3>
+
+            <div class="comment-form" id="commentForm">
+                <textarea id="commentContent" placeholder="궁금한 점을 문의해주세요"></textarea>
+                <button onclick="submitComment()">댓글 작성</button>
+            </div>
+
+            <div id="commentsContainer">
+                <div class="loading">댓글을 불러오는 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://js.tosspayments.com/v1"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api/v1';
+        const TOSS_CLIENT_KEY = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq'; // 토스 테스트 클라이언트 키
+        let currentProductId = null;
+        let currentProduct = null;
+        let currentUserId = null;
+
+        function getToken() {
+            return localStorage.getItem('jwt_token');
+        }
+
+        function getUserIdFromToken() {
+            const token = getToken();
+            if (!token) return null;
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload.uid; // JWT 토큰의 실제 키는 'uid'
+            } catch (e) {
+                return null;
+            }
+        }
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentProductId = urlParams.get('id');
+
+            if (!currentProductId) {
+                document.getElementById('productContainer').innerHTML =
+                    '<div class="error">상품 ID가 없습니다.</div>';
+                return;
+            }
+
+            currentUserId = getUserIdFromToken();
+            loadProduct();
+            loadComments();
+        };
+
+        async function loadProduct() {
+            const token = getToken();
+            const container = document.getElementById('productContainer');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/products/${currentProductId}`, {
+                    headers: token ? {
+                        'Authorization': `Bearer ${token}`
+                    } : {}
+                });
+
+                if (!response.ok) throw new Error('상품을 불러올 수 없습니다.');
+
+                currentProduct = await response.json();
+                displayProduct(currentProduct);
+                document.getElementById('commentsSection').style.display = 'block';
+            } catch (error) {
+                container.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+            }
+        }
+
+        function displayProduct(product) {
+            const container = document.getElementById('productContainer');
+
+            const statusClass = `status-${product.status.toLowerCase().replace('_', '-')}`;
+            const statusText = {
+                'ON_SALE': '판매중',
+                'RESERVED': '예약중',
+                'SOLD': '거래완료'
+            }[product.status] || product.status;
+
+            const conditionText = {
+                'NEW': '새상품',
+                'EXCELLENT': '상 (거의 새것)',
+                'GOOD': '중 (사용감 있음)',
+                'FAIR': '하 (사용감 많음)'
+            }[product.productCondition] || product.productCondition;
+
+            const imagesHtml = product.images && product.images.length > 0 ?
+                product.images.map(img => `<img src="${img.imageUrl}" alt="${product.title}">`).join('') :
+                '<div style="background:#f5f5f5;height:300px;display:flex;align-items:center;justify-content:center;color:#999;border-radius:12px;">이미지 없음</div>';
+
+            container.innerHTML = `
+                <div class="product-section">
+                    <div class="product-header">
+                        <div>
+                            <div class="product-title">${product.title}</div>
+                        </div>
+                        ${currentUserId ? `
+                            <div class="action-buttons">
+                                ${currentUserId !== product.seller.userId && product.status === 'ON_SALE' ? `
+                                    <button class="chat-button" style="background:#10b981;" onclick="purchaseProduct()">🛒 구매하기</button>
+                                    <button class="chat-button" onclick="startChat()">💬 채팅하기</button>
+                                ` : currentUserId !== product.seller.userId ? `
+                                    <button class="chat-button" onclick="startChat()">💬 채팅하기</button>
+                                ` : ''}
+                                <button class="like-button ${product.liked ? 'liked' : ''}" onclick="toggleLike()">
+                                    ${product.liked ? '❤️' : '🤍'} ${product.likeCount}
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+
+                    <div class="product-price">${product.price.toLocaleString()}원</div>
+
+                    <div class="product-images">
+                        ${imagesHtml}
+                    </div>
+
+                    <div class="product-info-grid">
+                        <div class="info-label">판매자</div>
+                        <div class="info-value">${product.seller.nickname}</div>
+
+                        <div class="info-label">품질 상태</div>
+                        <div class="info-value">${conditionText}</div>
+
+                        ${product.region ? `
+                            <div class="info-label">거래 지역</div>
+                            <div class="info-value">${product.region}</div>
+                        ` : ''}
+
+                        ${product.brand ? `
+                            <div class="info-label">브랜드</div>
+                            <div class="info-value">${product.brand}</div>
+                        ` : ''}
+
+                        ${product.size ? `
+                            <div class="info-label">사이즈</div>
+                            <div class="info-value">${product.size}</div>
+                        ` : ''}
+
+                        ${product.gender ? `
+                            <div class="info-label">성별</div>
+                            <div class="info-value">${product.gender}</div>
+                        ` : ''}
+
+                        <div class="info-label">조회수</div>
+                        <div class="info-value">${product.viewCount}</div>
+
+                        <div class="info-label">옷장 아이템</div>
+                        <div class="info-value">${product.clothName} (${product.clothCategory})</div>
+                    </div>
+
+                    <h3 style="margin-bottom:12px;">상품 설명</h3>
+                    <div class="product-description">${product.description}</div>
+                </div>
+            `;
+        }
+
+        async function toggleLike() {
+            const token = getToken();
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/products/${currentProductId}/like`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('찜 처리에 실패했습니다.');
+
+                const result = await response.json();
+                currentProduct.liked = result.liked;
+                currentProduct.likeCount = result.likeCount;
+                displayProduct(currentProduct);
+            } catch (error) {
+                alert(`❌ ${error.message}`);
+            }
+        }
+
+        async function loadComments() {
+            const container = document.getElementById('commentsContainer');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/products/${currentProductId}/comments?page=0&size=100`);
+
+                if (!response.ok) throw new Error('댓글을 불러올 수 없습니다.');
+
+                const data = await response.json();
+                displayComments(data.content);
+            } catch (error) {
+                container.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+            }
+        }
+
+        function displayComments(comments) {
+            const container = document.getElementById('commentsContainer');
+
+            if (comments.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">첫 댓글을 작성해보세요!</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            comments.forEach(comment => {
+                const item = createCommentItem(comment);
+                container.appendChild(item);
+            });
+        }
+
+        function createCommentItem(comment) {
+            const item = document.createElement('div');
+            item.className = 'comment-item';
+
+            const date = new Date(comment.createdAt);
+            const dateStr = date.toLocaleString('ko-KR');
+
+            const canDelete = currentUserId && currentUserId === comment.authorId;
+            const canChat = currentUserId && currentUserId !== comment.authorId;
+
+            item.innerHTML = `
+                <div class="comment-header">
+                    <div>
+                        <span class="comment-author ${comment.isSellerComment ? 'seller' : ''}">
+                            ${comment.authorName}${comment.isSellerComment ? ' (판매자)' : ''}
+                        </span>
+                        <span class="comment-date">${dateStr}</span>
+                    </div>
+                    <div>
+                        ${canChat ? `
+                            <button class="comment-chat" onclick="startDirectChat(${comment.authorId})">💬 채팅</button>
+                        ` : ''}
+                        ${canDelete ? `
+                            <button class="comment-delete" onclick="deleteComment(${comment.id})">삭제</button>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="comment-content">${comment.content}</div>
+            `;
+
+            return item;
+        }
+
+        async function submitComment() {
+            const token = getToken();
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+
+            const content = document.getElementById('commentContent').value.trim();
+            if (!content) {
+                alert('댓글 내용을 입력해주세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/products/${currentProductId}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ content })
+                });
+
+                if (!response.ok) throw new Error('댓글 작성에 실패했습니다.');
+
+                document.getElementById('commentContent').value = '';
+                loadComments();
+            } catch (error) {
+                alert(`❌ ${error.message}`);
+            }
+        }
+
+        async function deleteComment(commentId) {
+            const token = getToken();
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+
+            if (!confirm('댓글을 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/products/${currentProductId}/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('댓글 삭제에 실패했습니다.');
+
+                loadComments();
+            } catch (error) {
+                alert(`❌ ${error.message}`);
+            }
+        }
+
+        // 채팅 시작 (상품 기반)
+        async function startChat() {
+            const token = getToken();
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/chat/rooms`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId: currentProductId })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '채팅방 생성에 실패했습니다.');
+                }
+
+                const chatRoom = await response.json();
+                alert('채팅방이 생성되었습니다. 채팅 페이지로 이동합니다.');
+                location.href = `market-chat.html?roomId=${chatRoom.roomId}`;
+            } catch (error) {
+                alert(`❌ ${error.message}`);
+            }
+        }
+
+        // 직접 채팅 시작 (댓글 작성자와 1:1 채팅)
+        async function startDirectChat(targetUserId) {
+            const token = getToken();
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/chat/direct?targetUserId=${targetUserId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '채팅방 생성에 실패했습니다.');
+                }
+
+                const chatRoom = await response.json();
+                location.href = `market-chat.html?roomId=${chatRoom.roomId}`;
+            } catch (error) {
+                alert(`❌ ${error.message}`);
+            }
+        }
+
+        // 상품 구매하기 (토스 결제창 연동)
+        async function purchaseProduct() {
+            const token = getToken();
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                location.href = 'login.html';
+                return;
+            }
+
+            if (currentProduct.status !== 'ON_SALE') {
+                alert('판매중인 상품만 구매할 수 있습니다.');
+                return;
+            }
+
+            try {
+                // 1. 주문 생성 API 호출
+                const response = await fetch(`${API_BASE_URL}/market/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productId: currentProductId })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '주문 생성에 실패했습니다.');
+                }
+
+                const orderData = await response.json();
+                console.log('주문 생성 성공:', orderData);
+
+                // 2. 토스 결제창 호출
+                const tossPayments = TossPayments(TOSS_CLIENT_KEY);
+
+                tossPayments.requestPayment('카드', {
+                    amount: orderData.amount,
+                    orderId: orderData.tossOrderId,
+                    orderName: orderData.orderName,
+                    customerName: orderData.customerName,
+                    successUrl: `${window.location.origin}/payment-success.html`,
+                    failUrl: `${window.location.origin}/payment-fail.html`,
+                });
+
+            } catch (error) {
+                console.error('구매 실패:', error);
+                alert(`❌ ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

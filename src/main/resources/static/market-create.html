@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상품 등록 - ClosetConnect Market</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-group .required::after {
+            content: " *";
+            color: #e53935;
+        }
+
+        .cloth-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .cloth-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .cloth-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .cloth-card.selected {
+            border-color: #667eea;
+            background: #f3f4ff;
+        }
+
+        .cloth-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: #f5f5f5;
+        }
+
+        .cloth-card .cloth-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .cloth-card .cloth-category {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .loading, .error, .info {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            text-align: center;
+        }
+
+        .loading {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .info {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .no-cloth {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .no-cloth a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 통일된 네비게이션 탭 -->
+        <nav style="background:#fff;border-bottom:2px solid #eee;display:flex;justify-content:center;gap:0;margin:-20px -20px 20px;padding:0 16px;position:sticky;top:0;z-index:100;border-radius:16px 16px 0 0">
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/cloth/closet.html">👔 내 옷장</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:600;color:#667eea;border-bottom:3px solid #667eea;text-decoration:none" href="/market.html">🛒 중고거래</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/commu/community.html">💬 커뮤니티</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/weather-with-recommendation.html">🌤️ 날씨</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/user/me.html">👤 내 정보</a>
+        </nav>
+        <h1>🛒 상품 등록하기</h1>
+
+        <!-- 옷장 아이템 선택 -->
+        <div class="section">
+            <h2>1. 판매할 옷장 아이템 선택</h2>
+            <div id="clothContainer">
+                <div class="loading">옷장 아이템을 불러오는 중...</div>
+            </div>
+        </div>
+
+        <!-- 상품 정보 입력 -->
+        <div class="section">
+            <h2>2. 상품 정보 입력</h2>
+            <form id="productForm">
+                <div class="form-group">
+                    <label class="required">상품명</label>
+                    <input type="text" id="title" required placeholder="예: 나이키 반팔티 판매">
+                </div>
+
+                <div class="form-group">
+                    <label class="required">가격 (원)</label>
+                    <input type="number" id="price" required min="0" placeholder="예: 25000">
+                </div>
+
+                <div class="form-group">
+                    <label class="required">상품 설명</label>
+                    <textarea id="description" required placeholder="상품의 상태, 사이즈 정보 등을 자세히 적어주세요."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="required">상품 상태</label>
+                    <select id="productCondition" required>
+                        <option value="">선택하세요</option>
+                        <option value="NEW">새상품</option>
+                        <option value="EXCELLENT">상 (거의 새것)</option>
+                        <option value="GOOD">중 (사용감 있음)</option>
+                        <option value="FAIR">하 (사용감 많음)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>거래 지역</label>
+                    <input type="text" id="region" placeholder="예: 서울 강남구">
+                </div>
+
+                <div class="form-group">
+                    <label>브랜드</label>
+                    <input type="text" id="brand" placeholder="예: 나이키">
+                </div>
+
+                <div class="form-group">
+                    <label>사이즈</label>
+                    <input type="text" id="size" placeholder="예: M, 95">
+                </div>
+
+                <div class="form-group">
+                    <label>성별</label>
+                    <select id="gender">
+                        <option value="">선택하세요</option>
+                        <option value="남성">남성</option>
+                        <option value="여성">여성</option>
+                        <option value="공용">공용</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="location.href='market.html'">취소</button>
+                    <button type="submit" class="btn btn-primary">상품 등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api/v1';
+        let selectedClothId = null;
+
+        // JWT 토큰 가져오기
+        function getToken() {
+            return localStorage.getItem('jwt_token');
+        }
+
+        // 페이지 로드 시 옷장 아이템 불러오기
+        window.onload = function() {
+            const token = getToken();
+            if (!token) {
+                document.getElementById('clothContainer').innerHTML =
+                    '<div class="error">로그인이 필요합니다. <a href="login.html">로그인하기</a></div>';
+                return;
+            }
+            loadClothItems();
+        };
+
+        // 옷장 아이템 불러오기
+        async function loadClothItems() {
+            const token = getToken();
+            const container = document.getElementById('clothContainer');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/cloth`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('옷장 아이템을 불러올 수 없습니다.');
+
+                const data = await response.json();
+                // Page 객체에서 content 배열 추출
+                const clothes = data.content || [];
+                displayClothItems(clothes);
+            } catch (error) {
+                container.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+            }
+        }
+
+        // 옷장 아이템 표시
+        function displayClothItems(clothes) {
+            const container = document.getElementById('clothContainer');
+
+            if (clothes.length === 0) {
+                container.innerHTML = `
+                    <div class="no-cloth">
+                        등록된 옷장 아이템이 없습니다.<br>
+                        먼저 <a href="#">옷장에 아이템을 추가</a>해주세요.
+                    </div>
+                `;
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'cloth-grid';
+
+            clothes.forEach(cloth => {
+                const card = createClothCard(cloth);
+                grid.appendChild(card);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(grid);
+        }
+
+        // 옷장 카드 생성
+        function createClothCard(cloth) {
+            const card = document.createElement('div');
+            card.className = 'cloth-card';
+            card.onclick = () => selectCloth(cloth.id, card);
+
+            card.innerHTML = `
+                ${cloth.imageUrl ?
+                    `<img src="${cloth.imageUrl}" alt="${cloth.name}">` :
+                    `<div style="width:100%;height:120px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;color:#999;">이미지 없음</div>`
+                }
+                <div class="cloth-name">${cloth.name}</div>
+                <div class="cloth-category">${cloth.category}</div>
+            `;
+
+            return card;
+        }
+
+        // 옷장 아이템 선택
+        function selectCloth(clothId, cardElement) {
+            // 기존 선택 해제
+            document.querySelectorAll('.cloth-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // 새로운 선택
+            cardElement.classList.add('selected');
+            selectedClothId = clothId;
+        }
+
+        // 상품 등록 폼 제출
+        document.getElementById('productForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!selectedClothId) {
+                alert('판매할 옷장 아이템을 선택해주세요.');
+                return;
+            }
+
+            const token = getToken();
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                location.href = 'login.html';
+                return;
+            }
+
+            const formData = {
+                clothId: selectedClothId,
+                title: document.getElementById('title').value,
+                price: parseInt(document.getElementById('price').value),
+                description: document.getElementById('description').value,
+                productCondition: document.getElementById('productCondition').value,
+                region: document.getElementById('region').value || null,
+                brand: document.getElementById('brand').value || null,
+                size: document.getElementById('size').value || null,
+                gender: document.getElementById('gender').value || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '상품 등록에 실패했습니다.');
+                }
+
+                const product = await response.json();
+                alert('상품이 성공적으로 등록되었습니다!');
+                location.href = `market-detail.html?id=${product.id}`;
+            } catch (error) {
+                alert(`❌ ${error.message}`);
+            }
+        });
+    </script>
+</body>
+</html>

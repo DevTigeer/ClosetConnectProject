@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 성공 - ClosetConnect</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        .success-icon svg {
+            width: 50px;
+            height: 50px;
+            stroke: white;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .order-info {
+            background: #f3f4f6;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .order-row:last-child {
+            border-bottom: none;
+        }
+
+        .order-label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .order-value {
+            color: #1f2937;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #667eea;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loading-state">
+            <div class="loading">
+                <div class="spinner"></div>
+                <span>결제를 승인하고 있습니다...</span>
+            </div>
+        </div>
+
+        <div id="success-state" style="display: none;">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <h1>결제가 완료되었습니다!</h1>
+            <p class="message">주문이 정상적으로 처리되었습니다.<br>판매자가 상품을 발송할 때까지 기다려주세요.</p>
+
+            <div class="order-info" id="order-info"></div>
+
+            <div>
+                <a href="/market-demo.html" class="btn btn-secondary">상품 목록</a>
+                <button onclick="viewOrderDetail()" class="btn">주문 상세</button>
+            </div>
+        </div>
+
+        <div id="error-state" style="display: none;">
+            <h1>결제 승인 실패</h1>
+            <div class="error" id="error-message"></div>
+            <a href="/market-demo.html" class="btn">상품 목록으로</a>
+        </div>
+    </div>
+
+    <script>
+        let orderId = null;
+
+        // URL 파라미터에서 결제 정보 추출
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentKey = urlParams.get('paymentKey');
+        const tossOrderId = urlParams.get('orderId');
+        const amount = urlParams.get('amount');
+
+        // 페이지 로드 시 자동으로 결제 승인 요청
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (!paymentKey || !tossOrderId || !amount) {
+                showError('결제 정보가 올바르지 않습니다.');
+                return;
+            }
+
+            try {
+                // 결제 승인 API 호출
+                const response = await fetch('/api/v1/market/payments/confirm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        paymentKey: paymentKey,
+                        orderId: tossOrderId,
+                        amount: parseInt(amount)
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '결제 승인에 실패했습니다.');
+                }
+
+                const data = await response.json();
+                orderId = data.orderId;
+
+                // 성공 화면 표시
+                showSuccess(data);
+
+            } catch (error) {
+                console.error('결제 승인 실패:', error);
+                showError(error.message);
+            }
+        });
+
+        function showSuccess(data) {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('success-state').style.display = 'block';
+
+            // 주문 정보 표시
+            const orderInfo = document.getElementById('order-info');
+            orderInfo.innerHTML = `
+                <div class="order-row">
+                    <span class="order-label">주문 번호</span>
+                    <span class="order-value">${data.orderId}</span>
+                </div>
+                <div class="order-row">
+                    <span class="order-label">결제 금액</span>
+                    <span class="order-value">${data.amount.toLocaleString()}원</span>
+                </div>
+                <div class="order-row">
+                    <span class="order-label">결제 수단</span>
+                    <span class="order-value">${data.paymentMethod || '카드'}</span>
+                </div>
+                <div class="order-row">
+                    <span class="order-label">결제 상태</span>
+                    <span class="order-value" style="color: #10b981;">결제완료</span>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('error-state').style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+        }
+
+        function viewOrderDetail() {
+            if (orderId) {
+                location.href = `market-order-detail.html?id=${orderId}`;
+            }
+        }
+    </script>
+</body>
+</html>

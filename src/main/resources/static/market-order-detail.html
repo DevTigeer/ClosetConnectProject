@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문 상세 - ClosetConnect</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .nav-bar {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .nav-bar a {
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .back-button {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .back-button:hover {
+            text-decoration: underline;
+        }
+
+        .order-section {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .order-status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .status-payment-pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-payment-paid {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-shipped {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .status-confirmed {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .status-settlement-released {
+            background: #e0e0e0;
+            color: #424242;
+        }
+
+        .status-cancelled {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status-refunded {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .product-card {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .product-thumbnail {
+            width: 120px;
+            height: 120px;
+            background: #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .product-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .product-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .product-link {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .product-link:hover {
+            background: #5568d3;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .btn-danger:hover {
+            background: #ffcdd2;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .shipping-box {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #1976d2;
+        }
+
+        .shipping-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 12px;
+        }
+
+        .tracking-link {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: #1976d2;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .tracking-link:hover {
+            background: #1565c0;
+        }
+
+        .loading, .error {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 8px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -22px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #667eea;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -16px;
+            top: 17px;
+            width: 2px;
+            height: calc(100% - 12px);
+            background: #e0e0e0;
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .timeline-date {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+
+        .timeline-content {
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 통일된 네비게이션 탭 -->
+        <nav style="background:#fff;border-bottom:2px solid #eee;display:flex;justify-content:center;gap:0;margin-bottom:20px;padding:0 16px;position:sticky;top:0;z-index:100;border-radius:16px">
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/cloth/closet.html">👔 내 옷장</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:600;color:#667eea;border-bottom:3px solid #667eea;text-decoration:none" href="/market.html">🛒 중고거래</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/commu/community.html">💬 커뮤니티</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/weather-with-recommendation.html">🌤️ 날씨</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/user/me.html">👤 내 정보</a>
+        </nav>
+
+        <a href="market-my-orders.html" class="back-button">← 주문 목록으로</a>
+
+        <div id="orderContainer">
+            <div class="order-section">
+                <div class="loading">주문 정보를 불러오는 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 발송 처리 모달 -->
+    <div id="shipModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">📦 발송 처리</h2>
+            <form id="shipForm">
+                <div class="form-group">
+                    <label>택배사 *</label>
+                    <select id="shippingCompany" required>
+                        <option value="">선택하세요</option>
+                        <option value="CJ대한통운">CJ대한통운</option>
+                        <option value="우체국택배">우체국택배</option>
+                        <option value="한진택배">한진택배</option>
+                        <option value="롯데택배">롯데택배</option>
+                        <option value="로젠택배">로젠택배</option>
+                        <option value="GS Postbox">GS Postbox</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>운송장 번호 *</label>
+                    <input type="text" id="trackingNumber" required placeholder="예: 123456789012">
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeShipModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">발송 완료</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 주문 취소 모달 -->
+    <div id="cancelModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">❌ 주문 취소</h2>
+            <form id="cancelForm">
+                <div class="form-group">
+                    <label>취소 사유 *</label>
+                    <textarea id="cancelReason" required placeholder="취소 사유를 입력해주세요"></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeCancelModal()">닫기</button>
+                    <button type="submit" class="btn btn-danger">주문 취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api/v1';
+        let currentOrderId = null;
+        let currentOrder = null;
+        let currentUserId = null;
+
+        function getToken() {
+            return localStorage.getItem('jwt_token');
+        }
+
+        function getUserIdFromToken() {
+            const token = getToken();
+            if (!token) return null;
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload.uid;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentOrderId = urlParams.get('id');
+
+            if (!currentOrderId) {
+                document.getElementById('orderContainer').innerHTML =
+                    '<div class="order-section"><div class="error">주문 ID가 없습니다.</div></div>';
+                return;
+            }
+
+            const token = getToken();
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                location.href = '/login.html';
+                return;
+            }
+
+            currentUserId = getUserIdFromToken();
+            loadOrder();
+        };
+
+        async function loadOrder() {
+            const token = getToken();
+            const container = document.getElementById('orderContainer');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/orders/${currentOrderId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('주문 정보를 불러올 수 없습니다.');
+
+                currentOrder = await response.json();
+                displayOrder(currentOrder);
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="order-section">
+                        <div class="error">❌ ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function displayOrder(order) {
+            const container = document.getElementById('orderContainer');
+
+            const statusClass = `status-${order.orderStatus.toLowerCase().replace('_', '-')}`;
+            const statusText = order.orderStatusName;
+
+            const isBuyer = currentUserId === order.buyerId;
+            const isSeller = currentUserId === order.sellerId;
+
+            console.log('주문 정보:', {
+                orderId: order.orderId,
+                orderStatus: order.orderStatus,
+                isBuyer,
+                isSeller,
+                currentUserId,
+                buyerId: order.buyerId,
+                sellerId: order.sellerId
+            });
+
+            // 액션 버튼
+            let actionsHtml = '';
+
+            if (isBuyer) {
+                // 구매자 액션
+                if (order.orderStatus === 'PAYMENT_PENDING') {
+                    // 결제 대기 - 주문 취소 가능
+                    actionsHtml += `
+                        <button class="btn btn-danger" onclick="showCancelModal()">❌ 주문 취소</button>
+                    `;
+                } else if (order.orderStatus === 'PAYMENT_PAID') {
+                    // 결제 완료 - 환불 요청 가능
+                    actionsHtml += `
+                        <button class="btn btn-danger" onclick="requestRefund()">💰 환불 요청</button>
+                    `;
+                } else if (order.orderStatus === 'SHIPPED') {
+                    // 발송 완료 - 구매 확정 가능
+                    actionsHtml += `
+                        <button class="btn btn-primary" onclick="confirmOrder()">✅ 구매 확정</button>
+                    `;
+                }
+            } else if (isSeller) {
+                // 판매자 액션
+                if (order.orderStatus === 'PAYMENT_PAID') {
+                    // 결제 완료 - 발송 처리 가능
+                    actionsHtml += `
+                        <button class="btn btn-primary" onclick="showShipModal()">📦 발송 처리</button>
+                    `;
+                }
+            }
+
+            // 공통 버튼 (상품 보기는 항상 표시)
+            actionsHtml += `
+                <button class="btn btn-secondary" onclick="window.location.href='market-detail.html?id=${order.productId}'">🛍️ 상품 보기</button>
+            `;
+
+            console.log('생성된 액션 버튼:', actionsHtml);
+
+            // 배송 정보
+            let shippingHtml = '';
+            if (order.orderStatus === 'SHIPPED' || order.orderStatus === 'CONFIRMED' || order.orderStatus === 'SETTLEMENT_RELEASED') {
+                shippingHtml = `
+                    <div class="order-section">
+                        <h2 class="section-title">🚚 배송 정보</h2>
+                        <div class="shipping-box">
+                            <div class="shipping-title">배송 중입니다</div>
+                            <div class="info-grid">
+                                <div class="info-label">택배사</div>
+                                <div class="info-value">${order.shippingCompany || '-'}</div>
+                                <div class="info-label">운송장 번호</div>
+                                <div class="info-value">${order.trackingNumber || '-'}</div>
+                                <div class="info-label">발송일</div>
+                                <div class="info-value">${order.shippedAt ? new Date(order.shippedAt).toLocaleString('ko-KR') : '-'}</div>
+                            </div>
+                            ${order.trackingNumber ? `
+                                <a href="https://tracker.delivery/#/kr.cjlogistics/${order.trackingNumber}"
+                                   target="_blank" class="tracking-link">
+                                    배송 조회하기
+                                </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 타임라인
+            let timelineHtml = '<div class="timeline">';
+            if (order.createdAt) {
+                timelineHtml += `
+                    <div class="timeline-item">
+                        <div class="timeline-date">${new Date(order.createdAt).toLocaleString('ko-KR')}</div>
+                        <div class="timeline-content">주문 생성</div>
+                    </div>
+                `;
+            }
+            if (order.approvedAt) {
+                timelineHtml += `
+                    <div class="timeline-item">
+                        <div class="timeline-date">${new Date(order.approvedAt).toLocaleString('ko-KR')}</div>
+                        <div class="timeline-content">결제 완료</div>
+                    </div>
+                `;
+            }
+            if (order.shippedAt) {
+                timelineHtml += `
+                    <div class="timeline-item">
+                        <div class="timeline-date">${new Date(order.shippedAt).toLocaleString('ko-KR')}</div>
+                        <div class="timeline-content">상품 발송</div>
+                    </div>
+                `;
+            }
+            if (order.confirmedAt) {
+                timelineHtml += `
+                    <div class="timeline-item">
+                        <div class="timeline-date">${new Date(order.confirmedAt).toLocaleString('ko-KR')}</div>
+                        <div class="timeline-content">구매 확정</div>
+                    </div>
+                `;
+            }
+            if (order.refundedAt) {
+                timelineHtml += `
+                    <div class="timeline-item">
+                        <div class="timeline-date">${new Date(order.refundedAt).toLocaleString('ko-KR')}</div>
+                        <div class="timeline-content">환불 완료</div>
+                    </div>
+                `;
+            }
+            timelineHtml += '</div>';
+
+            container.innerHTML = `
+                <div class="order-section">
+                    <h2 class="section-title">📦 주문 정보</h2>
+                    <span class="order-status ${statusClass}">${statusText}</span>
+
+                    <div class="info-grid">
+                        <div class="info-label">주문 번호</div>
+                        <div class="info-value">${order.tossOrderId}</div>
+
+                        <div class="info-label">구매자</div>
+                        <div class="info-value">${order.buyerNickname}</div>
+
+                        <div class="info-label">판매자</div>
+                        <div class="info-value">${order.sellerNickname}</div>
+
+                        <div class="info-label">결제 금액</div>
+                        <div class="info-value" style="font-size:20px;font-weight:700;color:#667eea;">
+                            ${order.orderAmount.toLocaleString()}원
+                        </div>
+
+                        ${order.paymentMethodName ? `
+                            <div class="info-label">결제 수단</div>
+                            <div class="info-value">${order.paymentMethodName}</div>
+                        ` : ''}
+
+                        ${order.approvedAt ? `
+                            <div class="info-label">결제 일시</div>
+                            <div class="info-value">${new Date(order.approvedAt).toLocaleString('ko-KR')}</div>
+                        ` : ''}
+
+                        ${order.cancelReason ? `
+                            <div class="info-label">취소 사유</div>
+                            <div class="info-value" style="color:#c62828;">${order.cancelReason}</div>
+                        ` : ''}
+                    </div>
+
+                    <div class="action-buttons">
+                        ${actionsHtml}
+                    </div>
+                </div>
+
+                <div class="order-section">
+                    <h2 class="section-title">🛍️ 상품 정보</h2>
+                    <div class="product-card">
+                        <div class="product-thumbnail">
+                            ${order.productThumbnail ?
+                                `<img src="${order.productThumbnail}" alt="${order.productTitle}">` :
+                                '이미지 없음'
+                            }
+                        </div>
+                        <div class="product-info">
+                            <div class="product-title">${order.productTitle}</div>
+                            <div class="product-price">${order.orderAmount.toLocaleString()}원</div>
+                            <a href="market-detail.html?id=${order.productId}" class="product-link">
+                                상품 보기
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                ${shippingHtml}
+
+                <div class="order-section">
+                    <h2 class="section-title">📋 주문 히스토리</h2>
+                    ${timelineHtml}
+                </div>
+            `;
+        }
+
+        async function confirmOrder() {
+            if (!confirm('상품을 받으셨나요? 구매를 확정하시겠습니까?')) {
+                return;
+            }
+
+            const token = getToken();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/orders/${currentOrderId}/confirm`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '구매 확정에 실패했습니다.');
+                }
+
+                alert('구매가 확정되었습니다!');
+                loadOrder();
+            } catch (error) {
+                alert(`❌ ${error.message}`);
+            }
+        }
+
+        function showCancelModal() {
+            document.getElementById('cancelModal').classList.add('show');
+        }
+
+        function closeCancelModal() {
+            document.getElementById('cancelModal').classList.remove('show');
+            document.getElementById('cancelForm').reset();
+        }
+
+        document.getElementById('cancelForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const token = getToken();
+            const cancelReason = document.getElementById('cancelReason').value;
+
+            if (!confirm('정말 주문을 취소하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/orders/${currentOrderId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ cancelReason })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '주문 취소에 실패했습니다.');
+                }
+
+                alert('주문이 취소되었습니다.');
+                closeCancelModal();
+                loadOrder();
+            } catch (error) {
+                alert(`❌ ${error.message}`);
+            }
+        });
+
+        async function requestRefund() {
+            const reason = prompt('환불 사유를 입력해주세요:');
+            if (!reason) return;
+
+            const token = getToken();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/payments/${currentOrderId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ cancelReason: reason })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '환불 요청에 실패했습니다.');
+                }
+
+                alert('환불 요청이 완료되었습니다.');
+                loadOrder();
+            } catch (error) {
+                alert(`❌ ${error.message}`);
+            }
+        }
+
+        function showShipModal() {
+            document.getElementById('shipModal').classList.add('show');
+        }
+
+        function closeShipModal() {
+            document.getElementById('shipModal').classList.remove('show');
+            document.getElementById('shipForm').reset();
+        }
+
+        document.getElementById('shipForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const token = getToken();
+            const shippingCompany = document.getElementById('shippingCompany').value;
+            const trackingNumber = document.getElementById('trackingNumber').value;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/orders/${currentOrderId}/ship`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        shippingCompany,
+                        trackingNumber
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '발송 처리에 실패했습니다.');
+                }
+
+                alert('발송 처리가 완료되었습니다!');
+                closeShipModal();
+                loadOrder();
+            } catch (error) {
+                alert(`❌ ${error.message}`);
+            }
+        });
+    </script>
+</body>
+</html>

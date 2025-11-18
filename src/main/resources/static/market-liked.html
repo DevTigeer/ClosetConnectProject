@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>찜한 상품 - ClosetConnect Market</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .header-actions {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            background: white;
+            color: #667eea;
+        }
+
+        .btn:hover {
+            background: #f0f0f0;
+        }
+
+        .products-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .product-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .product-info {
+            padding: 16px;
+        }
+
+        .product-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .product-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .product-meta {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .status-on-sale {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-reserved {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-sold {
+            background: #e0e0e0;
+            color: #616161;
+        }
+
+        .loading, .error, .empty {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 8px;
+        }
+
+        .empty {
+            color: #666;
+        }
+
+        .empty a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 통일된 네비게이션 탭 -->
+        <nav style="background:#fff;border-bottom:2px solid #eee;display:flex;justify-content:center;gap:0;margin-bottom:20px;padding:0 16px;position:sticky;top:0;z-index:100;border-radius:16px">
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/cloth/closet.html">👔 내 옷장</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:600;color:#667eea;border-bottom:3px solid #667eea;text-decoration:none" href="/market.html">🛒 중고거래</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/commu/community.html">💬 커뮤니티</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/weather-with-recommendation.html">🌤️ 날씨</a>
+            <a style="padding:14px 24px;border:none;background:transparent;font-size:15px;font-weight:500;color:#666;border-bottom:3px solid transparent;text-decoration:none" href="/user/me.html">👤 내 정보</a>
+        </nav>
+        <h1>❤️ 찜한 상품</h1>
+
+        <div class="header-actions">
+            <a href="market.html" class="btn">← 목록으로</a>
+        </div>
+
+        <div class="products-section">
+            <div id="productsContainer">
+                <div class="loading">찜한 상품을 불러오는 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api/v1';
+
+        function getToken() {
+            return localStorage.getItem('jwt_token');
+        }
+
+        window.onload = function() {
+            const token = getToken();
+            if (!token) {
+                document.getElementById('productsContainer').innerHTML =
+                    '<div class="error">로그인이 필요합니다.</div>';
+                return;
+            }
+            loadLikedProducts();
+        };
+
+        async function loadLikedProducts() {
+            const token = getToken();
+            const container = document.getElementById('productsContainer');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/market/liked?page=0&size=100`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('찜한 상품을 불러올 수 없습니다.');
+
+                const data = await response.json();
+                displayProducts(data.content);
+            } catch (error) {
+                container.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+            }
+        }
+
+        function displayProducts(products) {
+            const container = document.getElementById('productsContainer');
+
+            if (products.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        찜한 상품이 없습니다.<br><br>
+                        <a href="market.html">상품 둘러보기 →</a>
+                    </div>
+                `;
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'products-grid';
+
+            products.forEach(product => {
+                const card = createProductCard(product);
+                grid.appendChild(card);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(grid);
+        }
+
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.onclick = () => location.href = `market-detail.html?id=${product.id}`;
+
+            const statusClass = `status-${product.status.toLowerCase().replace('_', '-')}`;
+            const statusText = {
+                'ON_SALE': '판매중',
+                'RESERVED': '예약중',
+                'SOLD': '거래완료'
+            }[product.status] || product.status;
+
+            card.innerHTML = `
+                <div class="product-image">
+                    ${product.thumbnailUrl ? `<img src="${product.thumbnailUrl}" style="width:100%;height:100%;object-fit:cover;">` : '이미지 없음'}
+                </div>
+                <div class="product-info">
+                    <div class="product-title">${product.title}</div>
+                    <div class="product-price">${product.price.toLocaleString()}원</div>
+                    <div class="product-meta">
+                        <span>${product.region || '지역미상'}</span>
+                        <span>❤️ ${product.likeCount}</span>
+                    </div>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>
+            `;
+
+            return card;
+        }
+    </script>
+</body>
+</html>
