@@ -215,4 +215,110 @@ export const weatherAPI = {
     }),
 };
 
+// ========== Market Product API ==========
+export const marketAPI = {
+  // 상품 목록 조회
+  list: (params) => api.get('/api/v1/market/products', { params }),
+
+  // 상품 상세 조회
+  getOne: (id) => api.get(`/api/v1/market/products/${id}`),
+
+  // 상품 등록
+  create: (data) => api.post('/api/v1/market/products', data),
+
+  // 상품 수정
+  update: (id, data) => api.patch(`/api/v1/market/products/${id}`, data),
+
+  // 상품 상태 변경
+  changeStatus: (id, status) =>
+    api.patch(`/api/v1/market/products/${id}/status`, { status }),
+
+  // 상품 삭제
+  delete: (id) => api.delete(`/api/v1/market/products/${id}`),
+
+  // 판매자별 상품 목록
+  listBySeller: (sellerId, params) =>
+    api.get(`/api/v1/market/products/seller/${sellerId}`, { params }),
+
+  // 찜하기
+  like: (id) => api.post(`/api/v1/market/products/${id}/like`),
+
+  // 찜 취소
+  unlike: (id) => api.delete(`/api/v1/market/products/${id}/like`),
+
+  // 찜한 상품 목록
+  getLiked: (params) => api.get('/api/v1/market/liked', { params }),
+};
+
+// ========== Market Comment API ==========
+export const marketCommentAPI = {
+  // 댓글 목록
+  list: (productId) => api.get(`/api/v1/market/products/${productId}/comments`),
+
+  // 댓글 작성
+  create: (productId, data) =>
+    api.post(`/api/v1/market/products/${productId}/comments`, data),
+
+  // 댓글 삭제
+  delete: (productId, commentId) =>
+    api.delete(`/api/v1/market/products/${productId}/comments/${commentId}`),
+};
+
+// ========== Market Chat API ==========
+export const marketChatAPI = {
+  // 채팅방 목록
+  listRooms: () => api.get('/api/v1/market/chat/rooms'),
+
+  // 채팅방 생성
+  createRoom: (data) => api.post('/api/v1/market/chat/rooms', data),
+
+  // 채팅 메시지 목록
+  listMessages: (roomId, params) =>
+    api.get(`/api/v1/market/chat/rooms/${roomId}/messages`, { params }),
+
+  // 메시지 전송 (HTTP)
+  sendMessage: (roomId, data) =>
+    api.post(`/api/v1/market/chat/rooms/${roomId}/messages`, data),
+
+  // 읽음 처리
+  markAsRead: (roomId) => api.post(`/api/v1/market/chat/rooms/${roomId}/read`),
+};
+
+// ========== Market Order API ==========
+export const marketOrderAPI = {
+  // 주문 생성
+  create: (data) => api.post('/api/v1/market/orders', data),
+
+  // 주문 상세 조회
+  getOne: (orderId) => api.get(`/api/v1/market/orders/${orderId}`),
+
+  // 내 구매 주문 목록
+  getBuyerOrders: (params) => api.get('/api/v1/market/orders/buyer', { params }),
+
+  // 내 판매 주문 목록
+  getSellerOrders: (params) => api.get('/api/v1/market/orders/seller', { params }),
+
+  // 발송 처리
+  ship: (orderId, data) => api.post(`/api/v1/market/orders/${orderId}/ship`, data),
+
+  // 구매 확정
+  confirm: (orderId) => api.post(`/api/v1/market/orders/${orderId}/confirm`),
+
+  // 주문 취소
+  cancel: (orderId, data) => api.delete(`/api/v1/market/orders/${orderId}`, { data }),
+};
+
+// ========== Custom Request (유연한 API 호출) ==========
+export const customRequest = (method, url, data = null, config = {}) => {
+  return api.request({
+    method,
+    url,
+    data,
+    ...config,
+  });
+};
+
+// marketAPI에 customRequest 추가
+marketAPI.customRequest = customRequest;
+
 export default api;

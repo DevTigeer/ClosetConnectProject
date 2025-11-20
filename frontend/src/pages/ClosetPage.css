@@ -1,90 +1,338 @@
+@import '../styles/variables.css';
+
 .closet-page {
-  min-height: 100%;
+  min-height: 100vh;
+  background-color: var(--bg-light);
 }
 
-.closet-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: #fff;
-  border-bottom: 1px solid #eee;
-  padding: 16px 24px;
+/* ==================== 로그인 유도 UI ==================== */
+.login-prompt-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--spacing-xxl) var(--spacing-lg);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: var(--spacing-xxl);
 }
 
-.closet-header h1 {
+.login-prompt-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: var(--spacing-xxl);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  color: white;
+  box-shadow: var(--shadow-lg);
+}
+
+.login-prompt-icon {
+  font-size: 80px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.login-prompt-title {
+  font-size: var(--font-3xl);
+  font-weight: var(--font-extrabold);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.login-prompt-text {
+  font-size: var(--font-lg);
+  margin: 0 0 var(--spacing-xl) 0;
+  opacity: 0.95;
+  line-height: 1.6;
+}
+
+.login-prompt-buttons {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.login-prompt-buttons .btn-primary {
+  padding: 14px 32px;
+  background-color: white;
+  color: #667eea;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-bold);
+  font-size: var(--font-md);
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+}
+
+.login-prompt-buttons .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.login-prompt-buttons .btn-secondary {
+  padding: 14px 32px;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 2px solid white;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-bold);
+  font-size: var(--font-md);
+  transition: var(--transition);
+  backdrop-filter: blur(10px);
+}
+
+.login-prompt-buttons .btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.login-prompt-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.feature-item {
+  background-color: var(--bg-white);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.feature-item:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.feature-icon {
+  font-size: 40px;
+  flex-shrink: 0;
+}
+
+.feature-item h3 {
+  font-size: var(--font-lg);
+  font-weight: var(--font-bold);
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--text-primary);
+}
+
+.feature-item p {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
   margin: 0;
-  font-size: 24px;
-  font-weight: 700;
+  line-height: 1.5;
 }
 
-.header-buttons {
+/* ==================== 페이지 헤더 ==================== */
+.page-header {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
 }
 
-.btn {
-  padding: 10px 16px;
-  border: 1px solid #ddd;
-  background: #fff;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
+.header-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-semibold);
+  font-size: var(--font-base);
+  transition: var(--transition);
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn:hover {
-  background: #f6f6f6;
+  border: none;
 }
 
 .btn-primary {
-  background: #222;
-  color: #fff;
-  border-color: #222;
+  background-color: var(--primary-color);
+  color: white;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-  background: #444;
+  background-color: var(--primary-hover);
+  box-shadow: var(--shadow-md);
 }
 
-.closet-content {
-  padding: 24px;
+.btn-secondary {
+  background-color: var(--bg-white);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
-.loading {
-  padding: 48px;
+.btn-secondary:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-dark);
+}
+
+.btn-secondary.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* ==================== 로딩 상태 ==================== */
+.loading-state {
   text-align: center;
-  color: #888;
+  padding: var(--spacing-xxl);
 }
 
-/* 카테고리 섹션 */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-light);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto var(--spacing-md);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-state p {
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ==================== 카테고리 섹션 ==================== */
 .category-section {
-  margin-bottom: 40px;
+  margin-bottom: var(--spacing-xxl);
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--border-color);
 }
 
 .category-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 16px 4px;
-  color: #222;
+  font-size: var(--font-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.category-count {
+  font-size: var(--font-sm);
+  color: var(--text-tertiary);
+  background-color: var(--bg-hover);
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-medium);
 }
 
 .cloth-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--spacing-lg);
 }
 
+/* ==================== 빈 상태 ==================== */
 .empty-state {
-  padding: 80px 24px;
   text-align: center;
+  padding: var(--spacing-xxl);
+  background-color: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
-.empty-state p {
-  color: #888;
-  margin-bottom: 16px;
-  font-size: 15px;
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.5;
+}
+
+.empty-title {
+  font-size: var(--font-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.empty-text {
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-xl) 0;
+  line-height: 1.6;
+}
+
+/* ==================== 반응형 ==================== */
+@media (max-width: 992px) {
+  .cloth-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--spacing-md);
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    flex: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-prompt-container {
+    padding: var(--spacing-lg);
+  }
+
+  .login-prompt-card {
+    padding: var(--spacing-lg);
+  }
+
+  .login-prompt-title {
+    font-size: var(--font-2xl);
+  }
+
+  .login-prompt-text {
+    font-size: var(--font-base);
+  }
+
+  .login-prompt-features {
+    grid-template-columns: 1fr;
+  }
+
+  .cloth-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--spacing-sm);
+  }
+
+  .category-title {
+    font-size: var(--font-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .login-prompt-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .login-prompt-buttons button {
+    width: 100%;
+  }
+
+  .cloth-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

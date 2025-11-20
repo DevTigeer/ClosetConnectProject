@@ -1,57 +1,151 @@
+@import '../styles/variables.css';
+
 .cloth-card {
-  border: 1px solid #eee;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-white);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: var(--transition);
   position: relative;
   overflow: hidden;
 }
 
 .cloth-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .cloth-card.delete-mode {
   cursor: default;
 }
 
+.cloth-card.selected {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
 .cloth-checkbox {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 20px;
-  height: 20px;
+  top: 12px;
+  left: 12px;
+  width: 24px;
+  height: 24px;
   cursor: pointer;
-  z-index: 5;
+  z-index: 10;
+  accent-color: var(--primary-color);
+}
+
+/* ==================== 이미지 영역 ==================== */
+.cloth-image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
 }
 
 .cloth-image {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  height: 100%;
   object-fit: cover;
-  background: #f0f0f0;
+  background: var(--bg-light);
+  transition: var(--transition);
 }
 
-.cloth-meta {
-  padding: 10px 12px;
+.cloth-card:hover .cloth-image {
+  transform: scale(1.05);
+}
+
+/* ==================== 오버레이 (중고거래 버튼) ==================== */
+.cloth-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  padding: var(--spacing-md);
 }
 
-.cloth-name {
-  font-weight: 500;
-  color: #222;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.cloth-card:hover .cloth-overlay {
+  opacity: 1;
+}
+
+.cloth-sell-btn {
+  padding: 10px 20px;
+  background-color: white;
+  color: var(--text-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-semibold);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
   white-space: nowrap;
 }
 
+.cloth-sell-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+  transform: scale(1.05);
+}
+
+/* ==================== 메타 정보 ==================== */
+.cloth-meta {
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+  border-top: 1px solid var(--border-light);
+}
+
+.cloth-name {
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
 .cloth-category {
-  color: #888;
-  font-size: 11px;
+  color: var(--text-tertiary);
+  font-size: var(--font-xs);
+  font-weight: var(--font-medium);
+  background-color: var(--bg-light);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+/* ==================== 반응형 ==================== */
+@media (max-width: 768px) {
+  .cloth-sell-btn {
+    font-size: var(--font-xs);
+    padding: 8px 16px;
+  }
+
+  .cloth-meta {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cloth-overlay {
+    opacity: 1;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+    align-items: flex-end;
+    justify-content: stretch;
+  }
+
+  .cloth-sell-btn {
+    width: 100%;
+    font-size: 11px;
+    padding: 6px 12px;
+  }
 }

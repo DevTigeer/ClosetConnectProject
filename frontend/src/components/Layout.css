@@ -1,11 +1,53 @@
+@import '../styles/variables.css';
+
 .layout {
   display: flex;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  background-color: var(--bg-light);
 }
 
 .main-content {
   flex: 1;
-  overflow-y: auto;
-  background: #fafafa;
+  min-width: 0;
+  background: var(--bg-light);
+  overflow-x: hidden;
+}
+
+/* ==================== 공통 페이지 컨테이너 ==================== */
+.page-container {
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-lg);
+}
+
+.page-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.page-title {
+  font-size: var(--font-3xl);
+  font-weight: var(--font-extrabold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.page-subtitle {
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ==================== 반응형 ==================== */
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .page-container {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .page-title {
+    font-size: var(--font-2xl);
+  }
 }

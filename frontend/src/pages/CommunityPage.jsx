@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { boardAPI } from '../services/api';
 import './CommunityPage.css';
 
 function CommunityPage() {
+  const navigate = useNavigate();
   const [boards, setBoards] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -12,7 +13,13 @@ function CommunityPage() {
       setLoading(true);
       try {
         const response = await boardAPI.listPublic();
-        setBoards(response.data || []);
+        const boardList = response.data || [];
+        setBoards(boardList);
+
+        // 게시판이 있으면 첫 번째 게시판(자유게시판)으로 리다이렉트
+        if (boardList.length > 0) {
+          navigate(`/community/${boardList[0].slug}`, { replace: true });
+        }
       } catch (err) {
         console.error(err);
         alert('보드 목록을 불러오는데 실패했습니다.');
@@ -22,7 +29,7 @@ function CommunityPage() {
     };
 
     fetchBoards();
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="community-page">
