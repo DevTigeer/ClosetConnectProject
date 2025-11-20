@@ -2,6 +2,7 @@ package com.tigger.closetconnectproject.Market.Service;
 
 import com.tigger.closetconnectproject.Market.Dto.OrderDtos;
 import com.tigger.closetconnectproject.Market.Entity.*;
+import com.tigger.closetconnectproject.Market.Repository.MarketProductImageRepository;
 import com.tigger.closetconnectproject.Market.Repository.OrderRepository;
 import com.tigger.closetconnectproject.User.Entity.Users;
 import com.tigger.closetconnectproject.User.Repository.UsersRepository;
@@ -29,6 +30,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UsersRepository usersRepository;
     private final MarketProductService productService;
+    private final MarketProductImageRepository imageRepository;
     private final ChatService chatService;
 
     /**
@@ -39,8 +41,6 @@ public class OrderService {
      * @return 주문 생성 응답 (토스 결제창 호출에 필요한 정보)
      */
     public OrderDtos.CreateResponse createOrder(Long buyerId, OrderDtos.CreateRequest request) {
-        log.info("[주문생성 시작] 구매자ID={}, 상품ID={}", buyerId, request.productId());
-
         // 1. 구매자 조회
         Users buyer = usersRepository.findById(buyerId)
                 .orElseThrow(() -> new IllegalArgumentException("구매자를 찾을 수 없습니다."));
@@ -87,10 +87,6 @@ public class OrderService {
 
         orderRepository.save(order);
 
-        log.info("[주문생성 완료] DB주문ID={}, 주문번호={}, 구매자={}, 판매자={}, 금액={}, 상품명={}",
-                order.getId(), tossOrderId, buyer.getNickname(), seller.getNickname(),
-                product.getPrice(), product.getTitle());
-
         return OrderDtos.CreateResponse.builder()
                 .orderId(order.getId())
                 .tossOrderId(tossOrderId)
@@ -113,7 +109,10 @@ public class OrderService {
             throw new IllegalArgumentException("주문 참여자만 조회할 수 있습니다.");
         }
 
-        return OrderDtos.DetailResponse.from(order);
+        // 상품 썸네일 조회
+        String thumbnail = getProductThumbnail(order.getProduct().getId());
+
+        return OrderDtos.DetailResponse.from(order, thumbnail);
     }
 
     /**
@@ -123,7 +122,10 @@ public class OrderService {
     public Page<OrderDtos.ListResponse> getBuyerOrders(Long buyerId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Order> orders = orderRepository.findByBuyer_UserId(buyerId, pageable);
-        return orders.map(OrderDtos.ListResponse::from);
+        return orders.map(order -> {
+            String thumbnail = getProductThumbnail(order.getProduct().getId());
+            return OrderDtos.ListResponse.from(order, thumbnail);
+        });
     }
 
     /**
@@ -133,7 +135,21 @@ public class OrderService {
     public Page<OrderDtos.ListResponse> getSellerOrders(Long sellerId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Order> orders = orderRepository.findBySeller_UserId(sellerId, pageable);
-        return orders.map(OrderDtos.ListResponse::from);
+        return orders.map(order -> {
+            String thumbnail = getProductThumbnail(order.getProduct().getId());
+            return OrderDtos.ListResponse.from(order, thumbnail);
+        });
+    }
+
+    /**
+     * 상품 썸네일 조회 (첫 번째 이미지)
+     */
+    private String getProductThumbnail(Long productId) {
+        return imageRepository.findByMarketProduct_IdOrderByOrderIndexAsc(productId)
+                .stream()
+                .findFirst()
+                .map(MarketProductImage::getImageUrl)
+                .orElse(null);
     }
 
     /**
@@ -145,14 +161,8 @@ public class OrderService {
      * @return 발송 응답
      */
     public OrderDtos.ShipResponse shipOrder(Long orderId, Long sellerId, OrderDtos.ShipRequest request) {
-        log.info("[발송처리 시작] DB주문ID={}, 판매자ID={}, 택배사={}, 운송장번호={}",
-                orderId, sellerId, request.shippingCompany(), request.trackingNumber());
-
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
-
-        log.info("[주문정보] DB주문ID={}, 주문번호={}, 주문상태={}",
-                order.getId(), order.getTossOrderId(), order.getOrderStatus());
 
         // 권한 확인 (판매자만)
         if (!order.isSeller(sellerId)) {
@@ -167,9 +177,6 @@ public class OrderService {
                 order.getProduct().getId(),
                 "판매자가 상품을 발송했습니다. 운송장번호: " + request.trackingNumber()
         );
-
-        log.info("[발송처리 완료] DB주문ID={}, 주문번호={}, 택배사={}, 운송장번호={}",
-                orderId, order.getTossOrderId(), request.shippingCompany(), request.trackingNumber());
 
         return OrderDtos.ShipResponse.builder()
                 .orderId(order.getId())
@@ -188,13 +195,8 @@ public class OrderService {
      * @return 구매 확정 응답
      */
     public OrderDtos.ConfirmResponse confirmOrder(Long orderId, Long buyerId) {
-        log.info("[구매확정 시작] DB주문ID={}, 구매자ID={}", orderId, buyerId);
-
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
-
-        log.info("[주문정보] DB주문ID={}, 주문번호={}, 주문상태={}, 결제금액={}",
-                order.getId(), order.getTossOrderId(), order.getOrderStatus(), order.getOrderAmount());
 
         // 권한 확인 (구매자만)
         if (!order.isBuyer(buyerId)) {
@@ -220,9 +222,6 @@ public class OrderService {
                 "구매자가 구매를 확정했습니다. 거래가 완료되었습니다."
         );
 
-        log.info("[구매확정 완료] DB주문ID={}, 주문번호={}, 정산완료",
-                orderId, order.getTossOrderId());
-
         return OrderDtos.ConfirmResponse.builder()
                 .orderId(order.getId())
                 .orderStatus(order.getOrderStatus())
@@ -234,13 +233,8 @@ public class OrderService {
      * 주문 취소 (결제 전)
      */
     public OrderDtos.CancelResponse cancelOrder(Long orderId, Long userId, String cancelReason) {
-        log.info("[주문취소 시작] DB주문ID={}, 사용자ID={}, 취소사유={}", orderId, userId, cancelReason);
-
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
-
-        log.info("[주문정보] DB주문ID={}, 주문번호={}, 주문상태={}",
-                order.getId(), order.getTossOrderId(), order.getOrderStatus());
 
         // 권한 확인
         if (!order.isParticipant(userId)) {
@@ -249,8 +243,6 @@ public class OrderService {
 
         // 취소 처리
         order.cancel(cancelReason);
-
-        log.info("[주문취소 완료] DB주문ID={}, 주문번호={}", orderId, order.getTossOrderId());
 
         return OrderDtos.CancelResponse.builder()
                 .orderId(order.getId())

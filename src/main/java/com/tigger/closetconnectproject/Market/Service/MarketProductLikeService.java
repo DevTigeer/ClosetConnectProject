@@ -2,9 +2,8 @@ package com.tigger.closetconnectproject.Market.Service;
 
 import com.tigger.closetconnectproject.Market.Dto.MarketProductDtos;
 import com.tigger.closetconnectproject.Market.Dto.MarketProductLikeDtos;
-import com.tigger.closetconnectproject.Market.Entity.MarketProduct;
-import com.tigger.closetconnectproject.Market.Entity.MarketProductImage;
-import com.tigger.closetconnectproject.Market.Entity.MarketProductLike;
+import com.tigger.closetconnectproject.Market.Entity.*;
+import com.tigger.closetconnectproject.Market.Repository.MarketProductCommentRepository;
 import com.tigger.closetconnectproject.Market.Repository.MarketProductImageRepository;
 import com.tigger.closetconnectproject.Market.Repository.MarketProductLikeRepository;
 import com.tigger.closetconnectproject.Market.Repository.MarketProductRepository;
@@ -31,6 +30,7 @@ public class MarketProductLikeService {
     private final MarketProductLikeRepository likeRepo;
     private final MarketProductRepository productRepo;
     private final MarketProductImageRepository imageRepo;
+    private final MarketProductCommentRepository commentRepo;
     private final UsersRepository userRepo;
 
     /**
@@ -97,20 +97,24 @@ public class MarketProductLikeService {
 
         Page<MarketProductLike> likes = likeRepo.findByUser_UserIdWithProduct(userId, pageable);
 
-        // 각 상품의 찜 개수 및 썸네일 조회
+        // 각 상품의 찜 개수, 댓글 개수, 이미지 URL 조회
         Map<Long, Long> likeCountMap = new HashMap<>();
-        Map<Long, String> thumbnailMap = new HashMap<>();
+        Map<Long, Integer> commentCountMap = new HashMap<>();
+        Map<Long, String> imageUrlMap = new HashMap<>();
 
         for (MarketProductLike like : likes.getContent()) {
             MarketProduct product = like.getMarketProduct();
             Long productId = product.getId();
 
-            long count = likeRepo.countByMarketProduct_Id(productId);
-            likeCountMap.put(productId, count);
+            long likeCount = likeRepo.countByMarketProduct_Id(productId);
+            likeCountMap.put(productId, likeCount);
+
+            int commentCount = (int) commentRepo.countByMarketProduct_IdAndStatus(productId, CommentStatus.ACTIVE);
+            commentCountMap.put(productId, commentCount);
 
             List<MarketProductImage> images = imageRepo.findByMarketProduct_IdOrderByOrderIndexAsc(productId);
             if (!images.isEmpty()) {
-                thumbnailMap.put(productId, images.get(0).getImageUrl());
+                imageUrlMap.put(productId, images.get(0).getImageUrl());
             }
         }
 
@@ -118,8 +122,9 @@ public class MarketProductLikeService {
             MarketProduct p = like.getMarketProduct();
             return MarketProductDtos.ProductListRes.of(
                     p,
-                    thumbnailMap.get(p.getId()),
-                    likeCountMap.getOrDefault(p.getId(), 0L)
+                    imageUrlMap.get(p.getId()),
+                    likeCountMap.getOrDefault(p.getId(), 0L),
+                    commentCountMap.getOrDefault(p.getId(), 0)
             );
         });
     }

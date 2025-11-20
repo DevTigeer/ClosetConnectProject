@@ -78,13 +78,13 @@ public class OrderDtos {
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
-        public static DetailResponse from(Order order) {
+        public static DetailResponse from(Order order, String productThumbnail) {
             return DetailResponse.builder()
                     .orderId(order.getId())
                     .tossOrderId(order.getTossOrderId())
                     .productId(order.getProduct().getId())
                     .productTitle(order.getProduct().getTitle())
-                    .productThumbnail(null)  // TODO: 썸네일 조회 필요
+                    .productThumbnail(productThumbnail)
                     .buyerId(order.getBuyer().getUserId())
                     .buyerNickname(order.getBuyer().getNickname())
                     .sellerId(order.getSeller().getUserId())
@@ -122,18 +122,35 @@ public class OrderDtos {
             Integer orderAmount,
             OrderStatus orderStatus,
             String orderStatusName,
+
+            // 구매자/판매자 정보 추가
+            Long buyerId,
+            String buyerNickname,
+            Long sellerId,
+            String sellerNickname,
+
+            // 배송 정보 추가
+            String shippingCompany,
+            String trackingNumber,
+
             LocalDateTime createdAt
     ) {
-        public static ListResponse from(Order order) {
+        public static ListResponse from(Order order, String productThumbnail) {
             return ListResponse.builder()
                     .orderId(order.getId())
                     .tossOrderId(order.getTossOrderId())
                     .productId(order.getProduct().getId())
                     .productTitle(order.getProduct().getTitle())
-                    .productThumbnail(null)  // TODO: 썸네일 조회
+                    .productThumbnail(productThumbnail)
                     .orderAmount(order.getOrderAmount())
                     .orderStatus(order.getOrderStatus())
                     .orderStatusName(order.getOrderStatus().getKoreanName())
+                    .buyerId(order.getBuyer().getUserId())
+                    .buyerNickname(order.getBuyer().getNickname())
+                    .sellerId(order.getSeller().getUserId())
+                    .sellerNickname(order.getSeller().getNickname())
+                    .shippingCompany(order.getShippingCompany())
+                    .trackingNumber(order.getTrackingNumber())
                     .createdAt(order.getCreatedAt())
                     .build();
         }

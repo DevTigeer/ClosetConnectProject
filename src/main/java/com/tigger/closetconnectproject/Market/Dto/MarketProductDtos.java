@@ -94,26 +94,28 @@ public class MarketProductDtos {
      */
     @Getter @Builder
     public static class ProductListRes {
-        private Long id;
+        private Long productId;  // id → productId로 변경
         private String title;
         private Integer price;
         private ProductStatus status;
-        private String thumbnailUrl;  // 대표 이미지
+        private String imageUrl;  // thumbnailUrl → imageUrl로 변경 (프론트엔드와 일치)
         private String region;
         private Long likeCount;
         private Integer viewCount;
+        private Integer commentCount;  // 댓글 수 추가
         private LocalDateTime createdAt;
 
-        public static ProductListRes of(MarketProduct p, String thumbnailUrl, Long likeCount) {
+        public static ProductListRes of(MarketProduct p, String imageUrl, Long likeCount, Integer commentCount) {
             return ProductListRes.builder()
-                    .id(p.getId())
+                    .productId(p.getId())
                     .title(p.getTitle())
                     .price(p.getPrice())
                     .status(p.getStatus())
-                    .thumbnailUrl(thumbnailUrl)
+                    .imageUrl(imageUrl)
                     .region(p.getRegion())
                     .likeCount(likeCount)
                     .viewCount(p.getViewCount())
+                    .commentCount(commentCount)
                     .createdAt(p.getCreatedAt())
                     .build();
         }
@@ -124,7 +126,7 @@ public class MarketProductDtos {
      */
     @Getter @Builder
     public static class ProductDetailRes {
-        private Long id;
+        private Long productId;  // id → productId로 변경
         private String title;
         private Integer price;
         private String description;
@@ -136,16 +138,21 @@ public class MarketProductDtos {
         private String gender;
         private Integer viewCount;
         private Long likeCount;
+        private Integer commentCount;  // 댓글 수 추가
         private boolean liked;  // 현재 사용자가 찜했는지 여부
+        private boolean isMine;  // 내 상품인지 여부 추가
 
         // 판매자 정보
-        private SellerInfo seller;
+        private String sellerNickname;  // seller 객체 대신 직접 nickname 노출
+        private Long sellerId;
 
         // 옷장 아이템 정보
         private Long clothId;
         private String clothName;
         private String clothCategory;
 
+        // 이미지 URL (대표 이미지)
+        private String imageUrl;
         // 이미지 목록
         private List<ImageRes> images;
 
@@ -155,11 +162,14 @@ public class MarketProductDtos {
         public static ProductDetailRes of(
                 MarketProduct p,
                 Long likeCount,
+                Integer commentCount,
                 boolean liked,
-                List<ImageRes> images
+                boolean isMine,
+                List<ImageRes> images,
+                Long viewerId
         ) {
             return ProductDetailRes.builder()
-                    .id(p.getId())
+                    .productId(p.getId())
                     .title(p.getTitle())
                     .price(p.getPrice())
                     .description(p.getDescription())
@@ -171,14 +181,15 @@ public class MarketProductDtos {
                     .gender(p.getGender())
                     .viewCount(p.getViewCount())
                     .likeCount(likeCount)
+                    .commentCount(commentCount)
                     .liked(liked)
-                    .seller(SellerInfo.builder()
-                            .userId(p.getSeller().getUserId())
-                            .nickname(p.getSeller().getNickname())
-                            .build())
+                    .isMine(isMine)
+                    .sellerNickname(p.getSeller().getNickname())
+                    .sellerId(p.getSeller().getUserId())
                     .clothId(p.getCloth().getId())
                     .clothName(p.getCloth().getName())
                     .clothCategory(p.getCloth().getCategory().name())
+                    .imageUrl(images.isEmpty() ? null : images.get(0).getImageUrl())  // 대표 이미지 추가
                     .images(images)
                     .createdAt(p.getCreatedAt())
                     .updatedAt(p.getUpdatedAt())

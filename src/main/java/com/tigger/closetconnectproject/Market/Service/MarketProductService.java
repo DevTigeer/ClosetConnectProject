@@ -4,6 +4,7 @@ import com.tigger.closetconnectproject.Closet.Entity.Cloth;
 import com.tigger.closetconnectproject.Closet.Repository.ClothRepository;
 import com.tigger.closetconnectproject.Market.Dto.MarketProductDtos;
 import com.tigger.closetconnectproject.Market.Entity.*;
+import com.tigger.closetconnectproject.Market.Repository.MarketProductCommentRepository;
 import com.tigger.closetconnectproject.Market.Repository.MarketProductImageRepository;
 import com.tigger.closetconnectproject.Market.Repository.MarketProductLikeRepository;
 import com.tigger.closetconnectproject.Market.Repository.MarketProductRepository;
@@ -29,6 +30,7 @@ public class MarketProductService {
     private final MarketProductRepository productRepo;
     private final MarketProductImageRepository imageRepo;
     private final MarketProductLikeRepository likeRepo;
+    private final MarketProductCommentRepository commentRepo;
     private final ClothRepository clothRepo;
     private final UsersRepository userRepo;
     private final ChatService chatService;
@@ -128,19 +130,27 @@ public class MarketProductService {
             likeCountMap.put(productId, count);
         }
 
+        // 각 상품의 댓글 개수 조회
+        Map<Long, Integer> commentCountMap = new HashMap<>();
+        for (Long productId : productIds) {
+            long count = commentRepo.countByMarketProduct_IdAndStatus(productId, CommentStatus.ACTIVE);
+            commentCountMap.put(productId, (int) count);
+        }
+
         // 각 상품의 대표 이미지 조회
-        Map<Long, String> thumbnailMap = new HashMap<>();
+        Map<Long, String> imageUrlMap = new HashMap<>();
         for (Long productId : productIds) {
             List<MarketProductImage> images = imageRepo.findByMarketProduct_IdOrderByOrderIndexAsc(productId);
             if (!images.isEmpty()) {
-                thumbnailMap.put(productId, images.get(0).getImageUrl());
+                imageUrlMap.put(productId, images.get(0).getImageUrl());
             }
         }
 
         return products.map(p -> MarketProductDtos.ProductListRes.of(
                 p,
-                thumbnailMap.get(p.getId()),
-                likeCountMap.getOrDefault(p.getId(), 0L)
+                imageUrlMap.get(p.getId()),
+                likeCountMap.getOrDefault(p.getId(), 0L),
+                commentCountMap.getOrDefault(p.getId(), 0)
         ));
     }
 
@@ -159,6 +169,12 @@ public class MarketProductService {
         long likeCount = likeRepo.countByMarketProduct_Id(productId);
         boolean liked = viewerId != null && likeRepo.existsByMarketProduct_IdAndUser_UserId(productId, viewerId);
 
+        // 댓글 개수 조회
+        int commentCount = (int) commentRepo.countByMarketProduct_IdAndStatus(productId, CommentStatus.ACTIVE);
+
+        // 내 상품인지 확인
+        boolean isMine = viewerId != null && product.getSeller().getUserId().equals(viewerId);
+
         // 이미지 목록 조회
         List<MarketProductImage> images = imageRepo.findByMarketProduct_IdOrderByOrderIndexAsc(productId);
         List<MarketProductDtos.ImageRes> imageResList = images.stream()
@@ -169,7 +185,7 @@ public class MarketProductService {
                         .build())
                 .collect(Collectors.toList());
 
-        return MarketProductDtos.ProductDetailRes.of(product, likeCount, liked, imageResList);
+        return MarketProductDtos.ProductDetailRes.of(product, likeCount, commentCount, liked, isMine, imageResList, viewerId);
     }
 
     /**
@@ -265,24 +281,29 @@ public class MarketProductService {
 
         Page<MarketProduct> products = productRepo.findBySeller_UserId(sellerId, pageable);
 
-        // 찜 개수 및 썸네일 조회
+        // 찜 개수, 댓글 개수, 이미지 URL 조회
         Map<Long, Long> likeCountMap = new HashMap<>();
-        Map<Long, String> thumbnailMap = new HashMap<>();
+        Map<Long, Integer> commentCountMap = new HashMap<>();
+        Map<Long, String> imageUrlMap = new HashMap<>();
 
         for (MarketProduct p : products.getContent()) {
-            long count = likeRepo.countByMarketProduct_Id(p.getId());
-            likeCountMap.put(p.getId(), count);
+            long likeCount = likeRepo.countByMarketProduct_Id(p.getId());
+            likeCountMap.put(p.getId(), likeCount);
+
+            int commentCount = (int) commentRepo.countByMarketProduct_IdAndStatus(p.getId(), CommentStatus.ACTIVE);
+            commentCountMap.put(p.getId(), commentCount);
 
             List<MarketProductImage> images = imageRepo.findByMarketProduct_IdOrderByOrderIndexAsc(p.getId());
             if (!images.isEmpty()) {
-                thumbnailMap.put(p.getId(), images.get(0).getImageUrl());
+                imageUrlMap.put(p.getId(), images.get(0).getImageUrl());
             }
         }
 
         return products.map(p -> MarketProductDtos.ProductListRes.of(
                 p,
-                thumbnailMap.get(p.getId()),
-                likeCountMap.getOrDefault(p.getId(), 0L)
+                imageUrlMap.get(p.getId()),
+                likeCountMap.getOrDefault(p.getId(), 0L),
+                commentCountMap.getOrDefault(p.getId(), 0)
         ));
     }
 
