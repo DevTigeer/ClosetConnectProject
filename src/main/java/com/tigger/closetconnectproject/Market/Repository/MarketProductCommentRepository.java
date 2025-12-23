@@ -4,7 +4,9 @@ import com.tigger.closetconnectproject.Market.Entity.CommentStatus;
 import com.tigger.closetconnectproject.Market.Entity.MarketProductComment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -14,8 +16,9 @@ import java.util.List;
 public interface MarketProductCommentRepository extends JpaRepository<MarketProductComment, Long> {
 
     /**
-     * 상품의 댓글 목록 조회 (활성 상태만, 생성일 순)
+     * 상품의 댓글 목록 조회 (활성 상태만, 생성일 순, N+1 방지)
      */
+    @EntityGraph(attributePaths = {"author"})
     Page<MarketProductComment> findByMarketProduct_IdAndStatusOrderByCreatedAtAsc(
             Long marketProductId,
             CommentStatus status,
@@ -31,4 +34,16 @@ public interface MarketProductCommentRepository extends JpaRepository<MarketProd
      * 상품의 활성 댓글 개수
      */
     long countByMarketProduct_IdAndStatus(Long marketProductId, CommentStatus status);
+
+    /**
+     * 여러 상품의 활성 댓글 개수 조회 (N+1 방지)
+     */
+    @Query("""
+        SELECT c.marketProduct.id, COUNT(c)
+        FROM MarketProductComment c
+        WHERE c.marketProduct.id IN :productIds
+        AND c.status = :status
+        GROUP BY c.marketProduct.id
+        """)
+    List<Object[]> countByMarketProduct_IdInAndStatus(List<Long> productIds, CommentStatus status);
 }

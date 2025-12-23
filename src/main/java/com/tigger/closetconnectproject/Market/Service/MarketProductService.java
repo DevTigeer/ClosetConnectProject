@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MarketProductService {
 
     private final MarketProductRepository productRepo;
@@ -38,6 +37,7 @@ public class MarketProductService {
     /**
      * 상품 등록
      */
+    @Transactional
     public MarketProductDtos.ProductDetailRes create(Long sellerId, MarketProductDtos.CreateReq req) {
         // 판매자 조회
         Users seller = userRepo.findById(sellerId)
@@ -123,28 +123,30 @@ public class MarketProductService {
                 .map(MarketProduct::getId)
                 .collect(Collectors.toList());
 
-        // 각 상품의 찜 개수 조회
-        Map<Long, Long> likeCountMap = new HashMap<>();
-        for (Long productId : productIds) {
-            long count = likeRepo.countByMarketProduct_Id(productId);
-            likeCountMap.put(productId, count);
-        }
+        // N+1 방지: 한 번의 쿼리로 모든 상품의 찜 개수 조회
+        Map<Long, Long> likeCountMap = likeRepo.countByMarketProduct_IdIn(productIds).stream()
+                .collect(Collectors.toMap(
+                        arr -> (Long) arr[0],
+                        arr -> (Long) arr[1]
+                ));
 
-        // 각 상품의 댓글 개수 조회
-        Map<Long, Integer> commentCountMap = new HashMap<>();
-        for (Long productId : productIds) {
-            long count = commentRepo.countByMarketProduct_IdAndStatus(productId, CommentStatus.ACTIVE);
-            commentCountMap.put(productId, (int) count);
-        }
+        // N+1 방지: 한 번의 쿼리로 모든 상품의 댓글 개수 조회
+        Map<Long, Integer> commentCountMap = commentRepo
+                .countByMarketProduct_IdInAndStatus(productIds, CommentStatus.ACTIVE).stream()
+                .collect(Collectors.toMap(
+                        arr -> (Long) arr[0],
+                        arr -> ((Long) arr[1]).intValue()
+                ));
 
-        // 각 상품의 대표 이미지 조회
-        Map<Long, String> imageUrlMap = new HashMap<>();
-        for (Long productId : productIds) {
-            List<MarketProductImage> images = imageRepo.findByMarketProduct_IdOrderByOrderIndexAsc(productId);
-            if (!images.isEmpty()) {
-                imageUrlMap.put(productId, images.get(0).getImageUrl());
-            }
-        }
+        // N+1 방지: 한 번의 쿼리로 모든 상품의 이미지 조회
+        Map<Long, String> imageUrlMap = imageRepo.findByMarketProduct_IdIn(productIds).stream()
+                .collect(Collectors.groupingBy(
+                        img -> img.getMarketProduct().getId(),
+                        Collectors.collectingAndThen(
+                                Collectors.minBy(Comparator.comparing(MarketProductImage::getOrderIndex)),
+                                opt -> opt.map(MarketProductImage::getImageUrl).orElse(null)
+                        )
+                ));
 
         return products.map(p -> MarketProductDtos.ProductListRes.of(
                 p,
@@ -191,6 +193,7 @@ public class MarketProductService {
     /**
      * 조회수 증가 (별도 트랜잭션)
      */
+    @Transactional
     public void incrementViewCount(Long productId) {
         MarketProduct product = productRepo.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
@@ -200,6 +203,7 @@ public class MarketProductService {
     /**
      * 상품 수정
      */
+    @Transactional
     public MarketProductDtos.ProductDetailRes update(Long productId, Long userId, MarketProductDtos.UpdateReq req) {
         MarketProduct product = productRepo.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
@@ -227,6 +231,7 @@ public class MarketProductService {
     /**
      * 상품 상태 변경 (판매중 -> 예약중 -> 거래완료)
      */
+    @Transactional
     public MarketProductDtos.ProductDetailRes changeStatus(Long productId, Long userId, ProductStatus newStatus) {
         MarketProduct product = productRepo.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
@@ -255,6 +260,7 @@ public class MarketProductService {
     /**
      * 상품 삭제
      */
+    @Transactional
     public void delete(Long productId, Long userId) {
         MarketProduct product = productRepo.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
@@ -281,23 +287,35 @@ public class MarketProductService {
 
         Page<MarketProduct> products = productRepo.findBySeller_UserId(sellerId, pageable);
 
-        // 찜 개수, 댓글 개수, 이미지 URL 조회
-        Map<Long, Long> likeCountMap = new HashMap<>();
-        Map<Long, Integer> commentCountMap = new HashMap<>();
-        Map<Long, String> imageUrlMap = new HashMap<>();
+        // 상품 ID 목록 추출
+        List<Long> productIds = products.getContent().stream()
+                .map(MarketProduct::getId)
+                .collect(Collectors.toList());
 
-        for (MarketProduct p : products.getContent()) {
-            long likeCount = likeRepo.countByMarketProduct_Id(p.getId());
-            likeCountMap.put(p.getId(), likeCount);
+        // N+1 방지: 한 번의 쿼리로 모든 상품의 찜 개수 조회
+        Map<Long, Long> likeCountMap = likeRepo.countByMarketProduct_IdIn(productIds).stream()
+                .collect(Collectors.toMap(
+                        arr -> (Long) arr[0],
+                        arr -> (Long) arr[1]
+                ));
 
-            int commentCount = (int) commentRepo.countByMarketProduct_IdAndStatus(p.getId(), CommentStatus.ACTIVE);
-            commentCountMap.put(p.getId(), commentCount);
+        // N+1 방지: 한 번의 쿼리로 모든 상품의 댓글 개수 조회
+        Map<Long, Integer> commentCountMap = commentRepo
+                .countByMarketProduct_IdInAndStatus(productIds, CommentStatus.ACTIVE).stream()
+                .collect(Collectors.toMap(
+                        arr -> (Long) arr[0],
+                        arr -> ((Long) arr[1]).intValue()
+                ));
 
-            List<MarketProductImage> images = imageRepo.findByMarketProduct_IdOrderByOrderIndexAsc(p.getId());
-            if (!images.isEmpty()) {
-                imageUrlMap.put(p.getId(), images.get(0).getImageUrl());
-            }
-        }
+        // N+1 방지: 한 번의 쿼리로 모든 상품의 이미지 조회
+        Map<Long, String> imageUrlMap = imageRepo.findByMarketProduct_IdIn(productIds).stream()
+                .collect(Collectors.groupingBy(
+                        img -> img.getMarketProduct().getId(),
+                        Collectors.collectingAndThen(
+                                Collectors.minBy(Comparator.comparing(MarketProductImage::getOrderIndex)),
+                                opt -> opt.map(MarketProductImage::getImageUrl).orElse(null)
+                        )
+                ));
 
         return products.map(p -> MarketProductDtos.ProductListRes.of(
                 p,

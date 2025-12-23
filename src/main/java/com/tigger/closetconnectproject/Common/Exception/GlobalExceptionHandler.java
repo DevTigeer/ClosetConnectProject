@@ -19,10 +19,36 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     /**
-     * 설명: IllegalArgumentException 처리
-     * - 주로 잘못된 파라미터, 존재하지 않는 리소스 등에서 발생
-     * - 메시지에 따라 400 또는 404로 구분하는 것이 이상적이지만,
-     *   단순화를 위해 400으로 통일 (필요시 메시지 패턴 매칭으로 분리 가능)
+     * 리소스를 찾을 수 없을 때 발생하는 예외 처리 (404 Not Found)
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<?> handleResourceNotFound(ResourceNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                        "error", "Not Found",
+                        "message", e.getMessage()
+                ));
+    }
+
+    /**
+     * 비즈니스 로직 검증 실패 시 발생하는 예외 처리 (400 Bad Request)
+     */
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<?> handleBusinessException(BusinessException e) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", "Bad Request");
+        body.put("message", e.getMessage());
+        if (e.getErrorCode() != null) {
+            body.put("errorCode", e.getErrorCode());
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(body);
+    }
+
+    /**
+     * IllegalArgumentException 처리 (하위 호환성 유지)
+     * - 점진적으로 ResourceNotFoundException, BusinessException으로 전환 권장
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException e) {

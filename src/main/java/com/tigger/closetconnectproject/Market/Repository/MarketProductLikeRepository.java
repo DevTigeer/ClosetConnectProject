@@ -58,4 +58,15 @@ public interface MarketProductLikeRepository extends JpaRepository<MarketProduct
     @Query(value = "INSERT IGNORE INTO market_product_like(market_product_id, user_id, created_at) " +
                    "VALUES (?1, ?2, NOW())", nativeQuery = true)
     void insert(Long marketProductId, Long userId);
+
+    /**
+     * 여러 상품의 찜 개수 조회 (N+1 방지)
+     */
+    @Query("""
+        SELECT l.marketProduct.id, COUNT(l)
+        FROM MarketProductLike l
+        WHERE l.marketProduct.id IN :productIds
+        GROUP BY l.marketProduct.id
+        """)
+    List<Object[]> countByMarketProduct_IdIn(List<Long> productIds);
 }

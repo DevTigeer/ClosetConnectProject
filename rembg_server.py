@@ -35,9 +35,13 @@ app = FastAPI(
 )
 
 # CORS 설정 (Spring Boot 서버에서 접근 허용)
+# localhost만 허용 (Spring Boot와 rembg가 같은 서버에서 실행)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080"],  # Spring Boot 서버
+    allow_origins=[
+        "http://localhost:8080",      # Spring Boot (로컬 및 AWS)
+        "http://127.0.0.1:8080",      # Spring Boot (127.0.0.1)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

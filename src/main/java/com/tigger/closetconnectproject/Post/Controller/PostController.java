@@ -42,5 +42,63 @@ public class PostController {
         return postService.create(boardId, uid, req);
     }
 
+    @GetMapping("/{postId}")
+    public PostDtos.PostRes getDetail(
+            @PathVariable Long boardId,
+            @PathVariable Long postId,
+            @AuthenticationPrincipal AppUserDetails principal
+    ) {
+        Long viewerId = (principal != null) ? principal.getUser().getUserId() : null;
+        return postService.read(postId, viewerId);
+    }
+
+    @PatchMapping("/{postId}")
+    @PreAuthorize("isAuthenticated()")
+    public PostDtos.PostRes update(
+            @PathVariable Long boardId,
+            @PathVariable Long postId,
+            @RequestBody PostDtos.UpdateReq req,
+            @AuthenticationPrincipal AppUserDetails principal
+    ) {
+        Long userId = principal.getUser().getUserId();
+        boolean isAdmin = principal.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return postService.update(postId, userId, req, isAdmin);
+    }
+
+    @DeleteMapping("/{postId}")
+    @PreAuthorize("isAuthenticated()")
+    public void delete(
+            @PathVariable Long boardId,
+            @PathVariable Long postId,
+            @AuthenticationPrincipal AppUserDetails principal
+    ) {
+        Long userId = principal.getUser().getUserId();
+        boolean isAdmin = principal.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        postService.delete(postId, userId, isAdmin);
+    }
+
+    @PostMapping("/{postId}/like")
+    @PreAuthorize("isAuthenticated()")
+    public void like(
+            @PathVariable Long boardId,
+            @PathVariable Long postId,
+            @AuthenticationPrincipal AppUserDetails principal
+    ) {
+        Long userId = principal.getUser().getUserId();
+        postService.like(postId, userId);
+    }
+
+    @DeleteMapping("/{postId}/like")
+    @PreAuthorize("isAuthenticated()")
+    public void unlike(
+            @PathVariable Long boardId,
+            @PathVariable Long postId,
+            @AuthenticationPrincipal AppUserDetails principal
+    ) {
+        Long userId = principal.getUser().getUserId();
+        postService.unlike(postId, userId);
+    }
 
 }

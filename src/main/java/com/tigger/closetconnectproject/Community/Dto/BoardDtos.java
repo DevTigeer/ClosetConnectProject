@@ -9,13 +9,13 @@ public class BoardDtos {
 
     public record BoardRes(
             Long id, String name, String slug, String type, String visibility,
-            boolean system, Integer sortOrder, LocalDateTime createdTime
+            boolean system, Integer sortOrder, LocalDateTime createdAt
     ) {
         public static BoardRes of(CommunityBoard b) {
             return new BoardRes(
                     b.getId(), b.getName(), b.getSlug(),
                     b.getType().name(), b.getVisibility().name(),
-                    b.isSystem(), b.getSortOrder(), b.getCreatedTime()
+                    b.isSystem(), b.getSortOrder(), b.getCreatedAt()
             );
         }
     }

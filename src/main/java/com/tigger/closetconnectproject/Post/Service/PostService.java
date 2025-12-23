@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class PostService {
 
     private final PostRepository postRepo;
@@ -102,11 +101,13 @@ public class PostService {
     }
 
 
+    @Transactional
     public void increaseView(Long postId) {
         Post p = postRepo.findById(postId).orElseThrow();
         p.increaseView();
     }
 
+    @Transactional
     public PostDtos.PostRes create(Long boardId, Long authorUserId, PostDtos.CreateReq req) {
         CommunityBoard board = boardRepo.getReferenceById(boardId);
         Users authorRef = Users.builder().userId(authorUserId).build();
@@ -127,6 +128,7 @@ public class PostService {
         return PostDtos.PostRes.of(p, false, List.of());
     }
 
+    @Transactional
     public PostDtos.PostRes update(Long postId, Long editorUserId, PostDtos.UpdateReq req, boolean isAdmin) {
         Post p = postRepo.findById(postId).orElseThrow();
         boolean owner = p.getAuthor() != null && p.getAuthor().getUserId().equals(editorUserId);
@@ -136,6 +138,7 @@ public class PostService {
         return read(p.getId(), editorUserId);
     }
 
+    @Transactional
     public void delete(Long postId, Long userId, boolean isAdmin) {
         Post p = postRepo.findById(postId).orElseThrow();
         boolean owner = p.getAuthor() != null && p.getAuthor().getUserId().equals(userId);
@@ -143,6 +146,7 @@ public class PostService {
         p.softDelete();
     }
 
+    @Transactional
     public PostDtos.AttachmentRes uploadAttachment(Long postId, Long userId, MultipartFile file) throws Exception {
         Post p = postRepo.findById(postId).orElseThrow();
         if (p.getAuthor() == null || !p.getAuthor().getUserId().equals(userId))
@@ -169,6 +173,7 @@ public class PostService {
     }
 
     // 좋아요(멱등) — 연관경로 메서드로 일치
+    @Transactional
     public void like(Long postId, Long userId) {
         // 이미 있으면 무시
         if (likeRepo.existsByPost_IdAndUser_UserId(postId, userId)) return;
@@ -182,6 +187,7 @@ public class PostService {
         // p.incLike();
     }
 
+    @Transactional
     public void unlike(Long postId, Long userId) {
         // 게시글 존재 확인(옵션)
         postRepo.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
