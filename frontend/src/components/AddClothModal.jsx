@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { uploadAPI } from '../services/api';
+import { clothAPI } from '../services/api';
+import { getImageUrl } from '../utils/imageUtils';
 import './Modal.css';
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
 
 const CATEGORIES = [
   { value: 'TOP', label: '상의' },
@@ -19,45 +18,47 @@ function AddClothModal({ onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     name: '',
     category: 'TOP',
-    imageUrl: '',
   });
+  const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
-  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleFileChange = async (e) => {
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setUploading(true);
-    try {
-      const response = await uploadAPI.upload(file);
-      const imageUrl = response.data.imageUrl;
-
-      setFormData({ ...formData, imageUrl });
-      setPreviewUrl(`${API_BASE}${imageUrl}`);
-    } catch (err) {
-      console.error(err);
-      alert('이미지 업로드에 실패했습니다.');
-    } finally {
-      setUploading(false);
-    }
+    // 파일 저장 및 미리보기 생성
+    setSelectedFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.imageUrl) {
-      alert('이미지를 먼저 업로드해주세요.');
+    if (!selectedFile) {
+      alert('이미지를 먼저 선택해주세요.');
       return;
     }
 
     setLoading(true);
     try {
-      await onSubmit(formData);
+      // 이미지 업로드와 함께 옷 등록 (rembg 배경 제거 포함)
+      const response = await clothAPI.uploadWithImage(
+        selectedFile,
+        formData.name,
+        formData.category
+      );
+
+      // 성공 시 부모 컴포넌트에 알림
+      if (onSubmit) {
+        await onSubmit(response.data);
+      }
+
+      onClose();
     } catch (err) {
       console.error(err);
-      alert('등록에 실패했습니다.');
+      alert(err.response?.data?.message || '등록에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -79,9 +80,8 @@ function AddClothModal({ onClose, onSubmit }) {
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              disabled={uploading}
+              disabled={loading}
             />
-            {uploading && <p className="upload-status">업로드 중...</p>}
             {previewUrl && (
               <img src={previewUrl} alt="Preview" className="image-preview" />
             )}

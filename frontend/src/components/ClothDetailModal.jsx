@@ -1,11 +1,8 @@
+import { getImageUrl } from '../utils/imageUtils';
 import './Modal.css';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
-
 function ClothDetailModal({ cloth, onClose }) {
-  const imageUrl = cloth.imageUrl?.startsWith('http')
-    ? cloth.imageUrl
-    : `${API_BASE}${cloth.imageUrl}`;
+  const imageUrl = getImageUrl(cloth.imageUrl);
 
   const createdDate = cloth.createdAt ? cloth.createdAt.split('T')[0] : '';
 

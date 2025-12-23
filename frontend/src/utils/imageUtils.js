@@ -15,13 +15,15 @@ export function getImageUrl(imageUrl) {
     return imageUrl;
   }
 
-  // /로 시작하는 상대 경로면 API_BASE와 합침
-  if (imageUrl.startsWith('/')) {
-    return `${API_BASE}${imageUrl}`;
+  // API_BASE가 비어있거나 /만 있으면 imageUrl 그대로 반환
+  if (!API_BASE || API_BASE === '/') {
+    return imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
   }
 
-  // 그 외의 경우 /를 추가해서 합침
-  return `${API_BASE}/${imageUrl}`;
+  // API_BASE와 imageUrl을 합칠 때 중복 슬래시 제거
+  const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
+  const path = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+  return `${base}${path}`;
 }
 
 /**

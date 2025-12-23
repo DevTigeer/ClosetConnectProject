@@ -54,6 +54,19 @@ export const clothAPI = {
   // 옷 등록
   create: (data) => api.post('/api/v1/cloth', data),
 
+  // 이미지 업로드와 함께 옷 등록 (rembg 배경 제거 포함)
+  uploadWithImage: (file, name, category) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('name', name);
+    formData.append('category', category);
+    return api.post('/api/v1/cloth/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
   // 옷 삭제
   delete: (id) => api.delete(`/api/v1/cloth/${id}`),
 };
