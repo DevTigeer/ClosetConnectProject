@@ -16,8 +16,8 @@ import java.util.UUID;
 
 /**
  * 이미지 파일 저장 서비스
- * - 원본 이미지와 배경 제거 이미지를 로컬 파일 시스템에 저장
- * - 저장 경로: /uploads/original/{clothId}.{ext}, /uploads/removed-bg/{clothId}.png
+ * - 원본 이미지와 AI 처리된 이미지를 로컬 파일 시스템에 저장
+ * - 저장 경로: /uploads/{imageType}/{filename}
  */
 @Slf4j
 @Service
@@ -29,9 +29,69 @@ public class ImageStorageService {
     @Value("${upload.base-url:/uploads}")
     private String uploadBaseUrl;
 
-    private static final String ORIGINAL_DIR = "original";
-    private static final String REMOVED_BG_DIR = "removed-bg";
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+    /**
+     * 이미지 타입별 저장 디렉토리와 설명을 정의하는 Enum
+     */
+    public enum ImageType {
+        ORIGINAL("original", "원본 이미지"),
+        REMOVED_BG("removed-bg", "배경 제거 이미지"),
+        SEGMENTED("segmented", "세그멘테이션 이미지"),
+        INPAINTED("inpainted", "인페인팅 이미지"),
+        ADDITIONAL("additional", "추가 감지 아이템"),
+        EXPANDED("expanded", "확장 이미지"),
+        TRYON("tryon", "Try-On 결과");
+
+        private final String directory;
+        private final String description;
+
+        ImageType(String directory, String description) {
+            this.directory = directory;
+            this.description = description;
+        }
+
+        public String getDirectory() {
+            return directory;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
+
+    /**
+     * 이미지를 저장하는 범용 메서드
+     *
+     * @param imageBytes 이미지 바이트 배열
+     * @param imageType  이미지 타입 (저장 디렉토리 결정)
+     * @param filename   파일명
+     * @return 저장된 이미지의 URL
+     */
+    private String saveImage(byte[] imageBytes, ImageType imageType, String filename) {
+        try {
+            // 저장 디렉토리 생성
+            Path uploadPath = Paths.get(uploadBaseDir, imageType.getDirectory());
+            Files.createDirectories(uploadPath);
+
+            // 파일 저장
+            Path filePath = uploadPath.resolve(filename);
+            Files.write(filePath, imageBytes);
+
+            // URL 생성 및 반환
+            String url = uploadBaseUrl + "/" + imageType.getDirectory() + "/" + filename;
+            log.info("Saved {} image: {}", imageType.getDescription(), url);
+
+            return url;
+
+        } catch (IOException e) {
+            log.error("Failed to save {} image: {}", imageType.getDescription(), filename, e);
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    imageType.getDescription() + " 저장 실패: " + e.getMessage()
+            );
+        }
+    }
 
     /**
      * 원본 이미지 저장
@@ -45,7 +105,7 @@ public class ImageStorageService {
 
         try {
             // 저장 디렉토리 생성
-            Path uploadPath = Paths.get(uploadBaseDir, ORIGINAL_DIR);
+            Path uploadPath = Paths.get(uploadBaseDir, ImageType.ORIGINAL.getDirectory());
             Files.createDirectories(uploadPath);
 
             // 파일 확장자 추출
@@ -60,16 +120,16 @@ public class ImageStorageService {
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
             // URL 반환
-            String url = uploadBaseUrl + "/" + ORIGINAL_DIR + "/" + filename;
-            log.info("Saved original image: {}", url);
+            String url = uploadBaseUrl + "/" + ImageType.ORIGINAL.getDirectory() + "/" + filename;
+            log.info("Saved {} image: {}", ImageType.ORIGINAL.getDescription(), url);
 
             return url;
 
         } catch (IOException e) {
-            log.error("Failed to save original image for clothId: {}", clothId, e);
+            log.error("Failed to save {} image for clothId: {}", ImageType.ORIGINAL.getDescription(), clothId, e);
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    "원본 이미지 저장 실패: " + e.getMessage()
+                    ImageType.ORIGINAL.getDescription() + " 저장 실패: " + e.getMessage()
             );
         }
     }
@@ -82,31 +142,69 @@ public class ImageStorageService {
      * @return 저장된 이미지의 URL
      */
     public String saveRemovedBgImage(byte[] imageBytes, Long clothId) {
-        try {
-            // 저장 디렉토리 생성
-            Path uploadPath = Paths.get(uploadBaseDir, REMOVED_BG_DIR);
-            Files.createDirectories(uploadPath);
+        String filename = clothId + ".png";
+        return saveImage(imageBytes, ImageType.REMOVED_BG, filename);
+    }
 
-            // 파일명 생성: {clothId}.png
-            String filename = clothId + ".png";
-            Path filePath = uploadPath.resolve(filename);
+    /**
+     * 세그멘테이션 결과 이미지 저장 (크롭된 옷 이미지)
+     *
+     * @param imageBytes 크롭된 옷 이미지 바이트 배열
+     * @param clothId 옷 ID
+     * @return 저장된 이미지의 URL
+     */
+    public String saveSegmentedImage(byte[] imageBytes, Long clothId) {
+        String filename = clothId + ".png";
+        return saveImage(imageBytes, ImageType.SEGMENTED, filename);
+    }
 
-            // 파일 저장
-            Files.write(filePath, imageBytes);
+    /**
+     * Inpainting 결과 이미지 저장 (복원된 최종 이미지)
+     *
+     * @param imageBytes 복원된 이미지 바이트 배열
+     * @param clothId 옷 ID
+     * @return 저장된 이미지의 URL
+     */
+    public String saveInpaintedImage(byte[] imageBytes, Long clothId) {
+        String filename = clothId + ".png";
+        return saveImage(imageBytes, ImageType.INPAINTED, filename);
+    }
 
-            // URL 반환
-            String url = uploadBaseUrl + "/" + REMOVED_BG_DIR + "/" + filename;
-            log.info("Saved removed-bg image: {}", url);
+    /**
+     * 추가 감지된 아이템 이미지 저장
+     *
+     * @param imageBytes 이미지 바이트 배열
+     * @param clothId 옷 ID
+     * @param label 아이템 라벨 (예: "upper-clothes", "pants" 등)
+     * @return 저장된 이미지의 URL
+     */
+    public String saveAdditionalItemImage(byte[] imageBytes, Long clothId, String label) {
+        String filename = clothId + "_" + label + ".png";
+        return saveImage(imageBytes, ImageType.ADDITIONAL, filename);
+    }
 
-            return url;
+    /**
+     * 세그먼트된 이미지 저장 (라벨 포함, 여러 아이템용)
+     * @param imageBytes 이미지 바이트 데이터
+     * @param clothId 옷 ID
+     * @param label 아이템 라벨 (예: "upper-clothes", "pants" 등)
+     * @return 저장된 이미지의 URL
+     */
+    public String saveSegmentedImage(byte[] imageBytes, Long clothId, String label) {
+        String filename = clothId + "_" + label + ".png";
+        return saveImage(imageBytes, ImageType.SEGMENTED, filename);
+    }
 
-        } catch (IOException e) {
-            log.error("Failed to save removed-bg image for clothId: {}", clothId, e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "배경 제거 이미지 저장 실패: " + e.getMessage()
-            );
-        }
+    /**
+     * Gemini 확장된 이미지 저장
+     * @param imageBytes 이미지 바이트 데이터
+     * @param clothId 옷 ID
+     * @param label 아이템 라벨 (예: "upper-clothes", "pants" 등)
+     * @return 저장된 이미지의 URL
+     */
+    public String saveExpandedImage(byte[] imageBytes, Long clothId, String label) {
+        String filename = clothId + "_" + label + ".png";
+        return saveImage(imageBytes, ImageType.EXPANDED, filename);
     }
 
     /**
@@ -167,6 +265,17 @@ public class ImageStorageService {
                     "이미지 파일만 업로드 가능합니다."
             );
         }
+    }
+
+    /**
+     * Try-On 결과 이미지 저장 (범용 바이트 배열 저장)
+     *
+     * @param imageBytes 이미지 바이트 배열
+     * @param filename 파일명 (확장자 포함)
+     * @return 저장된 이미지의 URL
+     */
+    public String saveImageBytes(byte[] imageBytes, String filename) {
+        return saveImage(imageBytes, ImageType.TRYON, filename);
     }
 
     /**

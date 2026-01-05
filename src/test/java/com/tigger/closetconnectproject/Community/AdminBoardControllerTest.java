@@ -52,28 +52,24 @@ class AdminBoardControllerTest {
                 .id(1L).name("공지사항").slug("notice")
                 .type(BoardType.FREE).visibility(Visibility.PUBLIC)
                 .isSystem(true).sortOrder(0)
-                .createdTime(LocalDateTime.now())
                 .build();
 
         created = CommunityBoard.builder()
                 .id(3L).name("신규 게시판").slug("new-board")
                 .type(BoardType.OOTD).visibility(Visibility.PUBLIC)
                 .isSystem(false).sortOrder(5)
-                .createdTime(LocalDateTime.now())
                 .build();
 
         updated = CommunityBoard.builder()
                 .id(1L).name("수정됨").slug("notice")
                 .type(BoardType.FREE).visibility(Visibility.PUBLIC)
                 .isSystem(true).sortOrder(3)
-                .createdTime(LocalDateTime.now())
                 .build();
 
         visChanged = CommunityBoard.builder()
                 .id(1L).name("공지사항").slug("notice")
                 .type(BoardType.FREE).visibility(Visibility.HIDDEN)
                 .isSystem(true).sortOrder(0)
-                .createdTime(LocalDateTime.now())
                 .build();
     }
 

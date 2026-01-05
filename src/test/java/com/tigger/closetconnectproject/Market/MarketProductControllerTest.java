@@ -69,11 +69,11 @@ class MarketProductControllerTest {
     @BeforeEach
     void setUp() {
         PRODUCT1 = MarketProductDtos.ProductListRes.builder()
-                .id(1L)
+                .productId(1L)
                 .title("나이키 운동화")
                 .price(50000)
                 .status(ProductStatus.ON_SALE)
-                .thumbnailUrl("/uploads/image1.jpg")
+                .imageUrl("/uploads/image1.jpg")
                 .region("서울")
                 .likeCount(5L)
                 .viewCount(100)
@@ -81,11 +81,11 @@ class MarketProductControllerTest {
                 .build();
 
         PRODUCT2 = MarketProductDtos.ProductListRes.builder()
-                .id(2L)
+                .productId(2L)
                 .title("아디다스 티셔츠")
                 .price(30000)
                 .status(ProductStatus.ON_SALE)
-                .thumbnailUrl("/uploads/image2.jpg")
+                .imageUrl("/uploads/image2.jpg")
                 .region("부산")
                 .likeCount(3L)
                 .viewCount(50)
@@ -93,7 +93,7 @@ class MarketProductControllerTest {
                 .build();
 
         PRODUCT_DETAIL = MarketProductDtos.ProductDetailRes.builder()
-                .id(1L)
+                .productId(1L)
                 .title("나이키 운동화")
                 .price(50000)
                 .description("깨끗한 상태의 나이키 운동화입니다.")
@@ -106,10 +106,10 @@ class MarketProductControllerTest {
                 .viewCount(100)
                 .likeCount(5L)
                 .liked(false)
-                .seller(MarketProductDtos.SellerInfo.builder()
-                        .userId(1L)
-                        .nickname("판매자")
-                        .build())
+                .isMine(false)
+                .sellerId(1L)
+                .sellerNickname("판매자")
+                .imageUrl("/uploads/image1.jpg")
                 .clothId(1L)
                 .clothName("운동화")
                 .clothCategory("SHOES")
@@ -175,7 +175,7 @@ class MarketProductControllerTest {
         // When & Then
         mvc.perform(get("/api/v1/market/products/{id}", 1L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.productId").value(1L))
                 .andExpect(jsonPath("$.title").value("나이키 운동화"))
                 .andExpect(jsonPath("$.price").value(50000))
                 .andExpect(jsonPath("$.status").value("ON_SALE"));
@@ -221,7 +221,7 @@ class MarketProductControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(req)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.productId").value(1L))
                 .andExpect(jsonPath("$.title").value("나이키 운동화"));
 
         verify(productService).create(eq(1L), any(MarketProductDtos.CreateReq.class));
@@ -257,7 +257,7 @@ class MarketProductControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L));
+                .andExpect(jsonPath("$.productId").value(1L));
 
         verify(productService).update(eq(1L), eq(1L), any(MarketProductDtos.UpdateReq.class));
     }
@@ -291,7 +291,7 @@ class MarketProductControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L));
+                .andExpect(jsonPath("$.productId").value(1L));
 
         verify(productService).changeStatus(eq(1L), eq(1L), eq(ProductStatus.SOLD));
     }

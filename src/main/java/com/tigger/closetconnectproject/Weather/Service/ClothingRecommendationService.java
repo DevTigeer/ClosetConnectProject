@@ -11,6 +11,56 @@ import org.springframework.stereotype.Service;
 @Service
 public class ClothingRecommendationService {
 
+    // 체감 온도 조정 상수
+    private static final double SUNNY_TEMP_ADJUSTMENT = 1.0;
+    private static final double HIGH_HUMIDITY_TEMP_ADJUSTMENT = 2.0;
+
+    // 습도 임계값
+    private static final int HIGH_HUMIDITY_THRESHOLD = 70;
+
+    // 추가 아이템 추천 상수
+    private static final String RAIN_ITEMS = ", 우산, 우비/방수 재킷, 방수 신발";
+    private static final String SNOW_ITEMS = ", 방한용품, 미끄럼 방지 신발";
+    private static final String THUNDERSTORM_WARNING = ", ⚠️ 외출 시 주의 필요";
+    private static final String BREATHABLE_ITEMS = ", 통풍 잘되는 소재 추천";
+
+    // 메시지 템플릿
+    private static final String RECOMMENDATION_MESSAGE_TEMPLATE =
+            "오늘은 %.1f°C 로 %s 날씨예요.\n" +
+            "체감 온도는 약 %.1f°C 정도예요.\n\n" +
+            "추천 코디는 다음과 같아요:\n" +
+            "- 상의: %s\n" +
+            "- 하의: %s\n" +
+            "- 추가: %s\n\n" +
+            "오늘 날씨에 잘 맞는 스타일로 하루를 보내세요!";
+
+    /**
+     * 날씨 상태 키워드를 정의하는 Enum
+     */
+    private enum WeatherKeyword {
+        CLEAR("맑음", "clear"),
+        RAIN("비", "rain", "소나기", "drizzle"),
+        SNOW("눈", "snow"),
+        THUNDERSTORM("천둥", "thunderstorm");
+
+        private final String[] keywords;
+
+        WeatherKeyword(String... keywords) {
+            this.keywords = keywords;
+        }
+
+        public boolean matches(String condition) {
+            if (condition == null) return false;
+            String lowerCondition = condition.toLowerCase();
+            for (String keyword : keywords) {
+                if (lowerCondition.contains(keyword.toLowerCase())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
     /**
      * 설명: 날씨 정보를 기반으로 옷 추천 생성
      *
@@ -86,18 +136,14 @@ public class ClothingRecommendationService {
         double adjustment = 0.0;
 
         // 날씨 상태 보정
-        if (weatherCondition != null) {
-            String condition = weatherCondition.toLowerCase();
-
-            if (condition.contains("맑음") || condition.contains("clear")) {
-                adjustment += 1.0; // 햇빛으로 체감 +1도
-            }
-            // 비/눈은 체감온도 변화 없음 (옷 추천에서 처리)
+        if (WeatherKeyword.CLEAR.matches(weatherCondition)) {
+            adjustment += SUNNY_TEMP_ADJUSTMENT; // 햇빛으로 체감온도 증가
         }
+        // 비/눈은 체감온도 변화 없음 (옷 추천에서 처리)
 
         // 습도 보정
-        if (humidity != null && humidity >= 70) {
-            adjustment += 2.0; // 높은 습도는 체감 +2도 (더 덥게 느껴짐)
+        if (humidity != null && humidity >= HIGH_HUMIDITY_THRESHOLD) {
+            adjustment += HIGH_HUMIDITY_TEMP_ADJUSTMENT; // 높은 습도는 더 덥게 느껴짐
         }
 
         return temperature + adjustment;
@@ -122,29 +168,24 @@ public class ClothingRecommendationService {
     ) {
         StringBuilder extra = new StringBuilder(baseExtra);
 
-        if (weatherCondition != null) {
-            String condition = weatherCondition.toLowerCase();
+        // 비/소나기 → 우산, 우비, 방수 재킷 추가
+        if (WeatherKeyword.RAIN.matches(weatherCondition)) {
+            extra.append(RAIN_ITEMS);
+        }
 
-            // 비/소나기 → 우산, 우비, 방수 재킷 추가
-            if (condition.contains("비") || condition.contains("소나기") ||
-                condition.contains("rain") || condition.contains("drizzle")) {
-                extra.append(", 우산, 우비/방수 재킷, 방수 신발");
-            }
+        // 눈 → 방한용품 강화
+        if (WeatherKeyword.SNOW.matches(weatherCondition)) {
+            extra.append(SNOW_ITEMS);
+        }
 
-            // 눈 → 방한용품 강화
-            if (condition.contains("눈") || condition.contains("snow")) {
-                extra.append(", 방한용품, 미끄럼 방지 신발");
-            }
-
-            // 천둥번개 → 실내 활동 권장
-            if (condition.contains("천둥") || condition.contains("thunderstorm")) {
-                extra.append(", ⚠️ 외출 시 주의 필요");
-            }
+        // 천둥번개 → 실내 활동 권장
+        if (WeatherKeyword.THUNDERSTORM.matches(weatherCondition)) {
+            extra.append(THUNDERSTORM_WARNING);
         }
 
         // 습도 70% 이상 → 통풍 잘되는 옷 추천
-        if (humidity != null && humidity >= 70) {
-            extra.append(", 통풍 잘되는 소재 추천");
+        if (humidity != null && humidity >= HIGH_HUMIDITY_THRESHOLD) {
+            extra.append(BREATHABLE_ITEMS);
         }
 
         return extra.toString();
@@ -173,13 +214,7 @@ public class ClothingRecommendationService {
             String extraRec
     ) {
         return String.format(
-            "오늘은 %.1f°C 로 %s 날씨예요.\n" +
-            "체감 온도는 약 %.1f°C 정도예요.\n\n" +
-            "추천 코디는 다음과 같아요:\n" +
-            "- 상의: %s\n" +
-            "- 하의: %s\n" +
-            "- 추가: %s\n\n" +
-            "오늘 날씨에 잘 맞는 스타일로 하루를 보내세요!",
+            RECOMMENDATION_MESSAGE_TEMPLATE,
             temperature,
             weatherCondition,
             feelsLikeTemp,

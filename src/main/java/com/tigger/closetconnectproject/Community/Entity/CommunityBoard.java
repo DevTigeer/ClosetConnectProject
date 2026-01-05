@@ -1,13 +1,12 @@
 package com.tigger.closetconnectproject.Community.Entity;
 
-import com.tigger.closetconnectproject.Common.Entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
 @Getter @Setter @NoArgsConstructor
 @Entity @Table(name = "community_board")
-public class CommunityBoard extends BaseTimeEntity {
+public class CommunityBoard {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

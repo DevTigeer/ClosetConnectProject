@@ -14,7 +14,18 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class PostReadController {
 
+    private static final String ROLE_ADMIN = "ROLE_ADMIN";
+
     private final PostService postService;
+
+    /**
+     * 사용자가 관리자 권한을 가지고 있는지 확인
+     */
+    private boolean isAdmin(AppUserDetails principal) {
+        return principal.getAuthorities()
+                .stream()
+                .anyMatch(authority -> authority.getAuthority().equals(ROLE_ADMIN));
+    }
 
     @GetMapping("/{postId}")
     public PostDtos.PostRes read(
@@ -34,8 +45,7 @@ public class PostReadController {
             @AuthenticationPrincipal AppUserDetails principal
     ) {
         Long uid = principal.getUser().getUserId();
-        boolean isAdmin = principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        return postService.update(postId, uid, req, isAdmin);
+        return postService.update(postId, uid, req, isAdmin(principal));
     }
 
     @DeleteMapping("/{postId}")
@@ -45,8 +55,7 @@ public class PostReadController {
             @AuthenticationPrincipal AppUserDetails principal
     ) {
         Long uid = principal.getUser().getUserId();
-        boolean isAdmin = principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        postService.delete(postId, uid, isAdmin);
+        postService.delete(postId, uid, isAdmin(principal));
     }
 
     @PostMapping("/{postId}/like")

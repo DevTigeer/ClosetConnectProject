@@ -54,6 +54,9 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+    // RabbitMQ
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+
     // Netty native DNS resolver for macOS (fixes DNS resolution warning)
     // Version matches Spring Boot's Netty version for proper compatibility
     runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.1.128.Final:osx-aarch_64'

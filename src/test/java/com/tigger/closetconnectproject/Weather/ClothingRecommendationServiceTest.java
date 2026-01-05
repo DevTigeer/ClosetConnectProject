@@ -55,7 +55,7 @@ class ClothingRecommendationServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getCurrentTemperature()).isEqualTo(15.0);
-        assertThat(result.getTopRecommendation()).contains("가디건");
+        assertThat(result.getExtraRecommendation()).contains("가디건");
         assertThat(result.getBottomRecommendation()).contains("청바지");
     }
 
@@ -73,7 +73,7 @@ class ClothingRecommendationServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getCurrentTemperature()).isEqualTo(-5.0);
-        assertThat(result.getTopRecommendation()).contains("패딩");
+        assertThat(result.getExtraRecommendation()).contains("패딩");
         assertThat(result.getExtraRecommendation()).contains("목도리");
     }
 
@@ -213,7 +213,7 @@ class ClothingRecommendationServiceTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getTopRecommendation()).contains("패딩");
+        assertThat(result.getExtraRecommendation()).contains("패딩");
         assertThat(result.getBottomRecommendation()).contains("기모");
     }
 
@@ -230,7 +230,7 @@ class ClothingRecommendationServiceTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getTopRecommendation()).contains("긴팔");
+        assertThat(result.getTopRecommendation()).contains("반팔");
         assertThat(result.getBottomRecommendation()).contains("면바지");
     }
 }

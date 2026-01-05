@@ -5,6 +5,7 @@ import com.tigger.closetconnectproject.Closet.Entity.Category;
 import com.tigger.closetconnectproject.Closet.Repository.ClothRepository;
 import com.tigger.closetconnectproject.Market.Dto.MarketProductDtos;
 import com.tigger.closetconnectproject.Market.Entity.*;
+import com.tigger.closetconnectproject.Market.Repository.MarketProductCommentRepository;
 import com.tigger.closetconnectproject.Market.Repository.MarketProductImageRepository;
 import com.tigger.closetconnectproject.Market.Repository.MarketProductLikeRepository;
 import com.tigger.closetconnectproject.Market.Repository.MarketProductRepository;
@@ -21,12 +22,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,6 +55,7 @@ class MarketProductServiceTest {
     @Mock MarketProductRepository productRepo;
     @Mock MarketProductImageRepository imageRepo;
     @Mock MarketProductLikeRepository likeRepo;
+    @Mock MarketProductCommentRepository commentRepo;
     @Mock ClothRepository clothRepo;
     @Mock UsersRepository userRepo;
     @Mock ChatService chatService;
@@ -65,24 +69,23 @@ class MarketProductServiceTest {
     @BeforeEach
     void setUp() {
         seller = Users.builder()
-                .userId(1L)
                 .email("seller@test.com")
                 .nickname("판매자")
                 .password("encoded")
                 .role(UserRole.ROLE_USER)
                 .status(UserStatus.NORMAL)
                 .build();
+        ReflectionTestUtils.setField(seller, "userId", 1L);
 
         cloth = Cloth.builder()
-                .id(1L)
                 .user(seller)
                 .name("나이키 운동화")
                 .category(Category.SHOES)
                 .imageUrl("/uploads/cloth1.jpg")
                 .build();
+        ReflectionTestUtils.setField(cloth, "id", 1L);
 
         product = MarketProduct.builder()
-                .id(1L)
                 .seller(seller)
                 .cloth(cloth)
                 .title("나이키 운동화 판매")
@@ -96,6 +99,9 @@ class MarketProductServiceTest {
                 .gender("남성")
                 .viewCount(0)
                 .build();
+
+        // @GeneratedValue로 인해 빌더에서 ID 설정이 안되므로 ReflectionTestUtils 사용
+        ReflectionTestUtils.setField(product, "id", 1L);
     }
 
     @Test
@@ -114,11 +120,16 @@ class MarketProductServiceTest {
 
         given(userRepo.findById(1L)).willReturn(Optional.of(seller));
         given(clothRepo.findById(1L)).willReturn(Optional.of(cloth));
-        given(productRepo.save(any(MarketProduct.class))).willReturn(product);
+        given(productRepo.save(any(MarketProduct.class))).willAnswer(invocation -> {
+            MarketProduct p = invocation.getArgument(0);
+            ReflectionTestUtils.setField(p, "id", 1L);
+            return p;
+        });
         given(productRepo.findByIdWithDetails(1L)).willReturn(Optional.of(product));
         given(likeRepo.countByMarketProduct_Id(1L)).willReturn(0L);
         given(likeRepo.existsByMarketProduct_IdAndUser_UserId(1L, 1L)).willReturn(false);
         given(imageRepo.findByMarketProduct_IdOrderByOrderIndexAsc(1L)).willReturn(List.of());
+        given(imageRepo.save(any(MarketProductImage.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // When
         var result = productService.create(1L, req);
@@ -193,8 +204,10 @@ class MarketProductServiceTest {
         Page<MarketProduct> page = new PageImpl<>(List.of(product), pageable, 1);
 
         given(productRepo.searchProducts(any(), any(), any(), any())).willReturn(page);
-        given(likeRepo.countByMarketProduct_Id(1L)).willReturn(5L);
-        given(imageRepo.findByMarketProduct_IdOrderByOrderIndexAsc(1L)).willReturn(List.of());
+        // N+1 방지 메서드들에 대한 stub
+        given(likeRepo.countByMarketProduct_IdIn(anyList())).willReturn(Collections.singletonList(new Object[]{1L, 5L}));
+        given(commentRepo.countByMarketProduct_IdInAndStatus(anyList(), any())).willReturn(Collections.singletonList(new Object[]{1L, 3L}));
+        given(imageRepo.findByMarketProduct_IdIn(anyList())).willReturn(List.of());
 
         // When
         var result = productService.list(null, null, null, 0, 20, "LATEST", null);
@@ -335,8 +348,9 @@ class MarketProductServiceTest {
         Page<MarketProduct> page = new PageImpl<>(List.of(product), pageable, 1);
 
         given(productRepo.findBySeller_UserId(eq(1L), any())).willReturn(page);
-        given(likeRepo.countByMarketProduct_Id(1L)).willReturn(3L);
-        given(imageRepo.findByMarketProduct_IdOrderByOrderIndexAsc(1L)).willReturn(List.of());
+        // N+1 방지 메서드들에 대한 stub
+        given(likeRepo.countByMarketProduct_IdIn(anyList())).willReturn(Collections.singletonList(new Object[]{1L, 3L}));
+        given(imageRepo.findByMarketProduct_IdIn(anyList())).willReturn(List.of());
 
         // When
         var result = productService.listBySeller(1L, 0, 20, null);

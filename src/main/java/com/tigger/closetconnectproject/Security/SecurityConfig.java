@@ -43,6 +43,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/market/**").authenticated() // Market 등록/수정/삭제는 인증 필요
                         .requestMatchers("/api/v1/users/**").authenticated()
                         .requestMatchers("/api/v1/cloth/**").authenticated()
+                        .requestMatchers("/api/v1/outfit/**").authenticated()
+                        .requestMatchers("/api/v1/ootd/**").authenticated()
                         .requestMatchers("/api/v1/boards/**").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/posts/**").authenticated()
@@ -75,6 +77,7 @@ public class SecurityConfig {
         // 필요한 HTTP 메서드만 명시적으로 허용
         config.addAllowedMethod("GET");
         config.addAllowedMethod("POST");
+        config.addAllowedMethod("PUT");
         config.addAllowedMethod("PATCH");
         config.addAllowedMethod("DELETE");
         config.addAllowedMethod("OPTIONS");

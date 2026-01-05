@@ -78,10 +78,10 @@ class PostReadControllerTest {
 
         // 공통 상세 응답 고정
         DETAIL = PostDtos.PostRes.builder()
-                .id(101L).boardId(1L)
+                .id(101L)
                 .title("상세").content("본문")
-                .authorName("kim").likedByMe(false)
-                .viewCount(11).likeCount(3)
+                .authorName("kim").liked(false)
+                .viewCount(11L).likeCount(3L)
                 .attachments(List.of())
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -127,10 +127,10 @@ class PostReadControllerTest {
         req.setTitle("수정"); req.setContent("수정 본문"); req.setVisibility(Visibility.PUBLIC);
 
         var updated = PostDtos.PostRes.builder()
-                .id(101L).boardId(1L)
+                .id(101L)
                 .title("수정").content("수정 본문")
-                .authorName("kim").likedByMe(false)
-                .viewCount(11).likeCount(3)
+                .authorName("kim").liked(false)
+                .viewCount(11L).likeCount(3L)
                 .attachments(List.of())
                 .createdAt(LocalDateTime.now()).build();
 

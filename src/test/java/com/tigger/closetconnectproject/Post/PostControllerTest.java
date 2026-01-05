@@ -47,6 +47,7 @@ class PostControllerTest {
     @MockBean
     AuditorAware<Long> auditorAware; // Auditing에서 참조 (타입은 너희 프로젝트 설정에 맞게)
     @MockBean PostService postService;
+    @MockBean com.tigger.closetconnectproject.Post.Service.PostLikeService postLikeService;
 
     // ===== 기대 응답(고정) =====
     private PostDtos.PostRes POST1;
@@ -56,18 +57,18 @@ class PostControllerTest {
     @BeforeEach
     void setUp() {
         POST1 = PostDtos.PostRes.builder()
-                .id(101L).boardId(1L)
+                .id(101L)
                 .title("첫 글").content("본문1")
-                .authorName("kim").likedByMe(false)
-                .viewCount(10).likeCount(2)
+                .authorName("kim").liked(false)
+                .viewCount(10L).likeCount(2L)
                 .attachments(List.of())
                 .createdAt(LocalDateTime.now())
                 .build();
         POST2 = PostDtos.PostRes.builder()
-                .id(102L).boardId(1L)
+                .id(102L)
                 .title("둘째 글").content("본문2")
-                .authorName("lee").likedByMe(true)
-                .viewCount(5).likeCount(7)
+                .authorName("lee").liked(true)
+                .viewCount(5L).likeCount(7L)
                 .attachments(List.of())
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -126,8 +127,8 @@ class PostControllerTest {
         req.setTitle("새 글"); req.setContent("본문"); req.setVisibility(Visibility.PUBLIC);
 
         var created = PostDtos.PostRes.builder()
-                .id(201L).boardId(1L).title("새 글").content("본문")
-                .authorName("kim").likedByMe(false).viewCount(0).likeCount(0)
+                .id(201L).title("새 글").content("본문")
+                .authorName("kim").liked(false).viewCount(0L).likeCount(0L)
                 .attachments(List.of()).createdAt(LocalDateTime.now()).build();
 
         given(postService.create(eq(1L), anyLong(), any(PostDtos.CreateReq.class)))

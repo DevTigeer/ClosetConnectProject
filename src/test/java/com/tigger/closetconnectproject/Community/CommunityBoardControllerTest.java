@@ -51,14 +51,12 @@ class CommunityBoardControllerTest {
                 .id(1L).name("공지사항").slug("notice")
                 .type(BoardType.FREE).visibility(Visibility.PUBLIC)
                 .isSystem(true).sortOrder(0)
-                .createdTime(LocalDateTime.now())
                 .build();
 
         b2 = CommunityBoard.builder()
                 .id(2L).name("잡담").slug("talk")
                 .type(BoardType.FREE).visibility(Visibility.PUBLIC)
                 .isSystem(false).sortOrder(1)
-                .createdTime(LocalDateTime.now())
                 .build();
     }
 

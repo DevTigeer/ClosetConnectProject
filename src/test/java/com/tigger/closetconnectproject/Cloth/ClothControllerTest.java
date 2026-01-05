@@ -12,6 +12,8 @@ import com.tigger.closetconnectproject.User.Entity.UserRole;
 import com.tigger.closetconnectproject.User.Entity.UserStatus;
 import com.tigger.closetconnectproject.User.Entity.Users;
 import org.junit.jupiter.api.DisplayName;
+
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -65,7 +67,10 @@ class ClothControllerTest {
         );
 
         ClothResponse res = new ClothResponse(
-                1L, "블랙 티셔츠", Category.TOP, "http://img/1"
+                1L, 10L, "블랙 티셔츠", Category.TOP, "http://img/1",
+                "http://img/1", null, null, null,
+                null, null, null, null,
+                List.of(), List.of(), List.of()
         );
 
         given(clothService.create(anyLong(), any(ClothCreateRequest.class)))
@@ -82,8 +87,7 @@ class ClothControllerTest {
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.name").value("블랙 티셔츠"))
                 // ✅ Enum은 문자열로 직렬화되므로 "TOP"로 검증
-                .andExpect(jsonPath("$.category").value("TOP"))
-                .andExpect(jsonPath("$.brand").value("UNIQLO"));
+                .andExpect(jsonPath("$.category").value("TOP"));
     }
 
     @Test
@@ -106,7 +110,10 @@ class ClothControllerTest {
     @DisplayName("인증된 사용자는 특정 옷을 조회할 수 있다")
     void getCloth_success() throws Exception {
         ClothResponse res = new ClothResponse(
-                1L, "블랙 티셔츠", Category.TOP,  "http://img/1"
+                1L, 10L, "블랙 티셔츠", Category.TOP, "http://img/1",
+                "http://img/1", null, null, null,
+                null, null, null, null,
+                List.of(), List.of(), List.of()
         );
 
         // ✅ principal(userId=10L) + id=1L 로 스텁

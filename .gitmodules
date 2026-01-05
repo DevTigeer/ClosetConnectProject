@@ -1,0 +1,3 @@
+[submodule "aiModel/huggingface-cloth-segmentation"]
+	path = aiModel/huggingface-cloth-segmentation
+	url = https://github.com/wildoctopus/huggingface-cloth-segmentation.git

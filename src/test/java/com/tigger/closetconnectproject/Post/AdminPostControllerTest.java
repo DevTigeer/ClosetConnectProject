@@ -49,9 +49,9 @@ class AdminPostControllerTest {
     @BeforeEach
     void setUp() {
         var p = PostDtos.PostRes.builder()
-                .id(99L).boardId(1L).title("관리자 글").content("x")
-                .authorName("admin").likedByMe(false)
-                .viewCount(0).likeCount(0)
+                .id(99L).title("관리자 글").content("x")
+                .authorName("admin").liked(false)
+                .viewCount(0L).likeCount(0L)
                 .attachments(List.of()).createdAt(LocalDateTime.now()).build();
         PAGE = new PageImpl<>(List.of(p), PageRequest.of(0,20), 1);
 

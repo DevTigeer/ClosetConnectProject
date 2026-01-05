@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>옷 업로드 - 진행 상황 실시간 표시</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        input[type="text"] {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .toggle-button {
+            background-color: #28a745;
+        }
+
+        .toggle-button:hover {
+            background-color: #218838;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .progress-container.hidden {
+            display: none;
+        }
+
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 30px;
+            background-color: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .status-text {
+            font-size: 16px;
+            color: #495057;
+            margin: 10px 0;
+        }
+
+        .status-text strong {
+            color: #007bff;
+        }
+
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .connection-status {
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .connection-status.connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .connection-status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>옷 업로드 및 AI 처리</h1>
+
+    <!-- WebSocket 연결 상태 -->
+    <div id="connectionStatus" class="connection-status disconnected">
+        WebSocket: 연결 안됨
+    </div>
+
+    <!-- 업로드 섹션 -->
+    <div class="upload-section">
+        <label for="clothName">옷 이름:</label>
+        <input type="text" id="clothName" placeholder="예: 나이키 운동화" value="테스트 옷">
+
+        <label for="clothImage">이미지 선택:</label>
+        <input type="file" id="clothImage" accept="image/*">
+
+        <button id="uploadBtn" onclick="uploadCloth()">업로드 및 AI 처리 시작</button>
+    </div>
+
+    <!-- 진행 상황 토글 버튼 -->
+    <button class="toggle-button" onclick="toggleProgress()">
+        진행 상황 보기/숨기기
+    </button>
+
+    <!-- 진행 상황 표시 영역 -->
+    <div id="progressContainer" class="progress-container hidden">
+        <h3>처리 진행 상황</h3>
+
+        <div class="progress-bar-wrapper">
+            <div id="progressBar" class="progress-bar">0%</div>
+        </div>
+
+        <div class="status-text">
+            <strong>상태:</strong> <span id="statusText">대기 중</span>
+        </div>
+
+        <div class="status-text">
+            <strong>현재 단계:</strong> <span id="currentStep">-</span>
+        </div>
+
+        <div id="resultMessage"></div>
+    </div>
+</div>
+
+<!-- SockJS 및 STOMP 라이브러리 -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script>
+    // 설정
+    const API_BASE_URL = 'http://localhost:8080';
+    const WS_URL = API_BASE_URL + '/ws';
+
+    // JWT 토큰 (로그인 후 받은 토큰으로 교체 필요)
+    const JWT_TOKEN = 'YOUR_JWT_TOKEN_HERE';
+
+    // WebSocket 관련 변수
+    let stompClient = null;
+    let userId = null;  // 로그인한 사용자 ID
+    let currentClothId = null;
+
+    // 페이지 로드 시 WebSocket 연결
+    window.onload = function() {
+        connectWebSocket();
+    };
+
+    // WebSocket 연결
+    function connectWebSocket() {
+        const socket = new SockJS(WS_URL);
+        stompClient = Stomp.over(socket);
+
+        // 디버그 로그 비활성화 (선택 사항)
+        stompClient.debug = null;
+
+        stompClient.connect({}, function(frame) {
+            console.log('WebSocket 연결 성공:', frame);
+            updateConnectionStatus(true);
+
+            // 사용자 ID 추출 (JWT 토큰에서 또는 로그인 정보에서)
+            // 여기서는 예시로 1번 사용자로 가정
+            userId = 1;  // 실제로는 로그인 정보에서 가져와야 함
+
+            // 진행 상황 구독
+            subscribeToProgress(userId);
+        }, function(error) {
+            console.error('WebSocket 연결 실패:', error);
+            updateConnectionStatus(false);
+
+            // 5초 후 재연결 시도
+            setTimeout(connectWebSocket, 5000);
+        });
+    }
+
+    // 진행 상황 구독
+    function subscribeToProgress(userId) {
+        const destination = '/queue/cloth/progress/' + userId;
+
+        stompClient.subscribe(destination, function(message) {
+            const progress = JSON.parse(message.body);
+            console.log('진행 상황 수신:', progress);
+
+            // UI 업데이트
+            updateProgressUI(progress);
+        });
+
+        console.log('구독 시작:', destination);
+    }
+
+    // 연결 상태 UI 업데이트
+    function updateConnectionStatus(connected) {
+        const statusDiv = document.getElementById('connectionStatus');
+        if (connected) {
+            statusDiv.className = 'connection-status connected';
+            statusDiv.textContent = 'WebSocket: 연결됨 ✓';
+        } else {
+            statusDiv.className = 'connection-status disconnected';
+            statusDiv.textContent = 'WebSocket: 연결 안됨 ✗';
+        }
+    }
+
+    // 진행 상황 UI 업데이트
+    function updateProgressUI(progress) {
+        // 현재 처리 중인 옷인지 확인
+        if (currentClothId && progress.clothId !== currentClothId) {
+            return;  // 다른 옷의 진행 상황이면 무시
+        }
+
+        // 진행 상황 컨테이너 표시
+        const container = document.getElementById('progressContainer');
+        container.classList.remove('hidden');
+
+        // 진행률 업데이트
+        const progressBar = document.getElementById('progressBar');
+        const percentage = progress.progressPercentage || 0;
+        progressBar.style.width = percentage + '%';
+        progressBar.textContent = percentage + '%';
+
+        // 현재 단계 업데이트
+        document.getElementById('currentStep').textContent = progress.currentStep || '-';
+
+        // 상태 텍스트 업데이트
+        const statusMap = {
+            'PROCESSING': '처리 중',
+            'READY_FOR_REVIEW': '검토 대기',
+            'COMPLETED': '완료',
+            'FAILED': '실패'
+        };
+        document.getElementById('statusText').textContent = statusMap[progress.status] || progress.status;
+
+        // 결과 메시지 업데이트
+        const resultDiv = document.getElementById('resultMessage');
+        if (progress.status === 'READY_FOR_REVIEW') {
+            resultDiv.className = 'success';
+            resultDiv.textContent = '✓ AI 처리가 완료되었습니다! 카테고리를 확인해주세요.';
+        } else if (progress.status === 'FAILED') {
+            resultDiv.className = 'error';
+            resultDiv.textContent = '✗ 처리 실패: ' + (progress.errorMessage || '알 수 없는 오류');
+        } else {
+            resultDiv.textContent = '';
+        }
+    }
+
+    // 옷 업로드 함수
+    async function uploadCloth() {
+        const nameInput = document.getElementById('clothName');
+        const imageInput = document.getElementById('clothImage');
+
+        if (!nameInput.value) {
+            alert('옷 이름을 입력해주세요.');
+            return;
+        }
+
+        if (!imageInput.files || imageInput.files.length === 0) {
+            alert('이미지를 선택해주세요.');
+            return;
+        }
+
+        // FormData 생성
+        const formData = new FormData();
+        formData.append('name', nameInput.value);
+        formData.append('image', imageInput.files[0]);
+
+        // 업로드 버튼 비활성화
+        const uploadBtn = document.getElementById('uploadBtn');
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = '업로드 중...';
+
+        // UI 초기화
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('progressBar').textContent = '0%';
+        document.getElementById('currentStep').textContent = '업로드 중...';
+        document.getElementById('statusText').textContent = '업로드 중';
+        document.getElementById('resultMessage').textContent = '';
+
+        try {
+            // API 호출
+            const response = await fetch(API_BASE_URL + '/api/v1/cloth/upload', {
+                method: 'POST',
+                headers: {
+                    // 'Authorization': 'Bearer ' + JWT_TOKEN  // JWT 토큰이 있는 경우
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('업로드 실패: ' + response.statusText);
+            }
+
+            const result = await response.json();
+            console.log('업로드 성공:', result);
+
+            // 현재 처리 중인 옷 ID 저장
+            currentClothId = result.id;
+
+            // 진행 상황 컨테이너 표시
+            document.getElementById('progressContainer').classList.remove('hidden');
+
+            alert('업로드 성공! AI 처리가 시작되었습니다. 진행 상황을 확인하세요.');
+
+        } catch (error) {
+            console.error('업로드 오류:', error);
+            alert('업로드 실패: ' + error.message);
+        } finally {
+            // 업로드 버튼 활성화
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = '업로드 및 AI 처리 시작';
+        }
+    }
+
+    // 진행 상황 토글 함수
+    function toggleProgress() {
+        const container = document.getElementById('progressContainer');
+        container.classList.toggle('hidden');
+    }
+</script>
+</body>
+</html>

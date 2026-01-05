@@ -5,6 +5,8 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -21,6 +23,8 @@ import java.io.IOException;
  */
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtTokenProvider jwtTokenProvider;
     private final AppUserDetailsService userDetailsService;
@@ -56,9 +60,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // SecurityContext에 인증 정보 저장
                 SecurityContextHolder.getContext().setAuthentication(auth);
+            } catch (JwtTokenProvider.JwtValidationException e) {
+                // JWT 검증 실패 (만료, 서명 오류, 잘못된 형식 등)
+                log.debug("JWT 검증 실패: {} (URI: {})", e.getMessage(), request.getRequestURI());
+                SecurityContextHolder.clearContext();
             } catch (Exception e) {
-                // 토큰 파싱 실패, 만료, 서명 오류 등 → 인증 실패 처리
-                // SecurityContext를 비우고 다음 필터로 진행 (최종적으로 401 반환)
+                // 기타 예외 (DB 조회 실패, 사용자 없음 등)
+                log.error("JWT 인증 처리 중 예외 발생: {} (URI: {})", e.getMessage(), request.getRequestURI(), e);
                 SecurityContextHolder.clearContext();
             }
         }

@@ -41,5 +41,63 @@ out/
 .env.local
 .env.*.local
 
-### Upload Directory ###
+### Runtime Outputs & Uploads ###
 uploads/
+outputs/
+output/
+temp/
+logs/
+*.log
+
+### AI Model Files ###
+model/
+*.pth
+*.pt
+*.onnx
+aiModel/outputs/
+aiModel/output/
+aiModel/test_output/
+aiModel/test_outputs/
+aiModel/__pycache__/
+aiModel/.pytest_cache/
+
+### Gradio UI ###
+.gradio/
+
+### Python ###
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv/
+*.egg-info/
+dist/
+.pytest_cache/
+
+### Frontend ###
+node_modules/
+prontend/ClosetConnectProject/node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+### Database ###
+*.db
+*.sqlite
+*.sqlite3
+
+### OS ###
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+### Temporary Files ###
+restored_skirt.png
+*.tmp
+tmp/
