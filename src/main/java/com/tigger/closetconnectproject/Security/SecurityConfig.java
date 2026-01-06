@@ -69,10 +69,15 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // 개발 환경: localhost 허용
-        // 운영 환경: application.properties의 cors.allowed-origins 사용 권장
         config.addAllowedOrigin("http://localhost:3000");
         config.addAllowedOrigin("http://localhost:5173"); // Vite 기본 포트
         config.addAllowedOrigin("http://localhost:8080");
+
+        // Vercel 배포 환경: 모든 Vercel 도메인 허용
+        config.addAllowedOriginPattern("https://*.vercel.app");
+
+        // 커스텀 도메인이 있다면 여기에 추가
+        // config.addAllowedOrigin("https://yourdomain.com");
 
         // 필요한 HTTP 메서드만 명시적으로 허용
         config.addAllowedMethod("GET");
