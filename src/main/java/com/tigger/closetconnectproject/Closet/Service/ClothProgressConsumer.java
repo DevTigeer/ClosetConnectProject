@@ -4,16 +4,19 @@ import com.tigger.closetconnectproject.Closet.Dto.ClothProgressMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 /**
  * RabbitMQ 옷 처리 진행도 컨슈머 (Python → Spring)
  * - cloth.progress.queue에서 실시간 진행 상황 메시지를 소비
  * - WebSocket을 통해 프론트엔드로 진행도 전송
+ * - spring.rabbitmq.enabled=true일 때만 활성화
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "spring.rabbitmq.enabled", havingValue = "true", matchIfMissing = true)
 public class ClothProgressConsumer {
 
     private final ClothProgressNotifier progressNotifier;

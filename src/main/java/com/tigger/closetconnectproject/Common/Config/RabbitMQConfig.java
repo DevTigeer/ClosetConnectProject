@@ -7,6 +7,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,8 +15,10 @@ import org.springframework.context.annotation.Configuration;
  * RabbitMQ 설정
  * - 옷 이미지 처리 파이프라인을 위한 큐, 익스체인지, 바인딩 설정
  * - 메시지 변환, 재시도 정책, 에러 핸들링 설정
+ * - spring.rabbitmq.enabled=true일 때만 활성화 (기본값: true)
  */
 @Configuration
+@ConditionalOnProperty(name = "spring.rabbitmq.enabled", havingValue = "true", matchIfMissing = true)
 public class RabbitMQConfig {
 
     @Value("${rabbitmq.queue.cloth-processing}")

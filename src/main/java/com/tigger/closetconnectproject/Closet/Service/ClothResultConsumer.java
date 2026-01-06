@@ -9,6 +9,7 @@ import com.tigger.closetconnectproject.Closet.Repository.ClothRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,10 +26,12 @@ import java.util.Map;
  * RabbitMQ 옷 처리 결과 컨슈머 (Python → Spring)
  * - cloth.result.queue에서 메시지를 소비
  * - Python worker가 처리한 결과를 받아서 DB 업데이트
+ * - spring.rabbitmq.enabled=true일 때만 활성화
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "spring.rabbitmq.enabled", havingValue = "true", matchIfMissing = true)
 public class ClothResultConsumer {
 
     private final ClothRepository clothRepository;
