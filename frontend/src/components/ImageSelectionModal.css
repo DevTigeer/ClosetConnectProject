@@ -1,0 +1,167 @@
+.image-selection-modal {
+  max-width: 900px !important;
+}
+
+.modal-xlarge {
+  width: 90%;
+  max-width: 1000px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-subtitle {
+  color: #666;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-top: 32px;
+  margin-bottom: 8px;
+}
+
+.section-subtitle {
+  color: #666;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.image-option {
+  cursor: pointer;
+  border: 3px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 12px;
+  transition: all 0.2s;
+  background: white;
+}
+
+.image-option:hover {
+  border-color: #3498db;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+}
+
+.image-option.selected {
+  border-color: #3498db;
+  background: #f0f8ff;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #f5f5f5;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selected-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #3498db;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.image-label {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.image-label strong {
+  font-size: 14px;
+  color: #333;
+}
+
+.image-label span {
+  font-size: 12px;
+  color: #666;
+}
+
+.category-section {
+  margin-bottom: 24px;
+}
+
+.category-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.ai-suggestion {
+  color: #3498db;
+  font-size: 12px;
+  font-weight: normal;
+  margin-left: 8px;
+}
+
+.category-section select {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.category-section select:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.hint-text {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .modal-xlarge {
+    width: 95%;
+  }
+
+  .image-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .image-option {
+    padding: 8px;
+  }
+
+  .image-label strong {
+    font-size: 12px;
+  }
+
+  .image-label span {
+    font-size: 10px;
+  }
+}
