@@ -1,8 +1,8 @@
-import { getImageUrl } from '../utils/imageUtils';
+import { getClothImageUrl } from '../utils/imageUtils';
 import './Modal.css';
 
 function ClothDetailModal({ cloth, onClose }) {
-  const imageUrl = getImageUrl(cloth.imageUrl);
+  const imageUrl = getClothImageUrl(cloth);
 
   const createdDate = cloth.createdAt ? cloth.createdAt.split('T')[0] : '';
 

@@ -1,48 +1,137 @@
 .community-page {
   min-height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 32px 0;
 }
 
 .community-header {
-  background: #fff;
-  border-bottom: 1px solid #eee;
-  padding: 16px 24px;
+  background: transparent;
+  border: none;
+  padding: 24px 32px;
+  margin-bottom: 24px;
 }
 
 .community-header h1 {
   margin: 0;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 42px;
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  letter-spacing: -0.5px;
 }
 
 .board-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-  padding: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  padding: 0 32px 48px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .board-card {
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 12px;
-  padding: 20px;
+  background: white;
+  border: none;
+  border-radius: 20px;
+  padding: 32px;
   text-decoration: none;
-  color: #222;
-  transition: transform 0.2s, box-shadow 0.2s;
+  color: #1a202c;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.board-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.board-card:hover::before {
+  transform: scaleX(1);
 }
 
 .board-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.25);
 }
 
 .board-name {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.board-name::before {
+  content: '💬';
+  font-size: 24px;
 }
 
 .board-meta {
-  font-size: 12px;
-  color: #888;
+  font-size: 13px;
+  color: #718096;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.board-meta::before {
+  content: '•';
+  color: #cbd5e0;
+}
+
+/* 로딩 상태 */
+.loading {
+  text-align: center;
+  padding: 64px 24px;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* 빈 상태 */
+.empty-state {
+  text-align: center;
+  padding: 64px 24px;
+  color: white;
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .community-page {
+    padding: 16px 0;
+  }
+
+  .community-header {
+    padding: 16px 20px;
+  }
+
+  .community-header h1 {
+    font-size: 32px;
+  }
+
+  .board-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 0 20px 32px;
+  }
+
+  .board-card {
+    padding: 24px;
+  }
 }

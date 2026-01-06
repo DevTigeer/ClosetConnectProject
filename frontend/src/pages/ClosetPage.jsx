@@ -4,17 +4,14 @@ import { clothAPI } from '../services/api';
 import ClothCard from '../components/ClothCard';
 import ClothDetailModal from '../components/ClothDetailModal';
 import AddClothModal from '../components/AddClothModal';
+import OutfitTryonModal from '../components/OutfitTryonModal';
 import './ClosetPage.css';
 
 const CATEGORIES = {
   TOP: '상의',
   BOTTOM: '하의',
-  OUTER: '아우터',
-  ONEPIECE: '원피스',
   SHOES: '신발',
-  BAG: '가방',
-  ACCESSORY: '액세서리',
-  ETC: '기타',
+  ACC: '액세서리',
 };
 
 function ClosetPage() {
@@ -24,6 +21,7 @@ function ClosetPage() {
   const [loading, setLoading] = useState(false);
   const [selectedCloth, setSelectedCloth] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showTryonModal, setShowTryonModal] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
 
@@ -167,12 +165,20 @@ function ClosetPage() {
           </div>
           <div className="header-actions">
             {clothes.length > 0 && (
-              <button
-                className={`btn-secondary ${deleteMode ? 'active' : ''}`}
-                onClick={toggleDeleteMode}
-              >
-                {deleteMode ? `삭제 실행 (${selectedIds.size}개)` : '삭제 모드'}
-              </button>
+              <>
+                <button
+                  className="btn-tryon"
+                  onClick={() => setShowTryonModal(true)}
+                >
+                  🎨 조합하기
+                </button>
+                <button
+                  className={`btn-secondary ${deleteMode ? 'active' : ''}`}
+                  onClick={toggleDeleteMode}
+                >
+                  {deleteMode ? `삭제 실행 (${selectedIds.size}개)` : '삭제 모드'}
+                </button>
+              </>
             )}
             <button className="btn-primary" onClick={() => setShowAddModal(true)}>
               + 옷 추가
@@ -243,6 +249,10 @@ function ClosetPage() {
 
       {showAddModal && (
         <AddClothModal onClose={() => setShowAddModal(false)} onSubmit={handleAddCloth} />
+      )}
+
+      {showTryonModal && (
+        <OutfitTryonModal clothes={clothes} onClose={() => setShowTryonModal(false)} />
       )}
     </div>
   );

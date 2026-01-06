@@ -36,6 +36,10 @@
   margin-bottom: 24px;
 }
 
+.image-grid-2col {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .image-option {
   cursor: pointer;
   border: 3px solid #e0e0e0;
@@ -54,6 +58,13 @@
   border-color: #3498db;
   background: #f0f8ff;
   box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.image-option-view {
+  border: 3px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 12px;
+  background: white;
 }
 
 .image-container {

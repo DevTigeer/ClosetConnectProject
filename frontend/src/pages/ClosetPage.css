@@ -176,6 +176,27 @@
   border-color: var(--primary-color);
 }
 
+.btn-tryon {
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-semibold);
+  font-size: var(--font-base);
+  transition: var(--transition);
+  cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-tryon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+}
+
 /* ==================== 로딩 상태 ==================== */
 .loading-state {
   text-align: center;
@@ -319,6 +340,11 @@
 
   .category-title {
     font-size: var(--font-lg);
+  }
+
+  .btn-tryon {
+    font-size: 14px;
+    padding: 10px 18px;
   }
 }
 

@@ -1,9 +1,39 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 const ClothUploadContext = createContext();
 
+const STORAGE_KEY = 'cloth_active_uploads';
+
 export function ClothUploadProvider({ children }) {
-  const [activeUploads, setActiveUploads] = useState([]);
+  // localStorage에서 초기값 복구
+  const [activeUploads, setActiveUploads] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        console.log('✅ localStorage에서 진행 중인 작업 복구:', parsed);
+        return parsed;
+      }
+    } catch (error) {
+      console.error('❌ localStorage 복구 실패:', error);
+    }
+    return [];
+  });
+
+  // activeUploads 변경 시 localStorage에 저장
+  useEffect(() => {
+    try {
+      if (activeUploads.length > 0) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(activeUploads));
+        console.log('💾 localStorage에 저장:', activeUploads.length, '개 작업');
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log('🗑️  localStorage 정리 (작업 없음)');
+      }
+    } catch (error) {
+      console.error('❌ localStorage 저장 실패:', error);
+    }
+  }, [activeUploads]);
 
   // 업로드 추가
   const addUpload = useCallback((clothId, userId) => {

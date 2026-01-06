@@ -113,3 +113,90 @@
 .btn-block {
   width: 100%;
 }
+
+/* 이미지 선택 화면 모달 크기 */
+.modal-large {
+  max-width: 900px;
+}
+
+/* 이미지 선택 화면 */
+.image-selection-container {
+  padding: 20px 0;
+}
+
+.selection-guide {
+  text-align: center;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.image-option {
+  border: 3px solid #ddd;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #f9f9f9;
+}
+
+.image-option:hover {
+  border-color: #999;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.image-option.selected {
+  border-color: #667eea;
+  background: #f0f4ff;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.image-option img {
+  width: 100%;
+  height: 250px;
+  object-fit: contain;
+  background: white;
+  display: block;
+}
+
+.image-label {
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  color: #444;
+  background: white;
+}
+
+.image-option.selected .image-label {
+  color: #667eea;
+  background: #f0f4ff;
+}
+
+.form-field small {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #667eea;
+  font-weight: 500;
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+  .image-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-large {
+    max-width: 95%;
+  }
+}

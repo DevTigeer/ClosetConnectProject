@@ -28,6 +28,10 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('accessToken');
+
+      // 커스텀 이벤트 발송하여 UI 업데이트 트리거
+      window.dispatchEvent(new Event('auth-logout'));
+
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -55,17 +59,24 @@ export const clothAPI = {
   create: (data) => api.post('/api/v1/cloth', data),
 
   // 이미지 업로드와 함께 옷 등록 (rembg 배경 제거 포함)
-  uploadWithImage: (file, name, category) => {
+  uploadWithImage: (file, name, category, imageType = 'FULL_BODY') => {
     const formData = new FormData();
     formData.append('image', file);
     formData.append('name', name);
     formData.append('category', category);
+    formData.append('imageType', imageType);
     return api.post('/api/v1/cloth/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
   },
+
+  // 최종 이미지 선택 및 옷 확정
+  confirmImage: (id, data) => api.post(`/api/v1/cloth/${id}/confirm-image`, data),
+
+  // 처리 결과 거부 (저장하지 않고 삭제)
+  reject: (id) => api.post(`/api/v1/cloth/${id}/reject`),
 
   // 옷 삭제
   delete: (id) => api.delete(`/api/v1/cloth/${id}`),
@@ -333,5 +344,23 @@ export const customRequest = (method, url, data = null, config = {}) => {
 
 // marketAPI에 customRequest 추가
 marketAPI.customRequest = customRequest;
+
+// ========== Outfit Try-On API ==========
+export const outfitAPI = {
+  // Try-On 생성
+  tryon: (data) => api.post('/api/v1/outfit/tryon', data),
+};
+
+// ========== OOTD API ==========
+export const ootdAPI = {
+  // OOTD 저장
+  save: (data) => api.post('/api/v1/ootd', data),
+
+  // 내 OOTD 목록 조회
+  list: () => api.get('/api/v1/ootd'),
+
+  // OOTD 삭제
+  delete: (id) => api.delete(`/api/v1/ootd/${id}`),
+};
 
 export default api;

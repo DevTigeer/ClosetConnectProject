@@ -3,6 +3,22 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import './ClothProgressTracker.css';
 
+const WEBSOCKET_CONFIG = {
+  URL: `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/ws`,
+  RECONNECT_DELAY: 5000,
+};
+
+const STATUS_TEXT_MAP = {
+  'PROCESSING': '처리 중',
+  'READY_FOR_REVIEW': '검토 대기',
+  'COMPLETED': '완료',
+  'FAILED': '실패'
+};
+
+function getStatusText(status) {
+  return STATUS_TEXT_MAP[status] || status;
+}
+
 function ClothProgressTracker({ userId, clothId, onComplete }) {
   const [progress, setProgress] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -12,19 +28,17 @@ function ClothProgressTracker({ userId, clothId, onComplete }) {
     if (!userId) return;
 
     // WebSocket 연결
-    const socket = new SockJS('http://localhost:8080/ws');
+    const socket = new SockJS(WEBSOCKET_CONFIG.URL);
     const stompClient = new Client({
       webSocketFactory: () => socket,
-      reconnectDelay: 5000,
+      reconnectDelay: WEBSOCKET_CONFIG.RECONNECT_DELAY,
 
       onConnect: () => {
-        console.log('WebSocket 연결 성공');
         setConnected(true);
 
         // 진행 상황 구독
         stompClient.subscribe(`/queue/cloth/progress/${userId}`, (message) => {
           const data = JSON.parse(message.body);
-          console.log('진행 상황 수신:', data);
 
           // 현재 업로드한 옷만 표시
           if (clothId && data.clothId === clothId) {
@@ -40,12 +54,11 @@ function ClothProgressTracker({ userId, clothId, onComplete }) {
       },
 
       onDisconnect: () => {
-        console.log('WebSocket 연결 해제');
         setConnected(false);
       },
 
       onStompError: (frame) => {
-        console.error('WebSocket 오류:', frame);
+        console.error('WebSocket 오류:', frame.headers.message);
       },
     });
 
@@ -110,16 +123,6 @@ function ClothProgressTracker({ userId, clothId, onComplete }) {
       )}
     </div>
   );
-}
-
-function getStatusText(status) {
-  const statusMap = {
-    'PROCESSING': '처리 중',
-    'READY_FOR_REVIEW': '검토 대기',
-    'COMPLETED': '완료',
-    'FAILED': '실패'
-  };
-  return statusMap[status] || status;
 }
 
 export default ClothProgressTracker;

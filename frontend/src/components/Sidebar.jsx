@@ -6,7 +6,7 @@ import './Sidebar.css';
 function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const token = localStorage.getItem('accessToken');
+  const [token, setToken] = useState(localStorage.getItem('accessToken'));
   const [isAdmin, setIsAdmin] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
   const [boards, setBoards] = useState([]);
@@ -17,6 +17,21 @@ function Sidebar() {
     }
     fetchBoards();
   }, [token]);
+
+  // 'auth-logout' 이벤트 리스너 추가 (토큰 만료 시 자동 UI 업데이트)
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      setToken(null);
+      setUserInfo(null);
+      setIsAdmin(false);
+    };
+
+    window.addEventListener('auth-logout', handleAuthLogout);
+
+    return () => {
+      window.removeEventListener('auth-logout', handleAuthLogout);
+    };
+  }, []);
 
   const fetchUserInfo = async () => {
     try {
@@ -44,6 +59,9 @@ function Sidebar() {
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
+    setToken(null);
+    setUserInfo(null);
+    setIsAdmin(false);
     navigate('/');
   };
 
@@ -107,6 +125,11 @@ function Sidebar() {
                   <span className="nav-text">내 옷장</span>
                 </NavLink>
 
+                <NavLink to="/ootd" className="nav-item">
+                  <span className="nav-icon">✨</span>
+                  <span className="nav-text">OOTD</span>
+                </NavLink>
+
                 <NavLink to="/recommend" className="nav-item">
                   <span className="nav-icon">🌤️</span>
                   <span className="nav-text">날씨 추천</span>
@@ -144,6 +167,11 @@ function Sidebar() {
                   <span className="nav-text">내 옷장</span>
                 </NavLink>
 
+                <NavLink to="/ootd" className="nav-item">
+                  <span className="nav-icon">✨</span>
+                  <span className="nav-text">OOTD</span>
+                </NavLink>
+
                 <NavLink to="/recommend" className="nav-item">
                   <span className="nav-icon">🌤️</span>
                   <span className="nav-text">날씨 추천</span>
@@ -163,6 +191,11 @@ function Sidebar() {
                 <NavLink to="/closet" className="nav-item">
                   <span className="nav-icon">👔</span>
                   <span className="nav-text">내 옷장</span>
+                </NavLink>
+
+                <NavLink to="/ootd" className="nav-item">
+                  <span className="nav-icon">✨</span>
+                  <span className="nav-text">OOTD</span>
                 </NavLink>
 
                 <NavLink to="/recommend" className="nav-item">

@@ -1,9 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ClothUploadProvider } from './contexts/ClothUploadContext';
 import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ClosetPage from './pages/ClosetPage';
+import OOTDPage from './pages/OOTDPage';
 import RecommendPage from './pages/RecommendPage';
 import MarketPage from './pages/MarketPage';
 import MarketDetailPage from './pages/MarketDetailPage';
@@ -29,8 +31,9 @@ function PrivateRoute({ children }) {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <ClothUploadProvider>
+      <BrowserRouter>
+        <Routes>
         {/* 랜딩 페이지 (레이아웃 없음) */}
         <Route path="/home" element={<LandingPage />} />
 
@@ -45,6 +48,16 @@ function App() {
 
           {/* 옷장 (메인 페이지, 비로그인시 유도 UI 표시) */}
           <Route path="closet" element={<ClosetPage />} />
+
+          {/* OOTD (인증 필요) */}
+          <Route
+            path="ootd"
+            element={
+              <PrivateRoute>
+                <OOTDPage />
+              </PrivateRoute>
+            }
+          />
 
           {/* 추천 (인증 필요) */}
           <Route
@@ -147,8 +160,9 @@ function App() {
             }
           />
         </Route>
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </ClothUploadProvider>
   );
 }
 
