@@ -1,0 +1,65 @@
+# Railway Environment Variables Template
+# Copy these to your Railway project settings
+
+# ==============================
+# DATABASE (Required)
+# ==============================
+# Railway MariaDB/MySQL service provides DATABASE_URL, map it:
+DB_URL=jdbc:mariadb://${{MYSQLHOST}}:${{MYSQLPORT}}/${{MYSQLDATABASE}}
+DB_USERNAME=${{MYSQLUSER}}
+DB_PASSWORD=${{MYSQLPASSWORD}}
+
+# Or manually set:
+# DB_URL=jdbc:mariadb://your-railway-db-host:3306/closetConnectProject
+# DB_USERNAME=your-username
+# DB_PASSWORD=your-password
+
+# ==============================
+# RABBITMQ (Required)
+# ==============================
+# Railway RabbitMQ service provides RABBITMQ_URL, or set manually:
+RABBITMQ_HOST=your-rabbitmq-host
+RABBITMQ_PORT=5672
+RABBITMQ_USERNAME=your-rabbitmq-user
+RABBITMQ_PASSWORD=your-rabbitmq-password
+
+# ==============================
+# JWT (Required - CHANGE THIS!)
+# ==============================
+JWT_SECRET=your-very-long-random-secret-key-at-least-256-bits-please-change-this
+JWT_TOKEN_VALIDITY=3600
+
+# ==============================
+# TOSS PAYMENTS (Required for payments)
+# ==============================
+TOSS_CLIENT_KEY=test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm
+TOSS_SECRET_KEY=test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
+
+# For production, get real keys from: https://developers.tosspayments.com/
+
+# ==============================
+# EXTERNAL SERVICES (Optional - if you have these running)
+# ==============================
+# Only set these if you have Python services deployed elsewhere
+
+# Rembg Server (background removal)
+# REMBG_SERVER_URL=http://your-rembg-service:8001
+
+# Cloth Segmentation Server
+# CLOTH_SEGMENTATION_SERVER_URL=http://your-segmentation-service:8002
+
+# Inpainting Server (Stable Diffusion)
+# INPAINTING_SERVER_URL=http://your-inpainting-service:8003
+
+# Virtual Try-On API
+# TRYON_API_URL=http://your-tryon-service:5001
+
+# ==============================
+# SPRING PROFILE (Recommended)
+# ==============================
+SPRING_PROFILES_ACTIVE=prod
+
+# ==============================
+# PORT (Railway provides this automatically)
+# ==============================
+# PORT=8080

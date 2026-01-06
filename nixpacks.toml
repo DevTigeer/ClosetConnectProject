@@ -1,0 +1,17 @@
+# Nixpacks configuration for Railway
+# This is a backup configuration in case Dockerfile is not used
+
+[phases.setup]
+nixPkgs = ["jdk17"]
+
+[phases.build]
+cmds = [
+    "chmod +x ./gradlew",
+    "./gradlew build -x test --no-daemon"
+]
+
+[phases.install]
+cmds = ["mkdir -p uploads"]
+
+[start]
+cmd = "java -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -jar build/libs/*.jar"

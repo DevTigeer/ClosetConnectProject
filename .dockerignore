@@ -1,0 +1,55 @@
+# Build outputs
+build/
+target/
+*.jar
+*.war
+
+# Gradle
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Uploads and temporary files
+uploads/
+outputs/
+test-uploads/
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+.env.local
+
+# Documentation
+*.md
+docs/
+manual/
+
+# Frontend (if not needed in backend build)
+frontend/
+
+# Python files (if separate)
+*.pyc
+__pycache__/
+venv/
+aiModel/
