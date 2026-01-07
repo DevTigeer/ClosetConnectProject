@@ -87,10 +87,8 @@ public class SecurityConfig {
         config.addAllowedMethod("DELETE");
         config.addAllowedMethod("OPTIONS");
 
-        // 필요한 헤더만 허용
-        config.addAllowedHeader("Authorization");
-        config.addAllowedHeader("Content-Type");
-        config.addAllowedHeader("Accept");
+        // 모든 헤더 허용 (Preflight 요청 통과를 위해)
+        config.addAllowedHeader("*");
 
         // 자격증명 허용 (JWT 사용 시 필요)
         config.setAllowCredentials(true);
