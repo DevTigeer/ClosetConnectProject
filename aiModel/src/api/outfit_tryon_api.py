@@ -281,7 +281,8 @@ def generate_tryon_from_urls():
 
 
 if __name__ == '__main__':
-    port = int(os.getenv('TRYON_API_PORT', '5001'))
+    # Cloud Run compatibility: PORT environment variable
+    port = int(os.getenv('PORT', os.getenv('TRYON_API_PORT', '5001')))
     print(f"\n🚀 Outfit Try-On API 서버 시작")
     print(f"   포트: {port}")
     print(f"   엔진: {tryon_service.get_service_name() if tryon_service else 'None'}")
