@@ -38,9 +38,13 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
 # Run the application
+# Memory optimized for Railway (512MB plan)
 ENTRYPOINT ["java", \
+    "-Xmx320m", \
+    "-Xms192m", \
+    "-XX:MaxMetaspaceSize=128m", \
+    "-XX:+UseSerialGC", \
     "-XX:+UseContainerSupport", \
-    "-XX:MaxRAMPercentage=75.0", \
     "-Djava.security.egd=file:/dev/./urandom", \
     "-jar", \
     "app.jar"]

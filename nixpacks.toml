@@ -14,4 +14,5 @@ cmds = [
 cmds = ["mkdir -p uploads"]
 
 [start]
-cmd = "java -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -jar build/libs/*.jar"
+# Memory optimized for Railway (512MB plan)
+cmd = "java -Xmx320m -Xms192m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -XX:+UseContainerSupport -jar build/libs/*.jar"
