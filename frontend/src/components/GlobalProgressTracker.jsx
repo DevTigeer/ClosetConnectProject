@@ -63,8 +63,11 @@ function GlobalProgressTracker() {
     console.log('🔵 GlobalProgressTracker useEffect 실행, userId:', userId);
     console.log('🔵 현재 activeUploads:', activeUploads);
 
-    // WebSocket 연결
-    const socket = new SockJS('http://localhost:8080/ws');
+    // WebSocket 연결 - 환경변수에서 URL 가져오기
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+    const wsUrl = `${baseUrl}/ws`;
+    console.log('🔵 WebSocket URL:', wsUrl);
+    const socket = new SockJS(wsUrl);
     const client = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,

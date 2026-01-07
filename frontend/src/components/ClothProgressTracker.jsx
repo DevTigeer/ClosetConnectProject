@@ -3,8 +3,14 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import './ClothProgressTracker.css';
 
+// WebSocket URL 생성: HTTPS 환경에서는 자동으로 HTTPS URL 사용
+function getWebSocketUrl() {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+  return `${baseUrl}/ws`;
+}
+
 const WEBSOCKET_CONFIG = {
-  URL: `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/ws`,
+  URL: getWebSocketUrl(),
   RECONNECT_DELAY: 5000,
 };
 
