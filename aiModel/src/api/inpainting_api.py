@@ -33,10 +33,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS 설정 (Spring Boot 서버 허용)
+# CORS 설정 (Spring Boot 서버와 Vercel 프론트엔드 허용)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080"],
+    allow_origins=[
+        "http://localhost:8080",
+        "https://*.railway.app",
+        "https://*.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -161,10 +165,12 @@ async def inpaint_image(
 
 if __name__ == "__main__":
     import uvicorn
+    import os
 
+    port = int(os.getenv("PORT", "8003"))
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8003,
+        port=port,
         log_level="info"
     )

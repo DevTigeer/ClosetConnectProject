@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import torch
 import numpy as np
@@ -11,6 +12,19 @@ import os
 from pathlib import Path
 
 app = FastAPI(title="Cloth Segmentation API")
+
+# CORS 설정 (Spring Boot 서버와 Vercel 프론트엔드 허용)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8080",
+        "https://*.railway.app",
+        "https://*.vercel.app"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # 의상 카테고리 정의``
 CLOTH_LABELS = {
@@ -220,4 +234,7 @@ async def segment_clothes(file: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002)
+    import os
+
+    port = int(os.getenv("PORT", "8002"))
+    uvicorn.run(app, host="0.0.0.0", port=port)

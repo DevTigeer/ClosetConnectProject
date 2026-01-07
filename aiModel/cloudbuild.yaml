@@ -1,0 +1,124 @@
+# Cloud Build configuration for building and deploying to Cloud Run
+# This is an alternative to using the deployment scripts
+
+steps:
+  # Build Segmentation API
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/closetconnect-segmentation:$SHORT_SHA'
+      - '-f'
+      - 'Dockerfile.segmentation'
+      - '.'
+    id: 'build-segmentation'
+
+  # Build Inpainting API
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/closetconnect-inpainting:$SHORT_SHA'
+      - '-f'
+      - 'Dockerfile.inpainting'
+      - '.'
+    id: 'build-inpainting'
+
+  # Build Try-on API
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/closetconnect-tryon:$SHORT_SHA'
+      - '-f'
+      - 'Dockerfile.tryon'
+      - '.'
+    id: 'build-tryon'
+
+  # Push Segmentation API
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/closetconnect-segmentation:$SHORT_SHA'
+    id: 'push-segmentation'
+
+  # Push Inpainting API
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/closetconnect-inpainting:$SHORT_SHA'
+    id: 'push-inpainting'
+
+  # Push Try-on API
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/closetconnect-tryon:$SHORT_SHA'
+    id: 'push-tryon'
+
+  # Deploy Segmentation API to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'closetconnect-segmentation'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/closetconnect-segmentation:$SHORT_SHA'
+      - '--region'
+      - 'asia-northeast3'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+    id: 'deploy-segmentation'
+
+  # Deploy Inpainting API to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'closetconnect-inpainting'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/closetconnect-inpainting:$SHORT_SHA'
+      - '--region'
+      - 'asia-northeast3'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+    id: 'deploy-inpainting'
+
+  # Deploy Try-on API to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'closetconnect-tryon'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/closetconnect-tryon:$SHORT_SHA'
+      - '--region'
+      - 'asia-northeast3'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+    id: 'deploy-tryon'
+
+images:
+  - 'gcr.io/$PROJECT_ID/closetconnect-segmentation:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/closetconnect-inpainting:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/closetconnect-tryon:$SHORT_SHA'
+
+timeout: 3600s
