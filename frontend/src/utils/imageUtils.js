@@ -1,10 +1,10 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 const IS_PRODUCTION = import.meta.env.MODE === 'production';
 
 /**
  * 이미지 URL을 절대 경로로 변환
  * - 개발 환경: http://localhost:8080/uploads/...
- * - 운영 환경: /uploads/... (같은 도메인)
+ * - 운영 환경: Railway HTTPS URL + /uploads/...
  *
  * @param {string} imageUrl - API에서 받은 이미지 URL
  * @returns {string} - 완전한 이미지 URL
@@ -19,13 +19,13 @@ export function getImageUrl(imageUrl) {
     return imageUrl;
   }
 
-  // 운영 환경 (VITE_API_BASE가 '/' 또는 빈 값)
-  if (IS_PRODUCTION || !API_BASE || API_BASE === '/' || API_BASE === '') {
+  // API_BASE가 없거나 '/' 또는 빈 값인 경우
+  if (!API_BASE || API_BASE === '/' || API_BASE === '') {
     // /uploads/... 형태로 반환
     return imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
   }
 
-  // 개발 환경 (VITE_API_BASE가 http://localhost:8080)
+  // 개발/운영 환경 모두 API_BASE + imageUrl
   // API_BASE와 imageUrl을 합칠 때 중복 슬래시 제거
   const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
   const path = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
