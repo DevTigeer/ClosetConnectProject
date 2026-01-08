@@ -5,14 +5,21 @@ const ClothUploadContext = createContext();
 const STORAGE_KEY = 'cloth_active_uploads';
 
 export function ClothUploadProvider({ children }) {
-  // localStorage에서 초기값 복구
+  // localStorage에서 초기값 복구 (PROCESSING 상태만)
   const [activeUploads, setActiveUploads] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        console.log('✅ localStorage에서 진행 중인 작업 복구:', parsed);
-        return parsed;
+        // 진행 중인 작업만 복구 (실패/완료 상태는 제외)
+        const processingOnly = parsed.filter(
+          upload => upload.status === 'PROCESSING'
+        );
+        console.log('✅ localStorage에서 진행 중인 작업 복구:', processingOnly);
+        if (processingOnly.length < parsed.length) {
+          console.log('🗑️  완료/실패 작업 제외:', parsed.length - processingOnly.length, '개');
+        }
+        return processingOnly;
       }
     } catch (error) {
       console.error('❌ localStorage 복구 실패:', error);
