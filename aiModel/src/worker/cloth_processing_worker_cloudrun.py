@@ -3,6 +3,7 @@ RabbitMQ Cloth Processing Worker (CloudRun API Version)
 - CloudRun에 배포된 AI API들을 호출하여 처리
 - rembg → CloudRun Segmentation API → Imagen → CloudRun Inpainting API
 - 기존 Worker보다 가볍고, CloudRun API들을 활용
+- HTTP 헬스체크 서버 포함 (Cloud Run 배포용)
 """
 
 import pika
@@ -18,6 +19,8 @@ import io
 from rembg import remove
 from datetime import datetime
 from dotenv import load_dotenv
+import threading
+from flask import Flask, jsonify
 
 # .env 파일에서 환경변수 로드
 load_dotenv()
@@ -474,6 +477,46 @@ class ClothProcessingWorker:
             print("👋 Worker stopped")
 
 
-if __name__ == "__main__":
+# Flask HTTP 서버 (Cloud Run 헬스체크용)
+app = Flask(__name__)
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Cloud Run 헬스체크 엔드포인트"""
+    return jsonify({
+        "status": "healthy",
+        "service": "closetconnect-worker",
+        "mode": "cloudrun-api",
+        "rabbitmq_host": RABBITMQ_HOST,
+        "segmentation_api": SEGMENTATION_API_URL,
+        "inpainting_api": INPAINTING_API_URL
+    }), 200
+
+@app.route('/', methods=['GET'])
+def index():
+    """루트 엔드포인트"""
+    return jsonify({
+        "service": "ClosetConnect CloudRun Worker",
+        "status": "running",
+        "description": "RabbitMQ worker that processes cloth images using CloudRun APIs"
+    }), 200
+
+
+def run_worker():
+    """별도 스레드에서 RabbitMQ Worker 실행"""
     worker = ClothProcessingWorker()
     worker.start()
+
+
+if __name__ == "__main__":
+    # Cloud Run에서 요구하는 PORT 환경변수
+    port = int(os.getenv("PORT", "8080"))
+
+    # RabbitMQ Worker를 별도 스레드로 시작
+    worker_thread = threading.Thread(target=run_worker, daemon=True)
+    worker_thread.start()
+    print(f"🔄 RabbitMQ Worker thread started")
+
+    # Flask HTTP 서버 시작 (Cloud Run 헬스체크용)
+    print(f"🌐 Starting HTTP health check server on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=False)
