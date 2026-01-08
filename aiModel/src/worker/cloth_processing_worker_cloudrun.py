@@ -34,7 +34,9 @@ except ImportError:
     print("⚠️  Google AI Imagen 서비스를 사용할 수 없습니다.")
 
 # 프로젝트 루트 디렉토리
-PROJECT_ROOT = Path(__file__).parent.parent
+# __file__ = /app/src/worker/cloth_processing_worker_cloudrun.py
+# .parent.parent.parent = /app (Dockerfile WORKDIR)
+PROJECT_ROOT = Path(__file__).parent.parent.parent
 OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 SEGMENTED_DIR = OUTPUTS_DIR / "segmented_clothes"
 REMOVED_BG_DIR = OUTPUTS_DIR / "removed_bg"
