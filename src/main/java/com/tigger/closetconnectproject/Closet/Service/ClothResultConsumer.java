@@ -60,28 +60,55 @@ public class ClothResultConsumer {
 
         try {
             if (message.getSuccess()) {
-                // === 성공 케이스: Python이 저장한 이미지 파일들을 Spring uploads로 복사 ===
+                // === 성공 케이스: CloudRun Worker에서 base64 이미지 데이터 처리 ===
                 log.info("[ResultConsumer][{}] Processing successful result", clothId);
 
                 // 1. 배경 제거 이미지 처리
-                if (message.getRemovedBgImagePath() != null) {
-                    byte[] removedBgBytes = loadImageFile(message.getRemovedBgImagePath());
+                byte[] removedBgBytes = null;
+                if (message.getRemovedBgImageBase64() != null && !message.getRemovedBgImageBase64().isEmpty()) {
+                    // CloudRun: base64 데이터 사용
+                    removedBgBytes = java.util.Base64.getDecoder().decode(message.getRemovedBgImageBase64());
+                    log.info("[ResultConsumer][{}] Using base64 removed-bg image ({} bytes)", clothId, removedBgBytes.length);
+                } else if (message.getRemovedBgImagePath() != null) {
+                    // Fallback: 로컬 파일 경로 (로컬 테스트용)
+                    removedBgBytes = loadImageFile(message.getRemovedBgImagePath());
+                    log.info("[ResultConsumer][{}] Using file path removed-bg image", clothId);
+                }
+                if (removedBgBytes != null) {
                     String removedBgUrl = imageStorageService.saveRemovedBgImage(removedBgBytes, clothId);
                     cloth.setRemovedBgImageUrl(removedBgUrl);
                     log.info("[ResultConsumer][{}] Saved removed-bg image: {}", clothId, removedBgUrl);
                 }
 
                 // 2. 세그먼트 이미지 처리
-                if (message.getSegmentedImagePath() != null) {
-                    byte[] segmentedBytes = loadImageFile(message.getSegmentedImagePath());
+                byte[] segmentedBytes = null;
+                if (message.getSegmentedImageBase64() != null && !message.getSegmentedImageBase64().isEmpty()) {
+                    // CloudRun: base64 데이터 사용
+                    segmentedBytes = java.util.Base64.getDecoder().decode(message.getSegmentedImageBase64());
+                    log.info("[ResultConsumer][{}] Using base64 segmented image ({} bytes)", clothId, segmentedBytes.length);
+                } else if (message.getSegmentedImagePath() != null) {
+                    // Fallback: 로컬 파일 경로
+                    segmentedBytes = loadImageFile(message.getSegmentedImagePath());
+                    log.info("[ResultConsumer][{}] Using file path segmented image", clothId);
+                }
+                if (segmentedBytes != null) {
                     String segmentedUrl = imageStorageService.saveSegmentedImage(segmentedBytes, clothId);
                     cloth.setSegmentedImageUrl(segmentedUrl);
                     log.info("[ResultConsumer][{}] Saved segmented image: {}", clothId, segmentedUrl);
                 }
 
                 // 3. 인페인팅 이미지 처리
-                if (message.getInpaintedImagePath() != null) {
-                    byte[] inpaintedBytes = loadImageFile(message.getInpaintedImagePath());
+                byte[] inpaintedBytes = null;
+                if (message.getInpaintedImageBase64() != null && !message.getInpaintedImageBase64().isEmpty()) {
+                    // CloudRun: base64 데이터 사용
+                    inpaintedBytes = java.util.Base64.getDecoder().decode(message.getInpaintedImageBase64());
+                    log.info("[ResultConsumer][{}] Using base64 inpainted image ({} bytes)", clothId, inpaintedBytes.length);
+                } else if (message.getInpaintedImagePath() != null) {
+                    // Fallback: 로컬 파일 경로
+                    inpaintedBytes = loadImageFile(message.getInpaintedImagePath());
+                    log.info("[ResultConsumer][{}] Using file path inpainted image", clothId);
+                }
+                if (inpaintedBytes != null) {
                     String inpaintedUrl = imageStorageService.saveInpaintedImage(inpaintedBytes, clothId);
                     cloth.setInpaintedImageUrl(inpaintedUrl);
                     log.info("[ResultConsumer][{}] Saved inpainted image: {}", clothId, inpaintedUrl);
@@ -109,8 +136,20 @@ public class ClothResultConsumer {
 
                     for (ClothResultMessage.SegmentedItem item : message.getAllSegmentedItems()) {
                         try {
-                            // 이미지 파일 로드
-                            byte[] itemImageBytes = loadImageFile(item.getSegmentedPath());
+                            // 이미지 로드 (base64 우선, 파일 경로는 fallback)
+                            byte[] itemImageBytes = null;
+                            if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
+                                // CloudRun: base64 사용
+                                itemImageBytes = java.util.Base64.getDecoder().decode(item.getImageBase64());
+                            } else if (item.getSegmentedPath() != null) {
+                                // Fallback: 파일 경로
+                                itemImageBytes = loadImageFile(item.getSegmentedPath());
+                            }
+
+                            if (itemImageBytes == null) {
+                                log.warn("[ResultConsumer][{}] No image data for segmented item: {}", clothId, item.getLabel());
+                                continue;
+                            }
 
                             // 이미지 저장
                             String itemImageUrl = imageStorageService.saveSegmentedImage(

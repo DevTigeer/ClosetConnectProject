@@ -204,6 +204,13 @@ class ClothProcessingPipelineCloudRun:
             print("  Using original image as fallback")
             return image  # 실패 시 원본 반환
 
+    def image_to_base64(self, image):
+        """PIL Image를 base64 문자열로 변환"""
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+        return base64.b64encode(img_byte_arr.read()).decode('utf-8')
+
     def process(self, cloth_id, user_id, image_bytes, image_type, worker=None):
         """전체 파이프라인 실행 (CloudRun API 사용)"""
         print(f"\n🔄 Processing clothId: {cloth_id}, userId: {user_id}, imageType: {image_type}")
@@ -270,13 +277,23 @@ class ClothProcessingPipelineCloudRun:
             # 카테고리 매핑
             suggested_category = CATEGORY_MAPPING.get(primary_item["label"], "ACC")
 
+            # 이미지들을 base64로 인코딩 (CloudRun → Railway 전송용)
+            removed_bg_base64 = self.image_to_base64(removed_bg_image)
+            segmented_base64 = self.image_to_base64(cropped_image)
+            inpainted_base64 = self.image_to_base64(inpainted_image)
+
             result = {
                 "clothId": cloth_id,
                 "success": True,
                 "errorMessage": None,
+                # 파일 경로 (참고용, Railway에서는 사용 안 함)
                 "removedBgImagePath": str(removed_bg_path.absolute()),
                 "segmentedImagePath": str(segmented_path.absolute()),
                 "inpaintedImagePath": str(inpainted_path.absolute()),
+                # base64 이미지 데이터 (Railway에서 사용)
+                "removedBgImageBase64": removed_bg_base64,
+                "segmentedImageBase64": segmented_base64,
+                "inpaintedImageBase64": inpainted_base64,
                 "suggestedCategory": suggested_category,
                 "segmentationLabel": primary_item["label"],
                 "areaPixels": primary_item["area_pixels"],
@@ -285,6 +302,7 @@ class ClothProcessingPipelineCloudRun:
                     {
                         "label": item["label"],
                         "segmentedPath": item.get("saved_path", ""),
+                        "imageBase64": item.get("image_base64", ""),  # Segmentation API에서 받은 base64
                         "areaPixels": item["area_pixels"]
                     }
                     for item in segmentation_result.get("all_items", [])

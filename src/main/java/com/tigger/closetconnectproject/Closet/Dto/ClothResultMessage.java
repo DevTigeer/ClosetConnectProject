@@ -33,18 +33,36 @@ public class ClothResultMessage implements Serializable {
 
     /**
      * 배경 제거 이미지 파일 경로 (Python 서버가 저장한 경로)
+     * @deprecated CloudRun에서는 파일 접근 불가. removedBgImageBase64 사용
      */
     private String removedBgImagePath;
 
     /**
      * 세그먼트된 이미지 파일 경로 (크롭된 이미지)
+     * @deprecated CloudRun에서는 파일 접근 불가. segmentedImageBase64 사용
      */
     private String segmentedImagePath;
 
     /**
      * 인페인팅된 이미지 파일 경로
+     * @deprecated CloudRun에서는 파일 접근 불가. inpaintedImageBase64 사용
      */
     private String inpaintedImagePath;
+
+    /**
+     * 배경 제거 이미지 base64 인코딩 데이터 (CloudRun용)
+     */
+    private String removedBgImageBase64;
+
+    /**
+     * 세그먼트된 이미지 base64 인코딩 데이터 (CloudRun용)
+     */
+    private String segmentedImageBase64;
+
+    /**
+     * 인페인팅된 이미지 base64 인코딩 데이터 (CloudRun용)
+     */
+    private String inpaintedImageBase64;
 
     /**
      * 제안된 카테고리 (예: "TOP", "BOTTOM", "OUTER" 등)
@@ -112,7 +130,8 @@ public class ClothResultMessage implements Serializable {
     @AllArgsConstructor
     public static class SegmentedItem implements Serializable {
         private String label;
-        private String segmentedPath;
+        private String segmentedPath;  // Deprecated
+        private String imageBase64;    // CloudRun용
         private Integer areaPixels;
     }
 
