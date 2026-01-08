@@ -111,6 +111,11 @@ function GlobalProgressTracker() {
           // 실패 처리
           if (data.status === 'FAILED') {
             alert(`AI 처리 실패: ${data.errorMessage || '알 수 없는 오류'}`);
+
+            // 실패한 항목을 목록에서 제거
+            setTimeout(() => {
+              removeUpload(data.clothId);
+            }, 3000); // 3초 후 제거 (사용자가 메시지를 볼 시간 확보)
           }
         });
 
