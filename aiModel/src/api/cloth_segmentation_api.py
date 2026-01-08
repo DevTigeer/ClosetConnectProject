@@ -73,8 +73,9 @@ class ClothSegmentationModel:
         self.model.eval()
         
         # 결과 저장 디렉토리 생성
-        # 절대 경로 사용 (Java 서버에서 접근 가능하도록)
-        base_dir = Path(__file__).parent.parent  # ClosetConnectProject 디렉토리
+        # 로컬: .../aiModel/src/api/cloth_segmentation_api.py → .../aiModel
+        # CloudRun: /app/src/api/cloth_segmentation_api.py → /app
+        base_dir = Path(__file__).parent.parent.parent  # aiModel 디렉토리 (또는 /app)
         self.output_dir = base_dir / "outputs" / "segmented_clothes"
         self.output_dir.mkdir(parents=True, exist_ok=True)
     
