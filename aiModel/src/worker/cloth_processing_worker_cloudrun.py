@@ -375,6 +375,10 @@ class ClothProcessingWorker:
 
     def on_message(self, ch, method, properties, body):
         """메시지 수신 콜백"""
+        cloth_id = None
+        user_id = None
+        retry_count = 0
+
         try:
             # 메시지 파싱
             message = json.loads(body)
@@ -383,8 +387,9 @@ class ClothProcessingWorker:
             image_bytes_data = message["imageBytes"]
             original_filename = message["originalFilename"]
             image_type = message.get("imageType", "FULL_BODY")
+            retry_count = message.get("retryCount", 0)
 
-            print(f"\n📨 Received message: clothId={cloth_id}, userId={user_id}, imageType={image_type}")
+            print(f"\n📨 Received message: clothId={cloth_id}, userId={user_id}, imageType={image_type}, retryCount={retry_count}")
 
             # userId 저장
             self.user_id = user_id
@@ -411,8 +416,57 @@ class ClothProcessingWorker:
             print(f"❌ Error processing message: {str(e)}")
             traceback.print_exc()
 
-            # NACK (재시도)
-            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+            # 최대 재시도 횟수 체크 (5회)
+            MAX_RETRIES = 5
+
+            if retry_count >= MAX_RETRIES:
+                # 최대 재시도 초과 - 실패 처리하고 ACK (큐에서 제거)
+                print(f"⚠️  Max retries ({MAX_RETRIES}) exceeded for clothId={cloth_id}. Sending FAILED status.")
+
+                # 실패 결과 전송
+                if cloth_id and user_id:
+                    failed_result = {
+                        "clothId": cloth_id,
+                        "success": False,
+                        "errorMessage": f"AI 처리 실패: 최대 재시도 횟수({MAX_RETRIES}회) 초과. {str(e)}",
+                        "removedBgImagePath": None,
+                        "segmentedImagePath": None,
+                        "inpaintedImagePath": None,
+                        "suggestedCategory": None,
+                        "segmentationLabel": None,
+                        "areaPixels": None
+                    }
+                    self.send_result(failed_result)
+
+                # ACK - 메시지 제거 (더 이상 재시도하지 않음)
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+                print(f"✅ Message acknowledged as FAILED (max retries exceeded)\n")
+            else:
+                # 재시도 가능 - retryCount 증가시켜서 다시 발행
+                print(f"🔄 Retry {retry_count + 1}/{MAX_RETRIES} for clothId={cloth_id}")
+
+                # 원본 메시지 ACK (큐에서 제거)
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+
+                # retryCount 증가시킨 새 메시지 발행
+                if cloth_id and user_id:
+                    retry_message = json.loads(body)  # 원본 메시지 복사
+                    retry_message["retryCount"] = retry_count + 1  # retryCount 증가
+
+                    # 같은 큐에 다시 발행
+                    self.channel.basic_publish(
+                        exchange=EXCHANGE,
+                        routing_key=REQUEST_ROUTING_KEY,
+                        body=json.dumps(retry_message),
+                        properties=pika.BasicProperties(
+                            delivery_mode=2,  # persistent
+                            content_type='application/json'
+                        )
+                    )
+                    print(f"📤 Re-queued message with retryCount={retry_count + 1}")
+                else:
+                    # cloth_id나 user_id가 없으면 그냥 버림
+                    print(f"⚠️  Cannot retry - missing clothId or userId")
 
     def send_progress(self, cloth_id, user_id, status, current_step, progress_percentage):
         """진행도 메시지 전송"""
