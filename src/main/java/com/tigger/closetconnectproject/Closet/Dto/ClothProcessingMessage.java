@@ -51,4 +51,10 @@ public class ClothProcessingMessage implements Serializable {
      * 재시도 횟수 (선택 사항)
      */
     private int retryCount = 0;
+
+    /**
+     * 메시지 생성 시간 (밀리초, Unix timestamp)
+     * - 오래된 메시지 폐기용
+     */
+    private long timestamp = System.currentTimeMillis();
 }

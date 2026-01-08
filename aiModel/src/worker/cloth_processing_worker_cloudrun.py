@@ -406,8 +406,38 @@ class ClothProcessingWorker:
             original_filename = message["originalFilename"]
             image_type = message.get("imageType", "FULL_BODY")
             retry_count = message.get("retryCount", 0)
+            message_timestamp = message.get("timestamp", None)
 
             print(f"\n📨 Received message: clothId={cloth_id}, userId={user_id}, imageType={image_type}, retryCount={retry_count}")
+
+            # 오래된 메시지 체크 (10분 이상 지난 메시지는 폐기)
+            MAX_MESSAGE_AGE_SECONDS = 600  # 10분
+            if message_timestamp:
+                current_time = datetime.now().timestamp() * 1000  # milliseconds
+                message_age_ms = current_time - message_timestamp
+                message_age_sec = message_age_ms / 1000
+
+                if message_age_sec > MAX_MESSAGE_AGE_SECONDS:
+                    print(f"⏰ Message too old ({message_age_sec:.0f}s > {MAX_MESSAGE_AGE_SECONDS}s). Discarding.")
+
+                    # 오래된 메시지는 실패 처리하고 ACK
+                    if cloth_id and user_id:
+                        failed_result = {
+                            "clothId": cloth_id,
+                            "success": False,
+                            "errorMessage": f"메시지가 너무 오래되었습니다 ({message_age_sec:.0f}초). 다시 업로드해주세요.",
+                            "removedBgImagePath": None,
+                            "segmentedImagePath": None,
+                            "inpaintedImagePath": None,
+                            "suggestedCategory": None,
+                            "segmentationLabel": None,
+                            "areaPixels": None
+                        }
+                        self.send_result(failed_result)
+
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                    print(f"✅ Old message discarded\n")
+                    return
 
             # userId 저장
             self.user_id = user_id
@@ -470,6 +500,7 @@ class ClothProcessingWorker:
                 if cloth_id and user_id:
                     retry_message = json.loads(body)  # 원본 메시지 복사
                     retry_message["retryCount"] = retry_count + 1  # retryCount 증가
+                    # timestamp는 유지 (원본 메시지의 생성 시간 유지)
 
                     # 같은 큐에 다시 발행
                     self.channel.basic_publish(

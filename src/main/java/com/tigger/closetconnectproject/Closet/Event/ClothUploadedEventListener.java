@@ -36,7 +36,8 @@ public class ClothUploadedEventListener {
                 event.getImageBytes(),
                 event.getOriginalFilename(),
                 event.getImageType(),
-                0  // 초기 재시도 횟수
+                0,  // 초기 재시도 횟수
+                System.currentTimeMillis()  // 타임스탬프 (밀리초)
         );
 
         clothMessageProducer.sendClothProcessingMessage(message);
