@@ -13,6 +13,7 @@ import os
 import sys
 import traceback
 import requests
+import time
 from pathlib import Path
 from PIL import Image
 import io
@@ -101,6 +102,20 @@ class ClothProcessingPipelineCloudRun:
                 self.use_imagen = False
         else:
             self.use_imagen = False
+
+        # rembg 모델 Warmup (첫 실행 시 모델 로딩으로 인한 지연 방지)
+        print("  🔥 Warming up rembg model...")
+        try:
+            warmup_start = time.time()
+            dummy_img = Image.new('RGB', (100, 100), color='white')
+            dummy_bytes = io.BytesIO()
+            dummy_img.save(dummy_bytes, format='PNG')
+            dummy_bytes.seek(0)
+            remove(dummy_bytes.getvalue())
+            warmup_time = time.time() - warmup_start
+            print(f"  ✅ rembg model loaded and ready ({warmup_time:.2f}s)")
+        except Exception as e:
+            print(f"  ⚠️  rembg warmup failed: {e}")
 
         print("✅ Pipeline initialized successfully")
 
@@ -360,8 +375,9 @@ class ClothProcessingWorker:
             host=RABBITMQ_HOST,
             port=RABBITMQ_PORT,
             credentials=credentials,
-            heartbeat=600,
-            blocked_connection_timeout=300
+            heartbeat=600,  # 10분 heartbeat
+            blocked_connection_timeout=300,  # 5분 블록 타임아웃
+            socket_timeout=600  # 10분 소켓 타임아웃 (rembg 첫 실행 대응)
         )
 
         self.connection = pika.BlockingConnection(parameters)
@@ -569,29 +585,54 @@ class ClothProcessingWorker:
         print(f"📤 Result sent to {RESULT_QUEUE}")
 
     def start(self):
-        """Worker 시작"""
-        self.connect()
+        """Worker 시작 (자동 재연결 포함)"""
+        while True:
+            try:
+                self.connect()
 
-        print(f"🎯 Listening on queue: {REQUEST_QUEUE}")
-        print(f"🌐 Using CloudRun APIs:")
-        print(f"   - Segmentation: {SEGMENTATION_API_URL}")
-        print(f"   - Inpainting: {INPAINTING_API_URL}")
-        print("Waiting for messages. To exit press CTRL+C\n")
+                print(f"🎯 Listening on queue: {REQUEST_QUEUE}")
+                print(f"🌐 Using CloudRun APIs:")
+                print(f"   - Segmentation: {SEGMENTATION_API_URL}")
+                print(f"   - Inpainting: {INPAINTING_API_URL}")
+                print("Waiting for messages. To exit press CTRL+C\n")
 
-        self.channel.basic_consume(
-            queue=REQUEST_QUEUE,
-            on_message_callback=self.on_message
-        )
+                self.channel.basic_consume(
+                    queue=REQUEST_QUEUE,
+                    on_message_callback=self.on_message
+                )
 
-        try:
-            self.channel.start_consuming()
-        except KeyboardInterrupt:
-            print("\n⛔ Stopping worker...")
-            self.channel.stop_consuming()
-        finally:
-            if self.connection:
-                self.connection.close()
-            print("👋 Worker stopped")
+                self.channel.start_consuming()
+
+            except KeyboardInterrupt:
+                print("\n⛔ Stopping worker...")
+                if self.channel and self.channel.is_open:
+                    self.channel.stop_consuming()
+                break
+
+            except (pika.exceptions.ConnectionClosedByBroker,
+                    pika.exceptions.AMQPConnectionError,
+                    pika.exceptions.StreamLostError) as e:
+                print(f"❌ RabbitMQ connection lost: {e}")
+                print("🔄 Reconnecting in 5 seconds...")
+                time.sleep(5)
+                continue
+
+            except Exception as e:
+                print(f"❌ Unexpected error: {e}")
+                traceback.print_exc()
+                print("🔄 Reconnecting in 5 seconds...")
+                time.sleep(5)
+                continue
+
+            finally:
+                # 연결이 열려있을 때만 닫기
+                if self.connection and self.connection.is_open:
+                    try:
+                        self.connection.close()
+                    except Exception as e:
+                        print(f"⚠️  Error closing connection: {e}")
+
+        print("👋 Worker stopped")
 
 
 # Flask HTTP 서버 (Cloud Run 헬스체크용)
