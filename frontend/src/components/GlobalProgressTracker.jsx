@@ -85,6 +85,13 @@ function GlobalProgressTracker() {
           console.log('📊 진행 상황 수신:', data);
           console.log('📊 현재 activeUploads에 있는 clothId들:', activeUploads.map(u => u.clothId));
 
+          // 현재 추적 중인 작업이 아니면 무시
+          const isTracking = activeUploads.some(upload => upload.clothId === data.clothId);
+          if (!isTracking) {
+            console.log('⏭️  추적 중이 아닌 작업, 무시:', data.clothId);
+            return;
+          }
+
           // 진행도 업데이트
           console.log('🔄 updateProgress 호출:', data.clothId);
           updateProgress(data.clothId, {
