@@ -193,8 +193,20 @@ public class ClothResultConsumer {
 
                     for (ClothResultMessage.ExpandedItem item : message.getAllExpandedItems()) {
                         try {
-                            // 이미지 파일 로드
-                            byte[] itemImageBytes = loadImageFile(item.getExpandedPath());
+                            // 이미지 로드 (base64 우선, 파일 경로는 fallback)
+                            byte[] itemImageBytes = null;
+                            if (item.getImageBase64() != null && !item.getImageBase64().isEmpty()) {
+                                // CloudRun: base64 사용
+                                itemImageBytes = java.util.Base64.getDecoder().decode(item.getImageBase64());
+                            } else if (item.getExpandedPath() != null) {
+                                // Fallback: 파일 경로
+                                itemImageBytes = loadImageFile(item.getExpandedPath());
+                            }
+
+                            if (itemImageBytes == null) {
+                                log.warn("[ResultConsumer][{}] No image data for expanded item: {}", clothId, item.getLabel());
+                                continue;
+                            }
 
                             // 이미지 저장
                             String itemImageUrl = imageStorageService.saveExpandedImage(

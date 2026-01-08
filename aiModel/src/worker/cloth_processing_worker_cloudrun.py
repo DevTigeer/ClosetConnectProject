@@ -235,10 +235,10 @@ class ClothProcessingPipelineCloudRun:
 
             segmentation_result = self.segment_clothing_api(removed_bg_image)
             primary_item = segmentation_result
-            cropped_image = primary_item["cropped_image"]
+            segmented_image = primary_item["cropped_image"]  # 원본 segmented 이미지 보존
 
             segmented_path = SEGMENTED_DIR / f"{cloth_id}.png"
-            cropped_image.save(segmented_path)
+            segmented_image.save(segmented_path)
             print(f"  💾 Segmented 이미지 저장: {segmented_path}")
 
             if worker:
@@ -246,14 +246,15 @@ class ClothProcessingPipelineCloudRun:
             print(f"  [50%] 옷 영역 분석 완료")
 
             # Step 3: Google AI Imagen 확장 (50% → 70%)
+            expanded_image = segmented_image  # 기본값: segmented 이미지 사용
             expanded_path = segmented_path  # 기본값
             if self.use_imagen:
                 if worker:
                     worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 확장 중...", 55)
                 print(f"  [55%] Google Imagen으로 이미지 확장 중...")
-                cropped_image = self.imagen_service.expand_image(cropped_image)
+                expanded_image = self.imagen_service.expand_image(segmented_image)  # 새 변수에 저장
                 expanded_path = EXPANDED_DIR / f"{cloth_id}.png"
-                cropped_image.save(expanded_path)
+                expanded_image.save(expanded_path)
                 print(f"  [70%] 이미지 확장 완료")
             else:
                 print(f"  [55%] Imagen 비활성화 - 확장 건너뜀")
@@ -266,7 +267,7 @@ class ClothProcessingPipelineCloudRun:
                 worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 복원 중...", 75)
             print(f"  [75%] CloudRun Inpainting API 호출...")
 
-            inpainted_image = self.inpaint_image_api(cropped_image)
+            inpainted_image = self.inpaint_image_api(expanded_image)  # expanded 이미지 사용
             inpainted_path = INPAINTED_DIR / f"{cloth_id}.png"
             inpainted_image.save(inpainted_path)
 
@@ -279,7 +280,8 @@ class ClothProcessingPipelineCloudRun:
 
             # 이미지들을 base64로 인코딩 (CloudRun → Railway 전송용)
             removed_bg_base64 = self.image_to_base64(removed_bg_image)
-            segmented_base64 = self.image_to_base64(cropped_image)
+            segmented_base64 = self.image_to_base64(segmented_image)  # ✅ 수정: segmented 원본 사용
+            expanded_base64 = self.image_to_base64(expanded_image)    # ✅ 추가: expanded 이미지
             inpainted_base64 = self.image_to_base64(inpainted_image)
 
             result = {
@@ -307,7 +309,15 @@ class ClothProcessingPipelineCloudRun:
                     }
                     for item in segmentation_result.get("all_items", [])
                 ],
-                "allExpandedItems": []  # CloudRun 버전에서는 기본 아이템만 처리
+                # ✅ 수정: allExpandedItems에 primary item 추가
+                "allExpandedItems": [
+                    {
+                        "label": primary_item["label"],
+                        "expandedPath": str(expanded_path.absolute()),
+                        "imageBase64": expanded_base64,  # ✅ base64 데이터 추가
+                        "areaPixels": primary_item["area_pixels"]
+                    }
+                ]
             }
 
             print(f"\n{'='*60}")

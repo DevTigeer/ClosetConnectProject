@@ -143,7 +143,8 @@ public class ClothResultMessage implements Serializable {
     @AllArgsConstructor
     public static class ExpandedItem implements Serializable {
         private String label;
-        private String expandedPath;
+        private String expandedPath;  // Deprecated (for local file access)
+        private String imageBase64;    // CloudRun용 - base64 인코딩된 이미지 데이터
         private Integer areaPixels;
     }
 }
