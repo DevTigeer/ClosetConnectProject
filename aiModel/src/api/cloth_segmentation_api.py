@@ -137,14 +137,21 @@ class ClothSegmentationModel:
             mask_3d = np.stack([cropped_mask] * 3, axis=-1) > 0
             masked_image[~mask_3d] = 255
             
-            # 이미지 저장
+            # 이미지 저장 (로컬 파일)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             category_kr = CATEGORY_MAPPING.get(label_name, label_name)
             filename = f"{category_kr}_{label_name}_{timestamp}.png"
             filepath = self.output_dir / filename
-            
-            Image.fromarray(masked_image).save(filepath)
-            
+
+            pil_image = Image.fromarray(masked_image)
+            pil_image.save(filepath)
+
+            # 이미지를 base64로 인코딩 (CloudRun Worker에서 사용)
+            img_byte_arr = io.BytesIO()
+            pil_image.save(img_byte_arr, format='PNG')
+            img_byte_arr.seek(0)
+            image_base64 = base64.b64encode(img_byte_arr.read()).decode('utf-8')
+
             results.append({
                 "label": label_name,
                 "category_kr": category_kr,
@@ -154,7 +161,8 @@ class ClothSegmentationModel:
                     "x_max": int(x_max),
                     "y_max": int(y_max)
                 },
-                "saved_path": str(filepath),
+                "saved_path": str(filepath),  # 로컬 저장용 (참고용)
+                "image_base64": image_base64,  # CloudRun Worker에서 사용할 이미지 데이터
                 "area_pixels": int(np.sum(mask > 0))
             })
         

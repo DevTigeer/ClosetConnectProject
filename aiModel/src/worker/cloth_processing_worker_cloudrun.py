@@ -153,13 +153,15 @@ class ClothProcessingPipelineCloudRun:
             detected_items_sorted = sorted(detected_items, key=lambda x: x["area_pixels"], reverse=True)
             primary_item = detected_items_sorted[0]
 
-            # saved_path에서 이미지 로드
-            saved_path = primary_item["saved_path"]
-            if os.path.exists(saved_path):
-                cropped_image = Image.open(saved_path).convert("RGBA")
+            # base64 이미지 데이터에서 이미지 로드
+            if "image_base64" in primary_item:
+                # CloudRun API에서 base64로 반환한 이미지 사용
+                image_data = base64.b64decode(primary_item["image_base64"])
+                cropped_image = Image.open(io.BytesIO(image_data)).convert("RGBA")
+                print(f"  ✅ Loaded image from base64 ({len(image_data)} bytes)")
             else:
-                # 경로가 없으면 원본 이미지 사용
-                print(f"  ⚠️  Saved path not found: {saved_path}, using original")
+                # Fallback: 원본 이미지 사용
+                print(f"  ⚠️  No image_base64 in response, using original")
                 cropped_image = image.copy()
 
             return {
