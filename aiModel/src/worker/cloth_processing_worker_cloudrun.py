@@ -1,0 +1,479 @@
+"""
+RabbitMQ Cloth Processing Worker (CloudRun API Version)
+- CloudRun에 배포된 AI API들을 호출하여 처리
+- rembg → CloudRun Segmentation API → Imagen → CloudRun Inpainting API
+- 기존 Worker보다 가볍고, CloudRun API들을 활용
+"""
+
+import pika
+import json
+import base64
+import os
+import sys
+import traceback
+import requests
+from pathlib import Path
+from PIL import Image
+import io
+from rembg import remove
+from datetime import datetime
+from dotenv import load_dotenv
+
+# .env 파일에서 환경변수 로드
+load_dotenv()
+
+# Google AI Imagen 서비스 import (선택적)
+try:
+    from ..services.imagen_service import GoogleAIImagenService
+    IMAGEN_AVAILABLE = True
+except ImportError:
+    IMAGEN_AVAILABLE = False
+    print("⚠️  Google AI Imagen 서비스를 사용할 수 없습니다.")
+
+# 프로젝트 루트 디렉토리
+PROJECT_ROOT = Path(__file__).parent.parent
+OUTPUTS_DIR = PROJECT_ROOT / "outputs"
+SEGMENTED_DIR = OUTPUTS_DIR / "segmented_clothes"
+REMOVED_BG_DIR = OUTPUTS_DIR / "removed_bg"
+EXPANDED_DIR = OUTPUTS_DIR / "expanded"
+INPAINTED_DIR = OUTPUTS_DIR / "inpainted"
+
+# 디렉토리 생성
+SEGMENTED_DIR.mkdir(parents=True, exist_ok=True)
+REMOVED_BG_DIR.mkdir(parents=True, exist_ok=True)
+EXPANDED_DIR.mkdir(parents=True, exist_ok=True)
+INPAINTED_DIR.mkdir(parents=True, exist_ok=True)
+
+# RabbitMQ 설정
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
+RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", "5672"))
+RABBITMQ_USER = os.getenv("RABBITMQ_USERNAME", "guest")
+RABBITMQ_PASS = os.getenv("RABBITMQ_PASSWORD", "guest")
+
+REQUEST_QUEUE = "cloth.processing.queue"
+RESULT_QUEUE = "cloth.result.queue"
+PROGRESS_QUEUE = "cloth.progress.queue"
+EXCHANGE = "cloth.exchange"
+REQUEST_ROUTING_KEY = "cloth.processing"
+RESULT_ROUTING_KEY = "cloth.result"
+PROGRESS_ROUTING_KEY = "cloth.progress"
+
+# CloudRun API URLs
+SEGMENTATION_API_URL = os.getenv("SEGMENTATION_API_URL", "http://localhost:8002")
+INPAINTING_API_URL = os.getenv("INPAINTING_API_URL", "http://localhost:8003")
+
+# 카테고리 매핑 (AI 라벨 → Spring Category enum)
+CATEGORY_MAPPING = {
+    "upper-clothes": "TOP",
+    "dress": "TOP",
+    "pants": "BOTTOM",
+    "skirt": "BOTTOM",
+    "hat": "ACC",
+    "bag": "ACC",
+    "scarf": "ACC",
+    "shoes": "SHOES",
+    "left-shoe": "SHOES",
+    "right-shoe": "SHOES"
+}
+
+
+class ClothProcessingPipelineCloudRun:
+    """CloudRun API를 호출하는 옷 이미지 처리 파이프라인"""
+
+    def __init__(self):
+        print(f"🚀 Initializing CloudRun API Pipeline")
+        print(f"   Segmentation API: {SEGMENTATION_API_URL}")
+        print(f"   Inpainting API: {INPAINTING_API_URL}")
+
+        # Google AI Imagen 서비스 초기화 (선택적)
+        if IMAGEN_AVAILABLE:
+            try:
+                self.imagen_service = GoogleAIImagenService()
+                self.use_imagen = True
+                print("  ✅ Google AI Imagen 서비스 활성화")
+            except Exception as e:
+                print(f"  ⚠️  Google AI Imagen 초기화 실패: {e}")
+                self.use_imagen = False
+        else:
+            self.use_imagen = False
+
+        print("✅ Pipeline initialized successfully")
+
+    def remove_background(self, image_bytes):
+        """배경 제거 (rembg - 로컬 실행)"""
+        print("  Step 1/4: Removing background with rembg...")
+        output = remove(image_bytes)
+        image = Image.open(io.BytesIO(output)).convert("RGBA")
+        print("  ✅ Background removed")
+        return image
+
+    def segment_clothing_api(self, image):
+        """CloudRun Segmentation API 호출"""
+        print("  Step 2/4: Calling CloudRun Segmentation API...")
+
+        # RGB로 변환
+        if image.mode == "RGBA":
+            rgb_image = Image.new("RGB", image.size, (255, 255, 255))
+            rgb_image.paste(image, mask=image.split()[3])
+            image = rgb_image
+        elif image.mode != "RGB":
+            image = image.convert("RGB")
+
+        # 이미지를 바이트로 변환
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+
+        # CloudRun API 호출
+        try:
+            response = requests.post(
+                f"{SEGMENTATION_API_URL}/segment",
+                files={"file": ("image.png", img_byte_arr, "image/png")},
+                timeout=60
+            )
+            response.raise_for_status()
+            result = response.json()
+
+            if result["status"] != "success":
+                raise Exception(f"Segmentation failed: {result.get('message', 'Unknown error')}")
+
+            detected_items = result["detected_items"]
+            print(f"  ✅ Segmentation API returned {len(detected_items)} items")
+
+            # 결과 파싱 (가장 큰 아이템 선택)
+            if not detected_items:
+                raise Exception("No clothing items detected")
+
+            # 픽셀 크기순으로 정렬
+            detected_items_sorted = sorted(detected_items, key=lambda x: x["area_pixels"], reverse=True)
+            primary_item = detected_items_sorted[0]
+
+            # saved_path에서 이미지 로드
+            saved_path = primary_item["saved_path"]
+            if os.path.exists(saved_path):
+                cropped_image = Image.open(saved_path).convert("RGBA")
+            else:
+                # 경로가 없으면 원본 이미지 사용
+                print(f"  ⚠️  Saved path not found: {saved_path}, using original")
+                cropped_image = image.copy()
+
+            return {
+                "label": primary_item["label"],
+                "area_pixels": primary_item["area_pixels"],
+                "cropped_image": cropped_image,
+                "all_items": detected_items_sorted
+            }
+
+        except requests.exceptions.RequestException as e:
+            print(f"  ❌ Segmentation API call failed: {e}")
+            raise Exception(f"Segmentation API 호출 실패: {e}")
+
+    def inpaint_image_api(self, image):
+        """CloudRun Inpainting API 호출"""
+        print("  Step 4/4: Calling CloudRun Inpainting API...")
+
+        # 이미지를 바이트로 변환
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+
+        # CloudRun API 호출
+        try:
+            response = requests.post(
+                f"{INPAINTING_API_URL}/inpaint",
+                files={"file": ("image.png", img_byte_arr, "image/png")},
+                data={"extend_ratio": 0.5},
+                timeout=300  # Inpainting은 시간이 오래 걸릴 수 있음
+            )
+            response.raise_for_status()
+
+            # 응답은 이미지 바이트
+            inpainted_image = Image.open(io.BytesIO(response.content)).convert("RGBA")
+            print("  ✅ Inpainting completed")
+            return inpainted_image
+
+        except requests.exceptions.RequestException as e:
+            print(f"  ⚠️  Inpainting API call failed: {e}")
+            print("  Using original image as fallback")
+            return image  # 실패 시 원본 반환
+
+    def process(self, cloth_id, user_id, image_bytes, image_type, worker=None):
+        """전체 파이프라인 실행 (CloudRun API 사용)"""
+        print(f"\n🔄 Processing clothId: {cloth_id}, userId: {user_id}, imageType: {image_type}")
+        print(f"  🎯 Mode: CloudRun API Pipeline")
+
+        try:
+            # Step 1: Background Removal (0% → 25%)
+            if worker:
+                worker.send_progress(cloth_id, user_id, "PROCESSING", "배경 제거 중...", 10)
+            print(f"  [10%] 배경 제거 중...")
+            removed_bg_image = self.remove_background(image_bytes)
+            removed_bg_path = REMOVED_BG_DIR / f"{cloth_id}.png"
+            removed_bg_image.save(removed_bg_path)
+            if worker:
+                worker.send_progress(cloth_id, user_id, "PROCESSING", "배경 제거 완료", 25)
+            print(f"  [25%] 배경 제거 완료")
+
+            # Step 2: CloudRun Segmentation API (25% → 50%)
+            if worker:
+                worker.send_progress(cloth_id, user_id, "PROCESSING", "옷 영역 분석 중...", 30)
+            print(f"  [30%] CloudRun Segmentation API 호출...")
+
+            segmentation_result = self.segment_clothing_api(removed_bg_image)
+            primary_item = segmentation_result
+            cropped_image = primary_item["cropped_image"]
+
+            segmented_path = SEGMENTED_DIR / f"{cloth_id}.png"
+            cropped_image.save(segmented_path)
+            print(f"  💾 Segmented 이미지 저장: {segmented_path}")
+
+            if worker:
+                worker.send_progress(cloth_id, user_id, "PROCESSING", "옷 영역 분석 완료", 50)
+            print(f"  [50%] 옷 영역 분석 완료")
+
+            # Step 3: Google AI Imagen 확장 (50% → 70%)
+            expanded_path = segmented_path  # 기본값
+            if self.use_imagen:
+                if worker:
+                    worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 확장 중...", 55)
+                print(f"  [55%] Google Imagen으로 이미지 확장 중...")
+                cropped_image = self.imagen_service.expand_image(cropped_image)
+                expanded_path = EXPANDED_DIR / f"{cloth_id}.png"
+                cropped_image.save(expanded_path)
+                print(f"  [70%] 이미지 확장 완료")
+            else:
+                print(f"  [55%] Imagen 비활성화 - 확장 건너뜀")
+
+            if worker:
+                worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 확장 완료", 70)
+
+            # Step 4: CloudRun Inpainting API (70% → 95%)
+            if worker:
+                worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 복원 중...", 75)
+            print(f"  [75%] CloudRun Inpainting API 호출...")
+
+            inpainted_image = self.inpaint_image_api(cropped_image)
+            inpainted_path = INPAINTED_DIR / f"{cloth_id}.png"
+            inpainted_image.save(inpainted_path)
+
+            if worker:
+                worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 복원 완료", 95)
+            print(f"  [95%] 이미지 복원 완료")
+
+            # 카테고리 매핑
+            suggested_category = CATEGORY_MAPPING.get(primary_item["label"], "ACC")
+
+            result = {
+                "clothId": cloth_id,
+                "success": True,
+                "errorMessage": None,
+                "removedBgImagePath": str(removed_bg_path.absolute()),
+                "segmentedImagePath": str(segmented_path.absolute()),
+                "inpaintedImagePath": str(inpainted_path.absolute()),
+                "suggestedCategory": suggested_category,
+                "segmentationLabel": primary_item["label"],
+                "areaPixels": primary_item["area_pixels"],
+                # 추가 아이템 (있는 경우)
+                "allSegmentedItems": [
+                    {
+                        "label": item["label"],
+                        "segmentedPath": item.get("saved_path", ""),
+                        "areaPixels": item["area_pixels"]
+                    }
+                    for item in segmentation_result.get("all_items", [])
+                ],
+                "allExpandedItems": []  # CloudRun 버전에서는 기본 아이템만 처리
+            }
+
+            print(f"\n{'='*60}")
+            print(f"✅ Processing completed: {suggested_category}")
+            print(f"   🎯 Mode: CloudRun API Pipeline")
+            print(f"   🏷️  Category: {suggested_category} ({primary_item['label']})")
+            print(f"{'='*60}\n")
+            return result
+
+        except Exception as e:
+            print(f"❌ Processing failed: {str(e)}")
+            traceback.print_exc()
+
+            return {
+                "clothId": cloth_id,
+                "success": False,
+                "errorMessage": str(e),
+                "removedBgImagePath": None,
+                "segmentedImagePath": None,
+                "inpaintedImagePath": None,
+                "suggestedCategory": None,
+                "segmentationLabel": None,
+                "areaPixels": None
+            }
+
+
+class ClothProcessingWorker:
+    """RabbitMQ Worker (CloudRun API 버전)"""
+
+    def __init__(self):
+        self.pipeline = ClothProcessingPipelineCloudRun()
+        self.connection = None
+        self.channel = None
+        self.user_id = None
+
+    def connect(self):
+        """RabbitMQ 연결"""
+        credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
+        parameters = pika.ConnectionParameters(
+            host=RABBITMQ_HOST,
+            port=RABBITMQ_PORT,
+            credentials=credentials,
+            heartbeat=600,
+            blocked_connection_timeout=300
+        )
+
+        self.connection = pika.BlockingConnection(parameters)
+        self.channel = self.connection.channel()
+
+        # Exchange 선언
+        self.channel.exchange_declare(
+            exchange=EXCHANGE,
+            exchange_type='direct',
+            durable=True
+        )
+
+        # 큐 선언
+        self.channel.queue_declare(queue=REQUEST_QUEUE, durable=True)
+        self.channel.queue_declare(queue=RESULT_QUEUE, durable=True)
+        self.channel.queue_declare(queue=PROGRESS_QUEUE, durable=True)
+
+        # 바인딩
+        self.channel.queue_bind(
+            exchange=EXCHANGE,
+            queue=REQUEST_QUEUE,
+            routing_key=REQUEST_ROUTING_KEY
+        )
+        self.channel.queue_bind(
+            exchange=EXCHANGE,
+            queue=RESULT_QUEUE,
+            routing_key=RESULT_ROUTING_KEY
+        )
+        self.channel.queue_bind(
+            exchange=EXCHANGE,
+            queue=PROGRESS_QUEUE,
+            routing_key=PROGRESS_ROUTING_KEY
+        )
+
+        # QoS 설정
+        self.channel.basic_qos(prefetch_count=1)
+
+        print(f"✅ Connected to RabbitMQ at {RABBITMQ_HOST}:{RABBITMQ_PORT}")
+
+    def on_message(self, ch, method, properties, body):
+        """메시지 수신 콜백"""
+        try:
+            # 메시지 파싱
+            message = json.loads(body)
+            cloth_id = message["clothId"]
+            user_id = message.get("userId")
+            image_bytes_data = message["imageBytes"]
+            original_filename = message["originalFilename"]
+            image_type = message.get("imageType", "FULL_BODY")
+
+            print(f"\n📨 Received message: clothId={cloth_id}, userId={user_id}, imageType={image_type}")
+
+            # userId 저장
+            self.user_id = user_id
+
+            # imageBytes 처리
+            if isinstance(image_bytes_data, str):
+                image_bytes = base64.b64decode(image_bytes_data)
+            elif isinstance(image_bytes_data, list):
+                image_bytes = bytes(image_bytes_data)
+            else:
+                raise ValueError(f"Unsupported imageBytes format: {type(image_bytes_data)}")
+
+            # 파이프라인 실행
+            result = self.pipeline.process(cloth_id, user_id, image_bytes, image_type, self)
+
+            # 결과 전송
+            self.send_result(result)
+
+            # ACK
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            print(f"✅ Message processed and acknowledged\n")
+
+        except Exception as e:
+            print(f"❌ Error processing message: {str(e)}")
+            traceback.print_exc()
+
+            # NACK (재시도)
+            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+
+    def send_progress(self, cloth_id, user_id, status, current_step, progress_percentage):
+        """진행도 메시지 전송"""
+        progress_message = {
+            "clothId": cloth_id,
+            "userId": user_id,
+            "status": status,
+            "currentStep": current_step,
+            "progressPercentage": progress_percentage,
+            "timestamp": int(datetime.now().timestamp() * 1000)
+        }
+
+        progress_json = json.dumps(progress_message)
+
+        self.channel.basic_publish(
+            exchange=EXCHANGE,
+            routing_key=PROGRESS_ROUTING_KEY,
+            body=progress_json,
+            properties=pika.BasicProperties(
+                delivery_mode=2,
+                content_type='application/json'
+            )
+        )
+
+        print(f"📊 Progress sent: {progress_percentage}% - {current_step}")
+
+    def send_result(self, result):
+        """결과 메시지 전송"""
+        result_json = json.dumps(result)
+
+        self.channel.basic_publish(
+            exchange=EXCHANGE,
+            routing_key=RESULT_ROUTING_KEY,
+            body=result_json,
+            properties=pika.BasicProperties(
+                delivery_mode=2,
+                content_type='application/json'
+            )
+        )
+
+        print(f"📤 Result sent to {RESULT_QUEUE}")
+
+    def start(self):
+        """Worker 시작"""
+        self.connect()
+
+        print(f"🎯 Listening on queue: {REQUEST_QUEUE}")
+        print(f"🌐 Using CloudRun APIs:")
+        print(f"   - Segmentation: {SEGMENTATION_API_URL}")
+        print(f"   - Inpainting: {INPAINTING_API_URL}")
+        print("Waiting for messages. To exit press CTRL+C\n")
+
+        self.channel.basic_consume(
+            queue=REQUEST_QUEUE,
+            on_message_callback=self.on_message
+        )
+
+        try:
+            self.channel.start_consuming()
+        except KeyboardInterrupt:
+            print("\n⛔ Stopping worker...")
+            self.channel.stop_consuming()
+        finally:
+            if self.connection:
+                self.connection.close()
+            print("👋 Worker stopped")
+
+
+if __name__ == "__main__":
+    worker = ClothProcessingWorker()
+    worker.start()
