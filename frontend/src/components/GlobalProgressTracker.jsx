@@ -55,6 +55,20 @@ function GlobalProgressTracker() {
     window.dispatchEvent(new Event('clothConfirmed'));
   };
 
+  // 삭제 버튼 클릭 핸들러
+  const handleRemoveUpload = (e, upload) => {
+    e.stopPropagation(); // 이벤트 버블링 방지 (완료된 항목 클릭 방지)
+
+    const confirmMessage = upload.status === 'PROCESSING'
+      ? `옷 #${upload.clothId}의 AI 처리를 취소하시겠습니까?\n(처리 중인 작업은 계속 진행될 수 있습니다)`
+      : `옷 #${upload.clothId}을(를) 목록에서 제거하시겠습니까?`;
+
+    if (window.confirm(confirmMessage)) {
+      removeUpload(upload.clothId);
+      console.log(`🗑️  사용자가 옷 #${upload.clothId} 제거`);
+    }
+  };
+
   useEffect(() => {
     if (!userId) {
       console.log('⚠️  userId 없음, WebSocket 연결 건너뜀');
@@ -182,8 +196,17 @@ function GlobalProgressTracker() {
               onClick={() => handleCompletedClick(upload)}
             >
               <div className="upload-info">
-                <span className="upload-id">옷 #{upload.clothId}</span>
-                <span className="upload-step">{upload.currentStep}</span>
+                <div className="upload-info-left">
+                  <span className="upload-id">옷 #{upload.clothId}</span>
+                  <span className="upload-step">{upload.currentStep}</span>
+                </div>
+                <button
+                  className="remove-upload-btn"
+                  onClick={(e) => handleRemoveUpload(e, upload)}
+                  title="목록에서 제거"
+                >
+                  ✕
+                </button>
               </div>
 
               {/* 진행 바 */}
