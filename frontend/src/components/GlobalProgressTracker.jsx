@@ -4,6 +4,7 @@ import { Client } from '@stomp/stompjs';
 import { useClothUpload } from '../contexts/ClothUploadContext';
 import { clothAPI } from '../services/api';
 import ImageSelectionModal from './ImageSelectionModal';
+import { getCurrentUserId } from '../utils/authUtils';
 import './GlobalProgressTracker.css';
 
 function GlobalProgressTracker() {
@@ -18,8 +19,9 @@ function GlobalProgressTracker() {
   const [selectedClothForModal, setSelectedClothForModal] = useState(null);
   const [showImageSelectionModal, setShowImageSelectionModal] = useState(false);
 
-  // activeUploads에서 첫 번째 업로드의 userId 사용 (모든 업로드는 같은 사용자)
-  const userId = activeUploads.length > 0 ? activeUploads[0].userId : null;
+  // JWT 토큰에서 현재 로그인한 사용자의 userId 가져오기
+  const userId = getCurrentUserId();
+  console.log('🔑 현재 로그인한 userId:', userId);
 
   // 완료된 항목 클릭 핸들러
   const handleCompletedClick = async (upload) => {

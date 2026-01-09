@@ -1,13 +1,26 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { getCurrentUserId } from '../utils/authUtils';
 
 const ClothUploadContext = createContext();
 
 const STORAGE_KEY = 'cloth_active_uploads';
+const STORAGE_USER_KEY = 'cloth_active_uploads_userId';
 
 export function ClothUploadProvider({ children }) {
   // localStorage에서 초기값 복구 (PROCESSING 상태만)
   const [activeUploads, setActiveUploads] = useState(() => {
     try {
+      const currentUserId = getCurrentUserId();
+      const savedUserId = localStorage.getItem(STORAGE_USER_KEY);
+
+      // 다른 계정의 데이터이면 무시
+      if (savedUserId && currentUserId && savedUserId !== String(currentUserId)) {
+        console.log('🔄 계정 전환 감지: 이전 activeUploads 정리');
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.setItem(STORAGE_USER_KEY, String(currentUserId));
+        return [];
+      }
+
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -19,6 +32,12 @@ export function ClothUploadProvider({ children }) {
         if (processingOnly.length < parsed.length) {
           console.log('🗑️  완료/실패 작업 제외:', parsed.length - processingOnly.length, '개');
         }
+
+        // 현재 userId 저장
+        if (currentUserId) {
+          localStorage.setItem(STORAGE_USER_KEY, String(currentUserId));
+        }
+
         return processingOnly;
       }
     } catch (error) {
@@ -30,11 +49,16 @@ export function ClothUploadProvider({ children }) {
   // activeUploads 변경 시 localStorage에 저장
   useEffect(() => {
     try {
+      const currentUserId = getCurrentUserId();
       if (activeUploads.length > 0) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(activeUploads));
+        if (currentUserId) {
+          localStorage.setItem(STORAGE_USER_KEY, String(currentUserId));
+        }
         console.log('💾 localStorage에 저장:', activeUploads.length, '개 작업');
       } else {
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_USER_KEY);
         console.log('🗑️  localStorage 정리 (작업 없음)');
       }
     } catch (error) {
