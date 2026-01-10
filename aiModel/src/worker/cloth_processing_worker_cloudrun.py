@@ -138,41 +138,17 @@ class ClothProcessingPipelineCloudRun:
     def remove_background(self, image_bytes):
         """배경 제거 (Hugging Face API 또는 로컬 rembg)"""
         if self.rembg_api_url:
-            # Hugging Face Gradio API 사용
+            # Hugging Face Space API 사용 (FastAPI /remove-bg)
             print("  Step 1/4: Removing background with Hugging Face API...")
             try:
-                from gradio_client import Client, handle_file
-
-                # 임시 파일로 저장
-                temp_path = f"/tmp/rembg_input_{int(time.time()*1000)}.png"
-                temp_image = Image.open(io.BytesIO(image_bytes))
-                temp_image.save(temp_path, format='PNG')
-
-                # Gradio Client로 호출
-                client = Client(self.rembg_api_url)
-                result = client.predict(
-                    image=handle_file(temp_path),
-                    api_name="/predict"
+                api_base_url = self.rembg_api_url.rstrip("/")
+                response = requests.post(
+                    f"{api_base_url}/remove-bg",
+                    files={"file": ("image.png", image_bytes, "image/png")},
+                    timeout=120
                 )
-
-                # 결과는 파일 경로 또는 PIL Image
-                if isinstance(result, str):
-                    # Gradio file path: 파일 다운로드
-                    file_url = f"{self.rembg_api_url}/file={result}"
-                    response = requests.get(file_url, timeout=30)
-                    response.raise_for_status()
-                    image_data = response.content
-                else:
-                    # PIL Image로 반환된 경우
-                    img_byte_arr = io.BytesIO()
-                    result.save(img_byte_arr, format='PNG')
-                    image_data = img_byte_arr.getvalue()
-
-                # 임시 파일 삭제
-                try:
-                    os.remove(temp_path)
-                except:
-                    pass
+                response.raise_for_status()
+                image_data = response.content
 
                 image = Image.open(io.BytesIO(image_data)).convert("RGBA")
                 print("  ✅ Background removed (Hugging Face API)")
