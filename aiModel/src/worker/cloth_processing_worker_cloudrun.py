@@ -138,29 +138,47 @@ class ClothProcessingPipelineCloudRun:
     def remove_background(self, image_bytes):
         """배경 제거 (Hugging Face API 또는 로컬 rembg)"""
         if self.rembg_api_url:
-            # Hugging Face API 사용 (FastAPI 엔드포인트)
+            # Hugging Face Gradio API 사용
             print("  Step 1/4: Removing background with Hugging Face API...")
             try:
-                # 이미지를 파일로 전송
-                files = {
-                    "file": ("image.png", io.BytesIO(image_bytes), "image/png")
-                }
+                from gradio_client import Client, handle_file
 
-                # FastAPI 엔드포인트 호출
-                response = requests.post(
-                    f"{self.rembg_api_url}/remove-bg",
-                    files=files,
-                    timeout=60
+                # 임시 파일로 저장
+                temp_path = f"/tmp/rembg_input_{int(time.time()*1000)}.png"
+                temp_image = Image.open(io.BytesIO(image_bytes))
+                temp_image.save(temp_path, format='PNG')
+
+                # Gradio Client로 호출
+                client = Client(self.rembg_api_url)
+                result = client.predict(
+                    image=handle_file(temp_path),
+                    api_name="/predict"
                 )
-                response.raise_for_status()
 
-                # 응답은 PNG 이미지 바이트
-                image_data = response.content
+                # 결과는 파일 경로 또는 PIL Image
+                if isinstance(result, str):
+                    # Gradio file path: 파일 다운로드
+                    file_url = f"{self.rembg_api_url}/file={result}"
+                    response = requests.get(file_url, timeout=30)
+                    response.raise_for_status()
+                    image_data = response.content
+                else:
+                    # PIL Image로 반환된 경우
+                    img_byte_arr = io.BytesIO()
+                    result.save(img_byte_arr, format='PNG')
+                    image_data = img_byte_arr.getvalue()
+
+                # 임시 파일 삭제
+                try:
+                    os.remove(temp_path)
+                except:
+                    pass
+
                 image = Image.open(io.BytesIO(image_data)).convert("RGBA")
                 print("  ✅ Background removed (Hugging Face API)")
                 return image
 
-            except requests.exceptions.RequestException as e:
+            except Exception as e:
                 print(f"  ❌ Hugging Face API failed: {e}")
                 raise Exception(f"Background removal API 호출 실패: {e}")
         else:
