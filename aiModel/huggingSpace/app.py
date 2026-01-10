@@ -14,12 +14,25 @@ import io
 import time
 import uvicorn
 
-# Global session for model reuse (GPU optimized)
-print("🔥 Loading rembg model...")
-start_time = time.time()
-rembg_session = new_session(model_name='u2net')
-load_time = time.time() - start_time
-print(f"✅ rembg model loaded in {load_time:.2f}s")
+def create_rembg_session():
+    """Create rembg session with GPU fallback to CPU if CUDA libraries are missing."""
+    print("🔥 Loading rembg model...")
+    start_time = time.time()
+    try:
+        session = new_session(model_name="u2net")
+        load_time = time.time() - start_time
+        print(f"✅ rembg model loaded in {load_time:.2f}s (default providers)")
+        return session
+    except Exception as e:
+        print(f"⚠️  GPU session failed, falling back to CPU: {e}")
+        session = new_session(model_name="u2net", providers=["CPUExecutionProvider"])
+        load_time = time.time() - start_time
+        print(f"✅ rembg model loaded in {load_time:.2f}s (CPU)")
+        return session
+
+
+# Global session for model reuse (GPU optimized with CPU fallback)
+rembg_session = create_rembg_session()
 
 def remove_background(image):
     """
