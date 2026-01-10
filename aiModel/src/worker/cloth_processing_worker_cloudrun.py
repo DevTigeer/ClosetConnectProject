@@ -164,26 +164,24 @@ class ClothProcessingPipelineCloudRun:
             print("  Step 1/4: Removing background with Hugging Face API...")
             try:
                 api_base_url = self.rembg_api_url.rstrip("/")
-                response = requests.post(
-                    f"{api_base_url}/remove-bg",
-                    files={"file": ("image.png", image_bytes, "image/png")},
-                    timeout=120
-                )
-                if response.status_code == 404:
-                    raise requests.HTTPError(
-                        f"404 Client Error: Not Found for url: {response.url}",
-                        response=response
+                try:
+                    response = requests.post(
+                        f"{api_base_url}/remove-bg",
+                        files={"file": ("image.png", image_bytes, "image/png")},
+                        timeout=120
                     )
-                response.raise_for_status()
-                image_data = response.content
+                    response.raise_for_status()
+                    image_data = response.content
 
-                image = Image.open(io.BytesIO(image_data)).convert("RGBA")
-                print("  ✅ Background removed (Hugging Face API)")
-                return image
-            except requests.HTTPError as e:
-                if e.response is None or e.response.status_code != 404:
-                    raise
-                print("  ⚠️  /remove-bg endpoint not found. Falling back to Gradio API...")
+                    image = Image.open(io.BytesIO(image_data)).convert("RGBA")
+                    print("  ✅ Background removed (Hugging Face API)")
+                    return image
+                except requests.RequestException as e:
+                    status_code = getattr(e.response, "status_code", None)
+                    if status_code not in {404, 405}:
+                        raise
+                    print("  ⚠️  /remove-bg endpoint unavailable. Falling back to Gradio API...")
+
                 from gradio_client import Client, handle_file
                 import tempfile
 
