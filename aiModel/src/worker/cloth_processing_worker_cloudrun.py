@@ -17,6 +17,7 @@ import time
 from pathlib import Path
 from PIL import Image
 import io
+from urllib.parse import urlparse
 from datetime import datetime
 from dotenv import load_dotenv
 import threading
@@ -86,13 +87,34 @@ CATEGORY_MAPPING = {
 class ClothProcessingPipelineCloudRun:
     """CloudRun API를 호출하는 옷 이미지 처리 파이프라인"""
 
+    @staticmethod
+    def normalize_rembg_api_url(rembg_api_url: str) -> str:
+        """Normalize Hugging Face Space URL to use the hf.space runtime domain."""
+        if not rembg_api_url:
+            return rembg_api_url
+
+        rembg_api_url = rembg_api_url.rstrip("/")
+        parsed = urlparse(rembg_api_url)
+        if "huggingface.co" not in parsed.netloc:
+            if parsed.path.rstrip("/").endswith("/remove-bg"):
+                return rembg_api_url[: -len("/remove-bg")]
+            return rembg_api_url
+
+        path_parts = parsed.path.strip("/").split("/")
+        if len(path_parts) >= 3 and path_parts[0] == "spaces":
+            owner = path_parts[1]
+            space = path_parts[2]
+            return f"https://{owner}-{space}.hf.space"
+
+        return rembg_api_url
+
     def __init__(self):
         print(f"🚀 Initializing CloudRun API Pipeline")
         print(f"   Segmentation API: {SEGMENTATION_API_URL}")
         print(f"   Inpainting API: {INPAINTING_API_URL}")
 
         # Background Removal 설정 (API 또는 로컬 rembg)
-        self.rembg_api_url = REMBG_API_URL
+        self.rembg_api_url = self.normalize_rembg_api_url(REMBG_API_URL)
         self.rembg_session = None
 
         if self.rembg_api_url:
@@ -142,26 +164,24 @@ class ClothProcessingPipelineCloudRun:
             print("  Step 1/4: Removing background with Hugging Face API...")
             try:
                 api_base_url = self.rembg_api_url.rstrip("/")
-                response = requests.post(
-                    f"{api_base_url}/remove-bg",
-                    files={"file": ("image.png", image_bytes, "image/png")},
-                    timeout=120
-                )
-                if response.status_code == 404:
-                    raise requests.HTTPError(
-                        f"404 Client Error: Not Found for url: {response.url}",
-                        response=response
+                try:
+                    response = requests.post(
+                        f"{api_base_url}/remove-bg",
+                        files={"file": ("image.png", image_bytes, "image/png")},
+                        timeout=120
                     )
-                response.raise_for_status()
-                image_data = response.content
+                    response.raise_for_status()
+                    image_data = response.content
 
-                image = Image.open(io.BytesIO(image_data)).convert("RGBA")
-                print("  ✅ Background removed (Hugging Face API)")
-                return image
-            except requests.HTTPError as e:
-                if e.response is None or e.response.status_code != 404:
-                    raise
-                print("  ⚠️  /remove-bg endpoint not found. Falling back to Gradio API...")
+                    image = Image.open(io.BytesIO(image_data)).convert("RGBA")
+                    print("  ✅ Background removed (Hugging Face API)")
+                    return image
+                except requests.RequestException as e:
+                    status_code = getattr(e.response, "status_code", None)
+                    if status_code not in {404, 405}:
+                        raise
+                    print("  ⚠️  /remove-bg endpoint unavailable. Falling back to Gradio API...")
+
                 from gradio_client import Client, handle_file
                 import tempfile
 
@@ -182,7 +202,12 @@ class ClothProcessingPipelineCloudRun:
                         pass
 
                 if isinstance(result, str):
-                    file_url = f"{api_base_url}/file={result}"
+                    if result.startswith("http"):
+                        file_url = result
+                    elif result.startswith("/"):
+                        file_url = f"{api_base_url}{result}"
+                    else:
+                        file_url = f"{api_base_url}/file={result}"
                     response = requests.get(file_url, timeout=30)
                     response.raise_for_status()
                     image_data = response.content
