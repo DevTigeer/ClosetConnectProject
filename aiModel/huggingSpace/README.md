@@ -33,12 +33,11 @@ You can call this service from your applications:
 
 ```python
 import requests
-import base64
 from PIL import Image
 import io
 
 # Your Hugging Face Space URL
-API_URL = "https://YOUR-USERNAME-background-removal.hf.space/run/predict"
+API_URL = "https://YOUR-USERNAME-background-removal.hf.space/remove-bg"
 
 # Read image
 with open("your_image.png", "rb") as f:
@@ -47,31 +46,20 @@ with open("your_image.png", "rb") as f:
 # Call API
 response = requests.post(
     API_URL,
-    files={"data": ("image.png", image_bytes, "image/png")},
+    files={"file": ("image.png", image_bytes, "image/png")},
     timeout=60
 )
 
-# Parse response
-result = response.json()
-if "data" in result and len(result["data"]) > 0:
-    data_item = result["data"][0]
+# Save result (response is PNG image)
+output_image = Image.open(io.BytesIO(response.content))
+output_image.save("output.png")
+```
 
-    # URL로 반환된 경우 (Gradio 4.x)
-    if isinstance(data_item, dict) and "url" in data_item:
-        image_url = data_item["url"]
-        if image_url.startswith("/"):
-            image_url = f"https://YOUR-USERNAME-background-removal.hf.space{image_url}"
-
-        img_response = requests.get(image_url, timeout=30)
-        image_data = img_response.content
-    # Base64로 반환된 경우
-    else:
-        base64_data = data_item.split(",")[1] if "," in data_item else data_item
-        image_data = base64.b64decode(base64_data)
-
-    # Save result
-    output_image = Image.open(io.BytesIO(image_data))
-    output_image.save("output.png")
+Or use curl:
+```bash
+curl -X POST "https://YOUR-USERNAME-background-removal.hf.space/remove-bg" \
+     -F "file=@your_image.png" \
+     -o output.png
 ```
 
 ### Environment Variables for CloudRun Worker

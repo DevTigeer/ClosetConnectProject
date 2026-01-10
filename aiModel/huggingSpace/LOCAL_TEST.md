@@ -82,9 +82,8 @@ python test_api.py test_image.png http://localhost:7860
 import requests
 from PIL import Image
 import io
-import base64
 
-API_URL = "http://localhost:7860/run/predict"
+API_URL = "http://localhost:7860/remove-bg"
 
 # 이미지 읽기
 with open("test_image.png", "rb") as f:
@@ -93,29 +92,12 @@ with open("test_image.png", "rb") as f:
 # API 호출
 response = requests.post(
     API_URL,
-    files={"data": ("image.png", image_bytes, "image/png")},
+    files={"file": ("image.png", image_bytes, "image/png")},
     timeout=60
 )
 
-# 결과 파싱
-result = response.json()
-data_item = result["data"][0]
-
-# URL로 반환된 경우 (Gradio 4.x)
-if isinstance(data_item, dict) and "url" in data_item:
-    image_url = data_item["url"]
-    if image_url.startswith("/"):
-        image_url = f"http://localhost:7860{image_url}"
-
-    img_response = requests.get(image_url, timeout=30)
-    image_data = img_response.content
-else:
-    # Base64로 반환된 경우
-    base64_data = data_item.split(",")[1] if "," in data_item else data_item
-    image_data = base64.b64decode(base64_data)
-
-# 결과 저장
-output_image = Image.open(io.BytesIO(image_data))
+# 결과 저장 (응답은 PNG 이미지)
+output_image = Image.open(io.BytesIO(response.content))
 output_image.save("output.png")
 print("✅ Saved to output.png")
 ```

@@ -2,15 +2,17 @@
 Background Removal API using rembg
 Optimized for Hugging Face Spaces with GPU support
 
-This Gradio app provides a simple API endpoint for background removal
-that can be called from CloudRun Worker or other services.
+Provides both Gradio UI and FastAPI endpoint for direct HTTP access
 """
 
 import gradio as gr
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.responses import Response
 from rembg import remove, new_session
 from PIL import Image
 import io
 import time
+import uvicorn
 
 # Global session for model reuse (GPU optimized)
 print("🔥 Loading rembg model...")
@@ -67,30 +69,67 @@ demo = gr.Interface(
     **Features:**
     - GPU-accelerated processing (on HF Spaces)
     - Session reuse for faster processing
-    - API endpoint available at `/api/predict`
+    - Direct HTTP API endpoint available at `/remove-bg`
 
-    **Usage:**
-    ```python
-    import requests
-
-    response = requests.post(
-        "YOUR_SPACE_URL/api/predict",
-        files={"data": open("image.png", "rb")}
-    )
-    result = response.json()
+    **API Usage:**
+    ```bash
+    curl -X POST "https://YOUR-SPACE.hf.space/remove-bg" \\
+         -F "file=@image.png" \\
+         -o output.png
     ```
     """,
-    examples=[
-        # You can add example images here if you want
-    ],
-    api_name="predict",  # API endpoint name
+    examples=[],
     allow_flagging="never"
 )
 
+# Mount Gradio app to FastAPI
+app = demo.app  # Get the FastAPI app from Gradio
+
+# Add custom FastAPI endpoint for direct HTTP access
+@app.post("/remove-bg")
+async def remove_bg_endpoint(file: UploadFile = File(...)):
+    """
+    Direct HTTP endpoint for background removal
+    Returns PNG image with transparent background
+    """
+    try:
+        # Read uploaded file
+        contents = await file.read()
+        input_image = Image.open(io.BytesIO(contents))
+
+        # Process with rembg
+        output_image = remove_background(input_image)
+
+        # Convert to bytes
+        img_byte_arr = io.BytesIO()
+        output_image.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+
+        # Return as PNG
+        return Response(
+            content=img_byte_arr.getvalue(),
+            media_type="image/png",
+            headers={
+                "Content-Disposition": f"attachment; filename=removed_bg.png"
+            }
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "model": "rembg u2net",
+        "session_loaded": rembg_session is not None
+    }
+
 if __name__ == "__main__":
-    # Launch with API mode enabled
+    # Launch Gradio with custom app
     demo.launch(
         server_name="0.0.0.0",
         server_port=7860,
-        show_api=True
+        show_api=False  # We have custom API endpoints
     )

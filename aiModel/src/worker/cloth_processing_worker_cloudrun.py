@@ -138,64 +138,27 @@ class ClothProcessingPipelineCloudRun:
     def remove_background(self, image_bytes):
         """배경 제거 (Hugging Face API 또는 로컬 rembg)"""
         if self.rembg_api_url:
-            # Hugging Face API 사용
+            # Hugging Face API 사용 (FastAPI 엔드포인트)
             print("  Step 1/4: Removing background with Hugging Face API...")
             try:
-                # Gradio 4.x API 형식
-                # 이미지를 PIL로 변환 후 다시 bytes로 (포맷 확실히)
-                temp_image = Image.open(io.BytesIO(image_bytes))
-                img_byte_arr = io.BytesIO()
-                temp_image.save(img_byte_arr, format='PNG')
-                img_byte_arr.seek(0)
-
-                # Gradio API 호출 (Gradio 4.x는 /run/predict 사용)
+                # 이미지를 파일로 전송
                 files = {
-                    "data": ("image.png", img_byte_arr, "image/png")
+                    "file": ("image.png", io.BytesIO(image_bytes), "image/png")
                 }
 
+                # FastAPI 엔드포인트 호출
                 response = requests.post(
-                    f"{self.rembg_api_url}/run/predict",
+                    f"{self.rembg_api_url}/remove-bg",
                     files=files,
                     timeout=60
                 )
                 response.raise_for_status()
 
-                # Gradio API 응답 처리
-                result = response.json()
-
-                # Gradio 응답은 {"data": [{"path": "...", "url": "..."}]} 형식일 수 있음
-                if "data" in result and len(result["data"]) > 0:
-                    data_item = result["data"][0]
-
-                    # URL로 반환된 경우 (Gradio 4.x)
-                    if isinstance(data_item, dict) and "url" in data_item:
-                        image_url = data_item["url"]
-                        # 상대 URL을 절대 URL로 변환
-                        if image_url.startswith("/"):
-                            image_url = f"{self.rembg_api_url}{image_url}"
-
-                        # 이미지 다운로드
-                        img_response = requests.get(image_url, timeout=30)
-                        img_response.raise_for_status()
-                        image_data = img_response.content
-
-                    # Base64로 반환된 경우 (Gradio 3.x 또는 특정 설정)
-                    elif isinstance(data_item, str):
-                        if data_item.startswith("data:image"):
-                            # data:image/png;base64,... 형식
-                            base64_data = data_item.split(",")[1]
-                            image_data = base64.b64decode(base64_data)
-                        else:
-                            # 직접 base64 데이터
-                            image_data = base64.b64decode(data_item)
-                    else:
-                        raise Exception(f"Unexpected response format: {type(data_item)}")
-
-                    image = Image.open(io.BytesIO(image_data)).convert("RGBA")
-                    print("  ✅ Background removed (Hugging Face API)")
-                    return image
-                else:
-                    raise Exception(f"Invalid response from Hugging Face API: {result}")
+                # 응답은 PNG 이미지 바이트
+                image_data = response.content
+                image = Image.open(io.BytesIO(image_data)).convert("RGBA")
+                print("  ✅ Background removed (Hugging Face API)")
+                return image
 
             except requests.exceptions.RequestException as e:
                 print(f"  ❌ Hugging Face API failed: {e}")
