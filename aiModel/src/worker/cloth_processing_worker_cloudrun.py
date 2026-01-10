@@ -147,11 +147,52 @@ class ClothProcessingPipelineCloudRun:
                     files={"file": ("image.png", image_bytes, "image/png")},
                     timeout=120
                 )
+                if response.status_code == 404:
+                    raise requests.HTTPError(
+                        f"404 Client Error: Not Found for url: {response.url}",
+                        response=response
+                    )
                 response.raise_for_status()
                 image_data = response.content
 
                 image = Image.open(io.BytesIO(image_data)).convert("RGBA")
                 print("  ✅ Background removed (Hugging Face API)")
+                return image
+            except requests.HTTPError as e:
+                if e.response is None or e.response.status_code != 404:
+                    raise
+                print("  ⚠️  /remove-bg endpoint not found. Falling back to Gradio API...")
+                from gradio_client import Client, handle_file
+                import tempfile
+
+                client = Client(self.rembg_api_url)
+                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+                    temp_file.write(image_bytes)
+                    temp_path = temp_file.name
+
+                try:
+                    result = client.predict(
+                        handle_file(temp_path),
+                        api_name="/predict"
+                    )
+                finally:
+                    try:
+                        os.remove(temp_path)
+                    except OSError:
+                        pass
+
+                if isinstance(result, str):
+                    file_url = f"{api_base_url}/file={result}"
+                    response = requests.get(file_url, timeout=30)
+                    response.raise_for_status()
+                    image_data = response.content
+                else:
+                    img_byte_arr = io.BytesIO()
+                    result.save(img_byte_arr, format='PNG')
+                    image_data = img_byte_arr.getvalue()
+
+                image = Image.open(io.BytesIO(image_data)).convert("RGBA")
+                print("  ✅ Background removed (Hugging Face API: Gradio fallback)")
                 return image
 
             except Exception as e:
