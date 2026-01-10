@@ -1,9 +1,9 @@
 # Lightweight requirements for CloudRun Worker
 # This worker calls CloudRun APIs instead of loading heavy models
+# Background removal uses Hugging Face API (set REMBG_API_URL)
 
 pillow>=10.1.0
 pika>=1.3.2
-rembg[cpu]>=2.0.55
 requests>=2.31.0
 python-dotenv>=1.0.0
 flask>=3.0.0

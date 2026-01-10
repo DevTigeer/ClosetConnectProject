@@ -20,14 +20,9 @@ COPY requirements-worker-cloudrun.txt ./requirements.txt
 # Install Python dependencies (only what's needed for CloudRun worker)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Pre-download rembg model (u2net) during build to avoid slow runtime download
-# This downloads ~176MB model once during image build instead of every container start
-RUN python -c "from rembg import remove; from PIL import Image; import io; \
-    img = Image.new('RGB', (100, 100)); \
-    buf = io.BytesIO(); \
-    img.save(buf, format='PNG'); \
-    remove(buf.getvalue()); \
-    print('✅ rembg model pre-downloaded successfully')"
+# Note: rembg model pre-download removed
+# CloudRun worker now uses Hugging Face API for background removal
+# Local environments can still use rembg by not setting REMBG_API_URL
 
 # Copy application code
 COPY . .

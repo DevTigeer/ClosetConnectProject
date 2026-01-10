@@ -17,7 +17,6 @@ import time
 from pathlib import Path
 from PIL import Image
 import io
-from rembg import remove
 from datetime import datetime
 from dotenv import load_dotenv
 import threading
@@ -67,6 +66,7 @@ PROGRESS_ROUTING_KEY = "cloth.progress"
 # CloudRun API URLs
 SEGMENTATION_API_URL = os.getenv("SEGMENTATION_API_URL", "http://localhost:8002")
 INPAINTING_API_URL = os.getenv("INPAINTING_API_URL", "http://localhost:8003")
+REMBG_API_URL = os.getenv("REMBG_API_URL", None)  # Hugging Face Space URL
 
 # 카테고리 매핑 (AI 라벨 → Spring Category enum)
 CATEGORY_MAPPING = {
@@ -91,6 +91,36 @@ class ClothProcessingPipelineCloudRun:
         print(f"   Segmentation API: {SEGMENTATION_API_URL}")
         print(f"   Inpainting API: {INPAINTING_API_URL}")
 
+        # Background Removal 설정 (API 또는 로컬 rembg)
+        self.rembg_api_url = REMBG_API_URL
+        self.rembg_session = None
+
+        if self.rembg_api_url:
+            print(f"   Background Removal: Hugging Face API ({self.rembg_api_url})")
+        else:
+            print(f"   Background Removal: Local rembg")
+            # 로컬 rembg 사용 (로컬 환경에서만)
+            try:
+                from rembg import remove, new_session
+                print("  🔥 Warming up local rembg model...")
+                warmup_start = time.time()
+                self.rembg_session = new_session()
+
+                # Warmup
+                dummy_img = Image.new('RGB', (100, 100), color='white')
+                dummy_bytes = io.BytesIO()
+                dummy_img.save(dummy_bytes, format='PNG')
+                dummy_bytes.seek(0)
+                remove(dummy_bytes.getvalue(), session=self.rembg_session)
+
+                warmup_time = time.time() - warmup_start
+                print(f"  ✅ Local rembg model loaded and ready ({warmup_time:.2f}s)")
+            except ImportError:
+                print(f"  ⚠️  rembg not available. Please install rembg or set REMBG_API_URL")
+                raise Exception("Background removal not available: rembg not installed and REMBG_API_URL not set")
+            except Exception as e:
+                print(f"  ⚠️  rembg warmup failed: {e}")
+
         # Google AI Imagen 서비스 초기화 (선택적)
         if IMAGEN_AVAILABLE:
             try:
@@ -103,29 +133,81 @@ class ClothProcessingPipelineCloudRun:
         else:
             self.use_imagen = False
 
-        # rembg 모델 Warmup (첫 실행 시 모델 로딩으로 인한 지연 방지)
-        print("  🔥 Warming up rembg model...")
-        try:
-            warmup_start = time.time()
-            dummy_img = Image.new('RGB', (100, 100), color='white')
-            dummy_bytes = io.BytesIO()
-            dummy_img.save(dummy_bytes, format='PNG')
-            dummy_bytes.seek(0)
-            remove(dummy_bytes.getvalue())
-            warmup_time = time.time() - warmup_start
-            print(f"  ✅ rembg model loaded and ready ({warmup_time:.2f}s)")
-        except Exception as e:
-            print(f"  ⚠️  rembg warmup failed: {e}")
-
         print("✅ Pipeline initialized successfully")
 
     def remove_background(self, image_bytes):
-        """배경 제거 (rembg - 로컬 실행)"""
-        print("  Step 1/4: Removing background with rembg...")
-        output = remove(image_bytes)
-        image = Image.open(io.BytesIO(output)).convert("RGBA")
-        print("  ✅ Background removed")
-        return image
+        """배경 제거 (Hugging Face API 또는 로컬 rembg)"""
+        if self.rembg_api_url:
+            # Hugging Face API 사용
+            print("  Step 1/4: Removing background with Hugging Face API...")
+            try:
+                # Gradio 4.x API 형식
+                # 이미지를 PIL로 변환 후 다시 bytes로 (포맷 확실히)
+                temp_image = Image.open(io.BytesIO(image_bytes))
+                img_byte_arr = io.BytesIO()
+                temp_image.save(img_byte_arr, format='PNG')
+                img_byte_arr.seek(0)
+
+                # Gradio API 호출 (Gradio 4.x는 /run/predict 사용)
+                files = {
+                    "data": ("image.png", img_byte_arr, "image/png")
+                }
+
+                response = requests.post(
+                    f"{self.rembg_api_url}/run/predict",
+                    files=files,
+                    timeout=60
+                )
+                response.raise_for_status()
+
+                # Gradio API 응답 처리
+                result = response.json()
+
+                # Gradio 응답은 {"data": [{"path": "...", "url": "..."}]} 형식일 수 있음
+                if "data" in result and len(result["data"]) > 0:
+                    data_item = result["data"][0]
+
+                    # URL로 반환된 경우 (Gradio 4.x)
+                    if isinstance(data_item, dict) and "url" in data_item:
+                        image_url = data_item["url"]
+                        # 상대 URL을 절대 URL로 변환
+                        if image_url.startswith("/"):
+                            image_url = f"{self.rembg_api_url}{image_url}"
+
+                        # 이미지 다운로드
+                        img_response = requests.get(image_url, timeout=30)
+                        img_response.raise_for_status()
+                        image_data = img_response.content
+
+                    # Base64로 반환된 경우 (Gradio 3.x 또는 특정 설정)
+                    elif isinstance(data_item, str):
+                        if data_item.startswith("data:image"):
+                            # data:image/png;base64,... 형식
+                            base64_data = data_item.split(",")[1]
+                            image_data = base64.b64decode(base64_data)
+                        else:
+                            # 직접 base64 데이터
+                            image_data = base64.b64decode(data_item)
+                    else:
+                        raise Exception(f"Unexpected response format: {type(data_item)}")
+
+                    image = Image.open(io.BytesIO(image_data)).convert("RGBA")
+                    print("  ✅ Background removed (Hugging Face API)")
+                    return image
+                else:
+                    raise Exception(f"Invalid response from Hugging Face API: {result}")
+
+            except requests.exceptions.RequestException as e:
+                print(f"  ❌ Hugging Face API failed: {e}")
+                raise Exception(f"Background removal API 호출 실패: {e}")
+        else:
+            # 로컬 rembg 사용
+            print("  Step 1/4: Removing background with local rembg...")
+            from rembg import remove
+            output = remove(image_bytes, session=self.rembg_session)
+            image = Image.open(io.BytesIO(output)).convert("RGBA")
+            print("  ✅ Background removed (local rembg)")
+            return image
 
     def segment_clothing_api(self, image):
         """CloudRun Segmentation API 호출"""
