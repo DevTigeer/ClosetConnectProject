@@ -96,6 +96,8 @@ class ClothProcessingPipelineCloudRun:
         rembg_api_url = rembg_api_url.rstrip("/")
         parsed = urlparse(rembg_api_url)
         if "huggingface.co" not in parsed.netloc:
+            if parsed.path.rstrip("/").endswith("/remove-bg"):
+                return rembg_api_url[: -len("/remove-bg")]
             return rembg_api_url
 
         path_parts = parsed.path.strip("/").split("/")
