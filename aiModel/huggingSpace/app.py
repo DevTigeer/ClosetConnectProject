@@ -86,17 +86,25 @@ demo = gr.Interface(
 
     **API Usage:**
     ```bash
-    curl -X POST "https://YOUR-SPACE.hf.space/remove-bg" \\
-         -F "file=@image.png" \\
+    curl -X POST "https://YOUR-SPACE.hf.space/remove-bg" \
+         -F "file=@image.png" \
          -o output.png
     ```
     """,
     examples=[],
-    allow_flagging="never"
+    flagging_mode="never",
+    api_visibility="public",
+    api_name="remove_background"
 )
 
 # Mount Gradio app to FastAPI
-app = demo.app  # Get the FastAPI app from Gradio
+fastapi_app = FastAPI()
+app = gr.mount_gradio_app(
+    fastapi_app,
+    demo,
+    path="/",
+    footer_links=["api", "gradio", "settings"]
+)
 
 # Add custom FastAPI endpoint for direct HTTP access
 @app.post("/remove-bg")
@@ -144,5 +152,5 @@ if __name__ == "__main__":
     demo.launch(
         server_name="0.0.0.0",
         server_port=7860,
-        show_api=False  # We have custom API endpoints
+        footer_links=["api", "gradio", "settings"]
     )
