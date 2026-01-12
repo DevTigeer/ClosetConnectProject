@@ -190,6 +190,8 @@ class ClothProcessingPipelineCloudRun:
                     # 결과 처리
                     if isinstance(result, str):
                         # 파일 경로로 반환된 경우
+                        print(f"  📄 Result is file path: {result}")
+
                         if result.startswith("http"):
                             file_url = result
                         elif result.startswith("/"):
@@ -205,11 +207,23 @@ class ClothProcessingPipelineCloudRun:
                         response = requests.get(file_url, timeout=30)
                         response.raise_for_status()
                         image_data = response.content
-                    else:
+                        print(f"  📦 Downloaded {len(image_data)} bytes")
+
+                    elif hasattr(result, 'save'):
                         # PIL Image로 반환된 경우
+                        print(f"  🖼️  Result is PIL Image: {result.size}, {result.mode}")
                         img_byte_arr = io.BytesIO()
                         result.save(img_byte_arr, format='PNG')
+                        img_byte_arr.seek(0)  # 중요: seek to beginning
                         image_data = img_byte_arr.getvalue()
+                        print(f"  📦 Converted to {len(image_data)} bytes")
+
+                    else:
+                        raise Exception(f"Unexpected result type: {type(result)}, value: {result}")
+
+                    # 이미지 데이터 검증
+                    if not image_data or len(image_data) < 100:
+                        raise Exception(f"Invalid image data: {len(image_data) if image_data else 0} bytes")
 
                 finally:
                     # 임시 파일 삭제
@@ -218,8 +232,11 @@ class ClothProcessingPipelineCloudRun:
                     except OSError:
                         pass
 
-                image = Image.open(io.BytesIO(image_data)).convert("RGBA")
-                print("  ✅ Background removed (Hugging Face Gradio API)")
+                # BytesIO로 변환 시 seek(0) 필수
+                image_io = io.BytesIO(image_data)
+                image_io.seek(0)
+                image = Image.open(image_io).convert("RGBA")
+                print(f"  ✅ Background removed (Hugging Face Gradio API): {image.size}, {image.mode}")
                 return image
 
             except Exception as e:
