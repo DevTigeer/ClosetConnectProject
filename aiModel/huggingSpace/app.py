@@ -1,18 +1,14 @@
 """
 Background Removal API using rembg
 Optimized for Hugging Face Spaces with GPU support
-
-Provides both Gradio UI and FastAPI endpoint for direct HTTP access
+Simple Gradio-only implementation
 """
 
 import gradio as gr
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import Response
 from rembg import remove, new_session
 from PIL import Image
 import io
 import time
-import uvicorn
 
 def create_rembg_session():
     """Create rembg session with GPU fallback to CPU if CUDA libraries are missing."""
@@ -21,17 +17,20 @@ def create_rembg_session():
     try:
         session = new_session(model_name="u2net")
         load_time = time.time() - start_time
-        print(f"✅ rembg model loaded in {load_time:.2f}s (default providers)")
+        print(f"✅ rembg model loaded in {load_time:.2f}s (GPU)")
         return session
     except Exception as e:
         print(f"⚠️  GPU session failed, falling back to CPU: {e}")
-        session = new_session(model_name="u2net", providers=["CPUExecutionProvider"])
-        load_time = time.time() - start_time
-        print(f"✅ rembg model loaded in {load_time:.2f}s (CPU)")
-        return session
+        try:
+            session = new_session(model_name="u2net", providers=["CPUExecutionProvider"])
+            load_time = time.time() - start_time
+            print(f"✅ rembg model loaded in {load_time:.2f}s (CPU)")
+            return session
+        except Exception as e2:
+            print(f"❌ Failed to load rembg: {e2}")
+            raise
 
-
-# Global session for model reuse (GPU optimized with CPU fallback)
+# Global session for model reuse
 rembg_session = create_rembg_session()
 
 def remove_background(image):
@@ -44,6 +43,9 @@ def remove_background(image):
     Returns:
         PIL Image with transparent background
     """
+    if image is None:
+        return None
+
     print(f"📥 Received image: {image.size}, mode: {image.mode}")
 
     try:
@@ -68,7 +70,7 @@ def remove_background(image):
 
     except Exception as e:
         print(f"❌ Error: {e}")
-        raise e
+        raise gr.Error(f"Background removal failed: {str(e)}")
 
 # Create Gradio Interface
 demo = gr.Interface(
@@ -80,77 +82,25 @@ demo = gr.Interface(
     Fast background removal using rembg (u2net model).
 
     **Features:**
-    - GPU-accelerated processing (on HF Spaces)
+    - GPU-accelerated processing (when available)
     - Session reuse for faster processing
-    - Direct HTTP API endpoint available at `/remove-bg`
+    - API access via gradio_client
 
-    **API Usage:**
-    ```bash
-    curl -X POST "https://YOUR-SPACE.hf.space/remove-bg" \
-         -F "file=@image.png" \
-         -o output.png
+    **Python API Usage:**
+    ```python
+    from gradio_client import Client
+
+    client = Client("https://tigger13-background-removal.hf.space")
+    result = client.predict("/path/to/image.png")
     ```
     """,
     examples=[],
-    flagging_mode="never",
-    api_visibility="public",
-    api_name="remove_background"
+    allow_flagging="never"
 )
-
-# Mount Gradio app to FastAPI
-fastapi_app = FastAPI()
-app = gr.mount_gradio_app(
-    fastapi_app,
-    demo,
-    path="/",
-    footer_links=["api", "gradio", "settings"]
-)
-
-# Add custom FastAPI endpoint for direct HTTP access
-@app.post("/remove-bg")
-async def remove_bg_endpoint(file: UploadFile = File(...)):
-    """
-    Direct HTTP endpoint for background removal
-    Returns PNG image with transparent background
-    """
-    try:
-        # Read uploaded file
-        contents = await file.read()
-        input_image = Image.open(io.BytesIO(contents))
-
-        # Process with rembg
-        output_image = remove_background(input_image)
-
-        # Convert to bytes
-        img_byte_arr = io.BytesIO()
-        output_image.save(img_byte_arr, format='PNG')
-        img_byte_arr.seek(0)
-
-        # Return as PNG
-        return Response(
-            content=img_byte_arr.getvalue(),
-            media_type="image/png",
-            headers={
-                "Content-Disposition": f"attachment; filename=removed_bg.png"
-            }
-        )
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "model": "rembg u2net",
-        "session_loaded": rembg_session is not None
-    }
 
 if __name__ == "__main__":
-    # Launch Gradio with custom app
     demo.launch(
         server_name="0.0.0.0",
         server_port=7860,
-        footer_links=["api", "gradio", "settings"]
+        show_error=True  # Enable error reporting
     )

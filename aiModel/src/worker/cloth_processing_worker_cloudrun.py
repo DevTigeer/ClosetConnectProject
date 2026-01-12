@@ -182,19 +182,18 @@ class ClothProcessingPipelineCloudRun:
                         raise
                     print("  ⚠️  /remove-bg endpoint unavailable. Falling back to Gradio API...")
 
-                from gradio_client import Client, handle_file
+                from gradio_client import Client
                 import tempfile
 
-                client = Client(self.rembg_api_url)
+                # 임시 파일로 저장
                 with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
                     temp_file.write(image_bytes)
                     temp_path = temp_file.name
 
                 try:
-                    result = client.predict(
-                        handle_file(temp_path),
-                        api_name="/predict"
-                    )
+                    # Gradio Client로 호출 (positional argument만 사용)
+                    client = Client(self.rembg_api_url)
+                    result = client.predict(temp_path)
                 finally:
                     try:
                         os.remove(temp_path)
