@@ -186,28 +186,41 @@ class ClothProcessingPipelineCloudRun:
                     )
 
                     print(f"  📥 Received result: {type(result)}")
+                    print(f"  📝 Result value: {result}")
+
+                    # result의 타입별 상세 정보
+                    if isinstance(result, str):
+                        print(f"  📄 String result length: {len(result)}")
+                        print(f"  📄 String preview: {result[:200]}")
+                    elif hasattr(result, '__dict__'):
+                        print(f"  📦 Object attributes: {dir(result)}")
+                    else:
+                        print(f"  ❓ Unknown result type")
 
                     # 결과 처리
                     if isinstance(result, str):
                         # 파일 경로로 반환된 경우
                         print(f"  📄 Result is file path: {result}")
 
-                        if result.startswith("http"):
-                            file_url = result
-                        elif result.startswith("/"):
-                            # Gradio file path format
-                            if "/file=" in result:
-                                file_url = f"{api_base_url}{result}"
-                            else:
-                                file_url = f"{api_base_url}/file={result}"
+                        # gradio_client는 파일을 로컬에 다운로드하고 경로를 반환함
+                        # 로컬 파일 시스템에서 직접 읽기
+                        if os.path.exists(result):
+                            print(f"  📂 Reading from local file: {result}")
+                            with open(result, 'rb') as f:
+                                image_data = f.read()
+                            print(f"  📦 Read {len(image_data)} bytes from local file")
                         else:
-                            file_url = f"{api_base_url}/file={result}"
+                            # URL인 경우 (거의 없음)
+                            print(f"  🌐 File not found locally, trying as URL...")
+                            if result.startswith("http"):
+                                file_url = result
+                            else:
+                                raise Exception(f"Invalid file path: {result} (does not exist)")
 
-                        print(f"  🌐 Downloading from: {file_url}")
-                        response = requests.get(file_url, timeout=30)
-                        response.raise_for_status()
-                        image_data = response.content
-                        print(f"  📦 Downloaded {len(image_data)} bytes")
+                            response = requests.get(file_url, timeout=30)
+                            response.raise_for_status()
+                            image_data = response.content
+                            print(f"  📦 Downloaded {len(image_data)} bytes")
 
                     elif hasattr(result, 'save'):
                         # PIL Image로 반환된 경우
