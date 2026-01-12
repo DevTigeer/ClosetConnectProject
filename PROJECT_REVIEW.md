@@ -250,7 +250,7 @@ public class Cloth {
 #### API 키 관리
 ```python
 # .env 파일에 평문 저장
-GOOGLE_API_KEY=**
+GOOGLE_API_KEY=** 
 ```
 
 **문제점**:
