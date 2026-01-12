@@ -158,32 +158,15 @@ class ClothProcessingPipelineCloudRun:
         print("✅ Pipeline initialized successfully")
 
     def remove_background(self, image_bytes):
-        """배경 제거 (Hugging Face API 또는 로컬 rembg)"""
+        """배경 제거 (Hugging Face Gradio API 또는 로컬 rembg)"""
         if self.rembg_api_url:
-            # Hugging Face Space API 사용 (FastAPI /remove-bg)
-            print("  Step 1/4: Removing background with Hugging Face API...")
+            # Hugging Face Space Gradio API 사용
+            print("  Step 1/4: Removing background with Hugging Face Gradio API...")
             try:
-                api_base_url = self.rembg_api_url.rstrip("/")
-                try:
-                    response = requests.post(
-                        f"{api_base_url}/remove-bg",
-                        files={"file": ("image.png", image_bytes, "image/png")},
-                        timeout=120
-                    )
-                    response.raise_for_status()
-                    image_data = response.content
-
-                    image = Image.open(io.BytesIO(image_data)).convert("RGBA")
-                    print("  ✅ Background removed (Hugging Face API)")
-                    return image
-                except requests.RequestException as e:
-                    status_code = getattr(e.response, "status_code", None)
-                    if status_code not in {404, 405}:
-                        raise
-                    print("  ⚠️  /remove-bg endpoint unavailable. Falling back to Gradio API...")
-
                 from gradio_client import Client
                 import tempfile
+
+                api_base_url = self.rembg_api_url.rstrip("/")
 
                 # 임시 파일로 저장
                 with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
@@ -191,36 +174,54 @@ class ClothProcessingPipelineCloudRun:
                     temp_path = temp_file.name
 
                 try:
-                    # Gradio Client로 호출 (positional argument만 사용)
+                    # Gradio Client로 호출
+                    print(f"  🔗 Connecting to {self.rembg_api_url}...")
                     client = Client(self.rembg_api_url)
+
+                    print(f"  📤 Sending image...")
                     result = client.predict(temp_path)
+
+                    print(f"  📥 Received result: {type(result)}")
+
+                    # 결과 처리
+                    if isinstance(result, str):
+                        # 파일 경로로 반환된 경우
+                        if result.startswith("http"):
+                            file_url = result
+                        elif result.startswith("/"):
+                            # Gradio file path format
+                            if "/file=" in result:
+                                file_url = f"{api_base_url}{result}"
+                            else:
+                                file_url = f"{api_base_url}/file={result}"
+                        else:
+                            file_url = f"{api_base_url}/file={result}"
+
+                        print(f"  🌐 Downloading from: {file_url}")
+                        response = requests.get(file_url, timeout=30)
+                        response.raise_for_status()
+                        image_data = response.content
+                    else:
+                        # PIL Image로 반환된 경우
+                        img_byte_arr = io.BytesIO()
+                        result.save(img_byte_arr, format='PNG')
+                        image_data = img_byte_arr.getvalue()
+
                 finally:
+                    # 임시 파일 삭제
                     try:
                         os.remove(temp_path)
                     except OSError:
                         pass
 
-                if isinstance(result, str):
-                    if result.startswith("http"):
-                        file_url = result
-                    elif result.startswith("/"):
-                        file_url = f"{api_base_url}{result}"
-                    else:
-                        file_url = f"{api_base_url}/file={result}"
-                    response = requests.get(file_url, timeout=30)
-                    response.raise_for_status()
-                    image_data = response.content
-                else:
-                    img_byte_arr = io.BytesIO()
-                    result.save(img_byte_arr, format='PNG')
-                    image_data = img_byte_arr.getvalue()
-
                 image = Image.open(io.BytesIO(image_data)).convert("RGBA")
-                print("  ✅ Background removed (Hugging Face API: Gradio fallback)")
+                print("  ✅ Background removed (Hugging Face Gradio API)")
                 return image
 
             except Exception as e:
                 print(f"  ❌ Hugging Face API failed: {e}")
+                import traceback
+                traceback.print_exc()
                 raise Exception(f"Background removal API 호출 실패: {e}")
         else:
             # 로컬 rembg 사용

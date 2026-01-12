@@ -94,8 +94,7 @@ demo = gr.Interface(
     result = client.predict("/path/to/image.png")
     ```
     """,
-    examples=[],
-    allow_flagging="never"
+    examples=[]
 )
 
 if __name__ == "__main__":
