@@ -175,11 +175,15 @@ class ClothProcessingPipelineCloudRun:
 
                 try:
                     # Gradio Client로 호출
+                    from gradio_client import handle_file
+
                     print(f"  🔗 Connecting to {self.rembg_api_url}...")
                     client = Client(self.rembg_api_url)
 
                     print(f"  📤 Sending image...")
-                    result = client.predict(temp_path)
+                    result = client.predict(
+                        handle_file(temp_path)
+                    )
 
                     print(f"  📥 Received result: {type(result)}")
 
