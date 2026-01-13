@@ -361,10 +361,56 @@ class ClothProcessingPipelineCloudRun:
     #         print("  Using original image as fallback")
     #         return image  # 실패 시 원본 반환
 
-    def image_to_base64(self, image):
-        """PIL Image를 base64 문자열로 변환"""
+    def _has_transparency(self, image):
+        """이미지에 실제 투명도가 있는지 확인"""
+        if image.mode != 'RGBA':
+            return False
+
+        # 알파 채널 확인
+        alpha = image.getchannel('A')
+        extrema = alpha.getextrema()
+
+        # 알파 채널이 모두 255(완전 불투명)가 아니면 투명도 있음
+        return extrema != (255, 255)
+
+    def image_to_base64(self, image, max_size=1024, quality=85):
+        """PIL Image를 base64 문자열로 변환 (최적화: 리사이즈 + JPEG)
+
+        Args:
+            image: PIL Image 객체
+            max_size: 최대 이미지 크기 (너비 또는 높이)
+            quality: JPEG 품질 (0-100, 85 권장)
+
+        Returns:
+            str: base64 인코딩된 문자열
+        """
+        # 1. 리사이즈 (비율 유지)
+        if image.width > max_size or image.height > max_size:
+            # 원본 보존을 위해 복사
+            image = image.copy()
+            image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+
+        # 2. 포맷 선택: 투명도 있으면 PNG, 없으면 JPEG
         img_byte_arr = io.BytesIO()
-        image.save(img_byte_arr, format='PNG')
+
+        if image.mode == 'RGBA' and self._has_transparency(image):
+            # 투명도가 있는 경우: PNG 사용 (투명도 보존)
+            image.save(img_byte_arr, format='PNG', optimize=True, compress_level=6)
+        else:
+            # 투명도가 없는 경우: JPEG 사용 (파일 크기 대폭 감소)
+            if image.mode != 'RGB':
+                # RGBA 또는 다른 모드를 RGB로 변환 (흰색 배경)
+                rgb_image = Image.new('RGB', image.size, (255, 255, 255))
+                if image.mode == 'RGBA':
+                    # 알파 채널을 마스크로 사용하여 합성
+                    rgb_image.paste(image, mask=image.split()[3])
+                else:
+                    rgb_image.paste(image)
+                image = rgb_image
+
+            # JPEG로 저장 (품질 85, 최적화 활성화)
+            image.save(img_byte_arr, format='JPEG', quality=quality, optimize=True)
+
         img_byte_arr.seek(0)
         return base64.b64encode(img_byte_arr.read()).decode('utf-8')
 
@@ -446,10 +492,12 @@ class ClothProcessingPipelineCloudRun:
             suggested_category = CATEGORY_MAPPING.get(primary_item["label"], "ACC")
 
             # 이미지들을 base64로 인코딩 (CloudRun → Railway 전송용)
+            print(f"  [96%] Base64 인코딩 중...")
             removed_bg_base64 = self.image_to_base64(removed_bg_image)
             segmented_base64 = self.image_to_base64(segmented_image)  # segmented 이미지
             expanded_base64 = self.image_to_base64(expanded_image)    # expanded 이미지 (Gemini)
             final_base64 = self.image_to_base64(final_image)          # 최종 이미지 (= expanded)
+            print(f"  [97%] Base64 인코딩 완료")
 
             result = {
                 "clothId": cloth_id,
@@ -487,11 +535,13 @@ class ClothProcessingPipelineCloudRun:
                 ]
             }
 
+            print(f"  [98%] Result 딕셔너리 생성 완료")
             print(f"\n{'='*60}")
             print(f"✅ Processing completed: {suggested_category}")
             print(f"   🎯 Mode: CloudRun API Pipeline")
             print(f"   🏷️  Category: {suggested_category} ({primary_item['label']})")
             print(f"{'='*60}\n")
+            print(f"  [99%] Returning result...")
             return result
 
         except Exception as e:
@@ -630,9 +680,11 @@ class ClothProcessingWorker:
 
             # 파이프라인 실행
             result = self.pipeline.process(cloth_id, user_id, image_bytes, image_type, self)
+            print(f"  [100%] Pipeline completed, sending result to Railway...")
 
             # 결과 전송
             self.send_result(result)
+            print(f"  [100%] Result sent successfully")
 
             # ACK
             ch.basic_ack(delivery_tag=method.delivery_tag)
