@@ -1,7 +1,9 @@
 """
+[미사용 - Stable Diffusion Inpainting]
 Image Inpainting API using Stable Diffusion
 - clothing_restorer.py를 FastAPI로 래핑
 - 크롭된 옷 이미지의 잘린 부분을 AI로 복원
+- 현재는 Google AI Imagen을 사용하므로 이 서비스는 미사용
 """
 
 from fastapi import FastAPI, File, UploadFile, HTTPException

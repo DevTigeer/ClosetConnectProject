@@ -1,7 +1,7 @@
 """
 RabbitMQ Cloth Processing Worker (CloudRun API Version)
 - CloudRun에 배포된 AI API들을 호출하여 처리
-- rembg → CloudRun Segmentation API → Imagen → CloudRun Inpainting API
+- rembg (Hugging Face Space) → CloudRun Segmentation API (Crop) → Google AI Imagen (Expand)
 - 기존 Worker보다 가볍고, CloudRun API들을 활용
 - HTTP 헬스체크 서버 포함 (Cloud Run 배포용)
 """
@@ -42,13 +42,13 @@ OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 SEGMENTED_DIR = OUTPUTS_DIR / "segmented_clothes"
 REMOVED_BG_DIR = OUTPUTS_DIR / "removed_bg"
 EXPANDED_DIR = OUTPUTS_DIR / "expanded"
-INPAINTED_DIR = OUTPUTS_DIR / "inpainted"
+# INPAINTED_DIR = OUTPUTS_DIR / "inpainted"  # Stable Diffusion - 미사용
 
 # 디렉토리 생성
 SEGMENTED_DIR.mkdir(parents=True, exist_ok=True)
 REMOVED_BG_DIR.mkdir(parents=True, exist_ok=True)
 EXPANDED_DIR.mkdir(parents=True, exist_ok=True)
-INPAINTED_DIR.mkdir(parents=True, exist_ok=True)
+# INPAINTED_DIR.mkdir(parents=True, exist_ok=True)  # Stable Diffusion - 미사용
 
 # RabbitMQ 설정
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
@@ -66,7 +66,7 @@ PROGRESS_ROUTING_KEY = "cloth.progress"
 
 # CloudRun API URLs
 SEGMENTATION_API_URL = os.getenv("SEGMENTATION_API_URL", "http://localhost:8002")
-INPAINTING_API_URL = os.getenv("INPAINTING_API_URL", "http://localhost:8003")
+# INPAINTING_API_URL = os.getenv("INPAINTING_API_URL", "http://localhost:8003")  # Stable Diffusion - 미사용
 REMBG_API_URL = os.getenv("REMBG_API_URL", None)  # Hugging Face Space URL
 
 # 카테고리 매핑 (AI 라벨 → Spring Category enum)
@@ -329,34 +329,37 @@ class ClothProcessingPipelineCloudRun:
             print(f"  ❌ Segmentation API call failed: {e}")
             raise Exception(f"Segmentation API 호출 실패: {e}")
 
-    def inpaint_image_api(self, image):
-        """CloudRun Inpainting API 호출"""
-        print("  Step 4/4: Calling CloudRun Inpainting API...")
-
-        # 이미지를 바이트로 변환
-        img_byte_arr = io.BytesIO()
-        image.save(img_byte_arr, format='PNG')
-        img_byte_arr.seek(0)
-
-        # CloudRun API 호출
-        try:
-            response = requests.post(
-                f"{INPAINTING_API_URL}/inpaint",
-                files={"file": ("image.png", img_byte_arr, "image/png")},
-                data={"extend_ratio": 0.5},
-                timeout=300  # Inpainting은 시간이 오래 걸릴 수 있음
-            )
-            response.raise_for_status()
-
-            # 응답은 이미지 바이트
-            inpainted_image = Image.open(io.BytesIO(response.content)).convert("RGBA")
-            print("  ✅ Inpainting completed")
-            return inpainted_image
-
-        except requests.exceptions.RequestException as e:
-            print(f"  ⚠️  Inpainting API call failed: {e}")
-            print("  Using original image as fallback")
-            return image  # 실패 시 원본 반환
+    # ============================================
+    # Stable Diffusion Inpainting (미사용)
+    # ============================================
+    # def inpaint_image_api(self, image):
+    #     """CloudRun Inpainting API 호출 (Stable Diffusion - 미사용)"""
+    #     print("  Step 4/4: Calling CloudRun Inpainting API...")
+    #
+    #     # 이미지를 바이트로 변환
+    #     img_byte_arr = io.BytesIO()
+    #     image.save(img_byte_arr, format='PNG')
+    #     img_byte_arr.seek(0)
+    #
+    #     # CloudRun API 호출
+    #     try:
+    #         response = requests.post(
+    #             f"{INPAINTING_API_URL}/inpaint",
+    #             files={"file": ("image.png", img_byte_arr, "image/png")},
+    #             data={"extend_ratio": 0.5},
+    #             timeout=300  # Inpainting은 시간이 오래 걸릴 수 있음
+    #         )
+    #         response.raise_for_status()
+    #
+    #         # 응답은 이미지 바이트
+    #         inpainted_image = Image.open(io.BytesIO(response.content)).convert("RGBA")
+    #         print("  ✅ Inpainting completed")
+    #         return inpainted_image
+    #
+    #     except requests.exceptions.RequestException as e:
+    #         print(f"  ⚠️  Inpainting API call failed: {e}")
+    #         print("  Using original image as fallback")
+    #         return image  # 실패 시 원본 반환
 
     def image_to_base64(self, image):
         """PIL Image를 base64 문자열로 변환"""
@@ -416,27 +419,37 @@ class ClothProcessingPipelineCloudRun:
             if worker:
                 worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 확장 완료", 70)
 
-            # Step 4: CloudRun Inpainting API (70% → 95%)
-            if worker:
-                worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 복원 중...", 75)
-            print(f"  [75%] CloudRun Inpainting API 호출...")
+            # ============================================
+            # Step 4: Stable Diffusion Inpainting (미사용)
+            # ============================================
+            # if worker:
+            #     worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 복원 중...", 75)
+            # print(f"  [75%] CloudRun Inpainting API 호출...")
+            #
+            # inpainted_image = self.inpaint_image_api(expanded_image)
+            # inpainted_path = INPAINTED_DIR / f"{cloth_id}.png"
+            # inpainted_image.save(inpainted_path)
+            #
+            # if worker:
+            #     worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 복원 완료", 95)
+            # print(f"  [95%] 이미지 복원 완료")
 
-            inpainted_image = self.inpaint_image_api(expanded_image)  # expanded 이미지 사용
-            inpainted_path = INPAINTED_DIR / f"{cloth_id}.png"
-            inpainted_image.save(inpainted_path)
+            # 최종 이미지는 expanded_image 사용
+            final_image = expanded_image
+            final_path = expanded_path
 
             if worker:
-                worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 복원 완료", 95)
-            print(f"  [95%] 이미지 복원 완료")
+                worker.send_progress(cloth_id, user_id, "PROCESSING", "처리 완료", 95)
+            print(f"  [95%] 최종 이미지 처리 완료")
 
             # 카테고리 매핑
             suggested_category = CATEGORY_MAPPING.get(primary_item["label"], "ACC")
 
             # 이미지들을 base64로 인코딩 (CloudRun → Railway 전송용)
             removed_bg_base64 = self.image_to_base64(removed_bg_image)
-            segmented_base64 = self.image_to_base64(segmented_image)  # ✅ 수정: segmented 원본 사용
-            expanded_base64 = self.image_to_base64(expanded_image)    # ✅ 추가: expanded 이미지
-            inpainted_base64 = self.image_to_base64(inpainted_image)
+            segmented_base64 = self.image_to_base64(segmented_image)  # segmented 이미지
+            expanded_base64 = self.image_to_base64(expanded_image)    # expanded 이미지 (Gemini)
+            final_base64 = self.image_to_base64(final_image)          # 최종 이미지 (= expanded)
 
             result = {
                 "clothId": cloth_id,
@@ -445,11 +458,11 @@ class ClothProcessingPipelineCloudRun:
                 # 파일 경로 (참고용, Railway에서는 사용 안 함)
                 "removedBgImagePath": str(removed_bg_path.absolute()),
                 "segmentedImagePath": str(segmented_path.absolute()),
-                "inpaintedImagePath": str(inpainted_path.absolute()),
+                "inpaintedImagePath": str(final_path.absolute()),  # 최종 이미지 경로 (expanded)
                 # base64 이미지 데이터 (Railway에서 사용)
                 "removedBgImageBase64": removed_bg_base64,
                 "segmentedImageBase64": segmented_base64,
-                "inpaintedImageBase64": inpainted_base64,
+                "inpaintedImageBase64": final_base64,  # 최종 이미지 base64 (= expanded)
                 "suggestedCategory": suggested_category,
                 "segmentationLabel": primary_item["label"],
                 "areaPixels": primary_item["area_pixels"],

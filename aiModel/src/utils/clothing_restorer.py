@@ -1,4 +1,5 @@
-# clothing_restorer.py (수정 버전) 🎨
+# clothing_restorer.py (미사용 - Stable Diffusion Inpainting) 🎨
+# 현재는 Google AI Imagen을 사용하므로 이 파일은 미사용
 
 from diffusers import StableDiffusionInpaintPipeline
 from PIL import Image, ImageDraw
