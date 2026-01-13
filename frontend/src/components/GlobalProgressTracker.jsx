@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { useClothUpload } from '../contexts/ClothUploadContext';
@@ -12,6 +12,9 @@ function GlobalProgressTracker() {
 
   const { activeUploads, updateProgress, completeUpload, removeUpload } = useClothUpload();
   console.log('🟢 activeUploads from context:', activeUploads);
+
+  // useRef로 최신 activeUploads를 항상 참조 (클로저 문제 해결)
+  const activeUploadsRef = useRef(activeUploads);
 
   const [stompClient, setStompClient] = useState(null);
   const [connected, setConnected] = useState(false);
@@ -71,6 +74,12 @@ function GlobalProgressTracker() {
     }
   };
 
+  // activeUploads가 변경될 때마다 ref 업데이트 (WebSocket 콜백에서 최신값 참조)
+  useEffect(() => {
+    activeUploadsRef.current = activeUploads;
+    console.log('🔄 activeUploadsRef 업데이트:', activeUploads.map(u => u.clothId));
+  }, [activeUploads]);
+
   useEffect(() => {
     if (!userId) {
       console.log('⚠️  userId 없음, WebSocket 연결 건너뜀');
@@ -99,10 +108,10 @@ function GlobalProgressTracker() {
         const subscription = client.subscribe(`/queue/cloth/progress/${userId}`, (message) => {
           const data = JSON.parse(message.body);
           console.log('📊 진행 상황 수신:', data);
-          console.log('📊 현재 activeUploads에 있는 clothId들:', activeUploads.map(u => u.clothId));
+          console.log('📊 현재 activeUploadsRef에 있는 clothId들:', activeUploadsRef.current.map(u => u.clothId));
 
-          // 현재 추적 중인 작업이 아니면 무시
-          const isTracking = activeUploads.some(upload => upload.clothId === data.clothId);
+          // 현재 추적 중인 작업이 아니면 무시 (ref를 통해 항상 최신 activeUploads 참조)
+          const isTracking = activeUploadsRef.current.some(upload => upload.clothId === data.clothId);
           if (!isTracking) {
             console.log('⏭️  추적 중이 아닌 작업, 무시:', data.clothId);
             return;
