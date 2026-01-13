@@ -26,8 +26,74 @@ function AddClothModal({ onClose, onSubmit }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizationInfo, setOptimizationInfo] = useState(null);
 
-  const handleFileChange = (e) => {
+  /**
+   * 이미지 리사이즈 함수
+   * AI 처리 속도 향상을 위해 이미지를 최대 1200px로 리사이즈하고 JPEG로 압축
+   */
+  const resizeImage = (file, maxSize = 1200, quality = 0.9) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
+
+      reader.onload = (e) => {
+        const img = new Image();
+
+        img.onerror = () => reject(new Error('이미지를 로드할 수 없습니다.'));
+
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // 최대 크기 제한 (비율 유지)
+          if (width > maxSize || height > maxSize) {
+            if (width > height) {
+              height = (height / width) * maxSize;
+              width = maxSize;
+            } else {
+              width = (width / height) * maxSize;
+              height = maxSize;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // JPEG로 변환하여 파일 크기 감소
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve({
+                  blob,
+                  width,
+                  height,
+                  originalSize: file.size,
+                  optimizedSize: blob.size,
+                });
+              } else {
+                reject(new Error('이미지 변환에 실패했습니다.'));
+              }
+            },
+            'image/jpeg',
+            quality
+          );
+        };
+
+        img.src = e.target.result;
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -36,10 +102,51 @@ function AddClothModal({ onClose, onSubmit }) {
       URL.revokeObjectURL(previewUrl);
     }
 
-    // 파일 저장 및 미리보기 생성
-    setSelectedFile(file);
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
+    // 이미지 최적화 시작
+    setIsOptimizing(true);
+    setOptimizationInfo(null);
+
+    try {
+      // 이미지 최적화 (리사이즈 + JPEG 압축)
+      const result = await resizeImage(file, 1200, 0.9);
+
+      // 최적화된 이미지를 File 객체로 변환
+      const optimizedFile = new File(
+        [result.blob],
+        file.name.replace(/\.[^/.]+$/, '.jpg'), // 확장자를 .jpg로 변경
+        { type: 'image/jpeg' }
+      );
+
+      // 파일 저장 및 미리보기 생성
+      setSelectedFile(optimizedFile);
+      const objectUrl = URL.createObjectURL(result.blob);
+      setPreviewUrl(objectUrl);
+
+      // 최적화 정보 저장
+      const reductionPercent = ((1 - result.optimizedSize / result.originalSize) * 100).toFixed(0);
+      setOptimizationInfo({
+        originalSize: (result.originalSize / 1024).toFixed(0),
+        optimizedSize: (result.optimizedSize / 1024).toFixed(0),
+        reduction: reductionPercent,
+        dimensions: `${result.width}×${result.height}`,
+      });
+
+      console.log(`이미지 최적화 완료: ${(result.originalSize / 1024).toFixed(0)}KB → ${(result.optimizedSize / 1024).toFixed(0)}KB (${reductionPercent}% 감소)`);
+    } catch (error) {
+      console.error('이미지 최적화 실패:', error);
+
+      // 최적화 실패 시 원본 파일 사용
+      setSelectedFile(file);
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+
+      setOptimizationInfo({
+        error: true,
+        message: '최적화 실패 - 원본 이미지 사용',
+      });
+    } finally {
+      setIsOptimizing(false);
+    }
   };
 
   // 컴포넌트 unmount 시 미리보기 URL 정리
@@ -114,6 +221,29 @@ function AddClothModal({ onClose, onSubmit }) {
               onChange={handleFileChange}
               disabled={loading}
             />
+
+            {/* 이미지 최적화 진행 중 표시 */}
+            {isOptimizing && (
+              <div className="text-sm text-gray-500 mt-2">
+                🔄 이미지 최적화 중... (AI 처리 속도가 빨라집니다)
+              </div>
+            )}
+
+            {/* 최적화 완료 정보 표시 */}
+            {optimizationInfo && !optimizationInfo.error && (
+              <div className="text-sm text-green-600 mt-2">
+                ✅ 이미지 최적화 완료: {optimizationInfo.originalSize}KB → {optimizationInfo.optimizedSize}KB
+                ({optimizationInfo.reduction}% 감소, {optimizationInfo.dimensions})
+              </div>
+            )}
+
+            {/* 최적화 실패 시 경고 표시 */}
+            {optimizationInfo && optimizationInfo.error && (
+              <div className="text-sm text-yellow-600 mt-2">
+                ⚠️ {optimizationInfo.message}
+              </div>
+            )}
+
             {previewUrl && (
               <img src={previewUrl} alt="Preview" className="image-preview" />
             )}

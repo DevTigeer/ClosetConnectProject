@@ -190,6 +190,27 @@
   font-weight: 500;
 }
 
+/* 이미지 최적화 피드백 스타일 */
+.text-sm {
+  font-size: 13px;
+}
+
+.text-gray-500 {
+  color: #6b7280;
+}
+
+.text-green-600 {
+  color: #059669;
+}
+
+.text-yellow-600 {
+  color: #d97706;
+}
+
+.mt-2 {
+  margin-top: 8px;
+}
+
 /* 모바일 대응 */
 @media (max-width: 768px) {
   .image-grid {
