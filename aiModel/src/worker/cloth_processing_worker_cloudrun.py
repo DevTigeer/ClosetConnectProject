@@ -111,7 +111,7 @@ class ClothProcessingPipelineCloudRun:
     def __init__(self):
         print(f"🚀 Initializing CloudRun API Pipeline")
         print(f"   Segmentation API: {SEGMENTATION_API_URL}")
-        print(f"   Inpainting API: {INPAINTING_API_URL}")
+        # print(f"   Inpainting API: {INPAINTING_API_URL}")  # Stable Diffusion - 미사용
 
         # Background Removal 설정 (API 또는 로컬 rembg)
         self.rembg_api_url = self.normalize_rembg_api_url(REMBG_API_URL)
@@ -745,7 +745,7 @@ class ClothProcessingWorker:
                 print(f"🎯 Listening on queue: {REQUEST_QUEUE}")
                 print(f"🌐 Using CloudRun APIs:")
                 print(f"   - Segmentation: {SEGMENTATION_API_URL}")
-                print(f"   - Inpainting: {INPAINTING_API_URL}")
+                # print(f"   - Inpainting: {INPAINTING_API_URL}")  # Stable Diffusion - 미사용
                 print("Waiting for messages. To exit press CTRL+C\n")
 
                 self.channel.basic_consume(
@@ -799,7 +799,7 @@ def health_check():
         "mode": "cloudrun-api",
         "rabbitmq_host": RABBITMQ_HOST,
         "segmentation_api": SEGMENTATION_API_URL,
-        "inpainting_api": INPAINTING_API_URL
+        # "inpainting_api": INPAINTING_API_URL  # Stable Diffusion - 미사용
     }), 200
 
 @app.route('/', methods=['GET'])
