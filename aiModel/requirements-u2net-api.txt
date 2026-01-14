@@ -1,0 +1,22 @@
+# Requirements for U2NET Segmentation API
+# SINGLE_ITEM 이미지 세그멘테이션 API
+
+# FastAPI 서버
+fastapi>=0.115.2
+uvicorn>=0.24.0
+python-multipart>=0.0.18
+
+# 이미지 처리
+pillow>=10.1.0
+numpy<2.0.0
+opencv-python-headless>=4.8.0
+
+# PyTorch (U2NET 모델용)
+torch>=2.2.0
+torchvision>=0.17.0
+
+# 모델 다운로드
+gdown>=4.7.1
+
+# 환경 설정
+python-dotenv>=1.0.0
