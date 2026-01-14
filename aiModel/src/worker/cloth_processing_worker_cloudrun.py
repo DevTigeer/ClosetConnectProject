@@ -1,10 +1,10 @@
 """
 RabbitMQ Cloth Processing Worker (CloudRun API Version)
 - CloudRun에 배포된 AI API들을 호출하여 처리
-- rembg (Hugging Face Space) → CloudRun Segmentation API (Crop) → Google AI Imagen (Expand)
-- 기존 Worker보다 가볍고, CloudRun API들을 활용
+- rembg (Hugging Face Space) → Segmentation APIs → Google AI Imagen (Expand)
+- ImageType 분기: FULL_BODY (Segformer API) / SINGLE_ITEM (U2NET API)
+- 모든 AI 모델은 별도 API로 분리되어 있음 (초경량 Worker)
 - HTTP 헬스체크 서버 포함 (Cloud Run 배포용)
-- ImageType 분기: FULL_BODY (Segformer API) / SINGLE_ITEM (로컬 U2NET)
 """
 
 import pika
@@ -23,8 +23,6 @@ from datetime import datetime
 from dotenv import load_dotenv
 import threading
 from flask import Flask, jsonify
-import numpy as np
-import cv2
 
 # .env 파일에서 환경변수 로드
 load_dotenv()
@@ -36,14 +34,6 @@ try:
 except ImportError:
     IMAGEN_AVAILABLE = False
     print("⚠️  Google AI Imagen 서비스를 사용할 수 없습니다.")
-
-# U2NET 모델 import (단일 옷 이미지용)
-try:
-    from ..utils.u2net_process import load_seg_model, get_palette, generate_mask
-    U2NET_AVAILABLE = True
-except ImportError as e:
-    print(f"⚠️  U2NET 모델 import 실패: {e}")
-    U2NET_AVAILABLE = False
 
 # 프로젝트 루트 디렉토리
 # __file__ = /app/src/worker/cloth_processing_worker_cloudrun.py
@@ -76,7 +66,8 @@ RESULT_ROUTING_KEY = "cloth.result"
 PROGRESS_ROUTING_KEY = "cloth.progress"
 
 # CloudRun API URLs
-SEGMENTATION_API_URL = os.getenv("SEGMENTATION_API_URL", "http://localhost:8002")
+SEGMENTATION_API_URL = os.getenv("SEGMENTATION_API_URL", "http://localhost:8002")  # Segformer (FULL_BODY)
+U2NET_API_URL = os.getenv("U2NET_API_URL", "http://localhost:8004")  # U2NET (SINGLE_ITEM)
 # INPAINTING_API_URL = os.getenv("INPAINTING_API_URL", "http://localhost:8003")  # Stable Diffusion - 미사용
 REMBG_API_URL = os.getenv("REMBG_API_URL", None)  # Hugging Face Space URL
 
@@ -120,8 +111,9 @@ class ClothProcessingPipelineCloudRun:
         return rembg_api_url
 
     def __init__(self):
-        print(f"🚀 Initializing CloudRun API Pipeline")
-        print(f"   Segmentation API: {SEGMENTATION_API_URL}")
+        print(f"🚀 Initializing CloudRun API Pipeline (Lightweight Worker)")
+        print(f"   Segformer API (FULL_BODY): {SEGMENTATION_API_URL}")
+        print(f"   U2NET API (SINGLE_ITEM): {U2NET_API_URL}")
         # print(f"   Inpainting API: {INPAINTING_API_URL}")  # Stable Diffusion - 미사용
 
         # Background Removal 설정 (API 또는 로컬 rembg)
@@ -153,28 +145,6 @@ class ClothProcessingPipelineCloudRun:
                 raise Exception("Background removal not available: rembg not installed and REMBG_API_URL not set")
             except Exception as e:
                 print(f"  ⚠️  rembg warmup failed: {e}")
-
-        # U2NET 모델 로드 (단일 옷 이미지용)
-        self.u2net_available = False
-        self.u2net_model = None
-        self.u2net_palette = None
-        if U2NET_AVAILABLE:
-            try:
-                checkpoint_path = PROJECT_ROOT / "model" / "cloth_segm.pth"
-                if checkpoint_path.exists():
-                    print("  🔥 Loading U2NET model for SINGLE_ITEM images...")
-                    import torch
-                    self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                    self.u2net_model = load_seg_model(str(checkpoint_path), device=str(self.device))
-                    self.u2net_palette = get_palette(4)
-                    self.u2net_available = True
-                    print(f"  ✅ U2NET 모델 로드 성공 (device: {self.device})")
-                else:
-                    print(f"  ⚠️  U2NET 체크포인트 없음: {checkpoint_path}")
-            except Exception as e:
-                print(f"  ⚠️  U2NET 모델 로드 실패: {e}")
-        else:
-            print("  ⚠️  U2NET 모듈을 사용할 수 없습니다 (SINGLE_ITEM 지원 불가)")
 
         # Google AI Imagen 서비스 초기화 (선택적)
         if IMAGEN_AVAILABLE:
@@ -362,10 +332,9 @@ class ClothProcessingPipelineCloudRun:
             print(f"  ❌ Segmentation API call failed: {e}")
             raise Exception(f"Segmentation API 호출 실패: {e}")
 
-    def segment_clothing_u2net(self, image):
-        """U2NET 모델로 단일 옷 이미지 세그멘테이션 - 배경 제거, 옷만 추출"""
-        print("  Step 2/4: Segmenting clothing with U2NET (단일 옷 모드)...")
-        print("  🤖 모델: U2NET (Single item segmentation + Auto category detection)")
+    def segment_clothing_u2net_api(self, image):
+        """U2NET API로 단일 옷 이미지 세그멘테이션"""
+        print("  Step 2/4: Calling U2NET API (SINGLE_ITEM mode)...")
 
         # RGB로 변환
         if image.mode == "RGBA":
@@ -375,89 +344,50 @@ class ClothProcessingPipelineCloudRun:
         elif image.mode != "RGB":
             image = image.convert("RGB")
 
-        # U2NET으로 마스크 생성
-        cloth_mask = generate_mask(image, self.u2net_model, self.u2net_palette, device=str(self.device))
+        # 이미지를 바이트로 변환
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
 
-        # 마스크를 numpy 배열로 변환
-        mask_np = np.array(cloth_mask)
-        image_np = np.array(image)
+        # U2NET API 호출
+        try:
+            response = requests.post(
+                f"{U2NET_API_URL}/segment",
+                files={"file": ("image.png", img_byte_arr, "image/png")},
+                timeout=90  # U2NET은 시간이 걸릴 수 있음
+            )
+            response.raise_for_status()
+            result = response.json()
 
-        # U2NET 카테고리 매핑 (자동 감지)
-        U2NET_LABEL_MAP = {
-            1: "upper-clothes",  # 상의
-            2: "pants",          # 하의
-            3: "dress"           # 원피스
-        }
+            if result["status"] != "success":
+                raise Exception(f"U2NET API failed: {result.get('message', 'Unknown error')}")
 
-        # 각 클래스의 픽셀 수 계산 (배경 제외)
-        class_pixels = {}
-        for class_id in [1, 2, 3]:
-            pixel_count = np.sum(mask_np == class_id)
-            if pixel_count > 0:
-                class_pixels[class_id] = pixel_count
-                print(f"     Class {class_id} ({U2NET_LABEL_MAP.get(class_id, 'unknown')}): {pixel_count} pixels")
+            detected_item = result["detected_item"]
+            print(f"  ✅ U2NET API returned: {detected_item['label']} ({detected_item['area_pixels']} pixels)")
 
-        # 가장 많은 픽셀을 차지하는 클래스 선택
-        if not class_pixels:
-            raise Exception("No clothing detected in single item image")
+            # base64 이미지 데이터에서 이미지 로드
+            cropped_image_data = base64.b64decode(detected_item["image_base64"])
+            cropped_image = Image.open(io.BytesIO(cropped_image_data)).convert("RGBA")
 
-        dominant_class = max(class_pixels, key=class_pixels.get)
-        detected_label = U2NET_LABEL_MAP.get(dominant_class, "upper-clothes")
-        print(f"     🎯 자동 감지된 카테고리: {detected_label} (U2NET class {dominant_class})")
+            fullsize_image_data = base64.b64decode(detected_item["fullsize_base64"])
+            fullsize_image = Image.open(io.BytesIO(fullsize_image_data)).convert("RGBA")
 
-        # 배경이 아닌 모든 영역을 옷으로 간주 (모든 옷 클래스 통합)
-        cloth_mask_binary = (mask_np > 0).astype(np.uint8)
-        total_cloth_pixels = np.sum(cloth_mask_binary)
+            # Primary 아이템 결과
+            primary_item = {
+                "label": detected_item["label"],
+                "area_pixels": detected_item["area_pixels"],
+                "cropped_image": cropped_image,
+                "fullsize_image": fullsize_image
+            }
 
-        # 바운딩 박스 계산 (패딩 포함)
-        rows = np.any(cloth_mask_binary, axis=1)
-        cols = np.any(cloth_mask_binary, axis=0)
+            # 모든 감지된 아이템 (U2NET은 단일 아이템만)
+            detected_items = [primary_item]
 
-        if not np.any(rows) or not np.any(cols):
-            raise Exception("No valid bounding box found for clothing")
+            return primary_item, detected_items
 
-        rmin, rmax = np.where(rows)[0][[0, -1]]
-        cmin, cmax = np.where(cols)[0][[0, -1]]
-
-        # Adaptive padding (2%)
-        height, width = cloth_mask_binary.shape
-        bbox_width = cmax - cmin
-        bbox_height = rmax - rmin
-        padding = max(5, min(20, int(0.02 * max(bbox_width, bbox_height))))
-
-        rmin_padded = max(0, rmin - padding)
-        rmax_padded = min(height, rmax + padding)
-        cmin_padded = max(0, cmin - padding)
-        cmax_padded = min(width, cmax + padding)
-
-        # 크롭된 이미지 생성 (RGBA)
-        cropped_image_np = image_np[rmin_padded:rmax_padded, cmin_padded:cmax_padded]
-        cropped_mask = cloth_mask_binary[rmin_padded:rmax_padded, cmin_padded:cmax_padded]
-        alpha_channel = (cropped_mask * 255).astype(np.uint8)
-        image_rgba = np.dstack([cropped_image_np, alpha_channel])
-        cropped_image = Image.fromarray(image_rgba, mode='RGBA')
-
-        # Fullsize 이미지 생성 (배경만 투명, 크기 유지)
-        alpha_full = (cloth_mask_binary * 255).astype(np.uint8)
-        fullsize_rgba = np.dstack([image_np, alpha_full])
-        fullsize_image = Image.fromarray(fullsize_rgba, mode='RGBA')
-
-        print(f"  ✅ U2NET 세그멘테이션 완료: {detected_label}, {total_cloth_pixels} pixels")
-
-        # Primary 아이템 결과 (크롭 버전 사용)
-        primary_item = {
-            "label": detected_label,  # U2NET으로 자동 감지된 카테고리
-            "label_id": 4,  # Spring Boot에서 사용하는 ID (매핑 필요)
-            "area_pixels": int(total_cloth_pixels),
-            "bbox": [int(cmin_padded), int(rmin_padded), int(cmax_padded), int(rmax_padded)],
-            "cropped_image": cropped_image,
-            "fullsize_image": fullsize_image  # Fullsize 버전 추가
-        }
-
-        # 모든 감지된 아이템 (U2NET은 단일 아이템만)
-        detected_items = [primary_item]
-
-        return primary_item, detected_items
+        except requests.exceptions.RequestException as e:
+            print(f"  ❌ U2NET API call failed: {e}")
+            raise Exception(f"U2NET API 호출 실패: {e}")
 
     # ============================================
     # Stable Diffusion Inpainting (미사용)
@@ -550,15 +480,15 @@ class ClothProcessingPipelineCloudRun:
 
         try:
             # 모델 선택 로직
-            use_u2net = (image_type == "SINGLE_ITEM" and self.u2net_available)
+            use_u2net_api = (image_type == "SINGLE_ITEM")
 
             print(f"\n{'='*60}")
-            if use_u2net:
-                print("  🎯 모델 선택: U2NET (로컬)")
+            if use_u2net_api:
+                print("  🎯 모델 선택: U2NET API")
                 print("  📸 이미지 타입: SINGLE_ITEM (단일 옷 이미지)")
                 print("  🔍 처리 방식: 단일 아이템 감지 + 자동 카테고리 분류")
             else:
-                print("  🎯 모델 선택: Segformer (CloudRun API)")
+                print("  🎯 모델 선택: Segformer API")
                 print(f"  📸 이미지 타입: {image_type} (전신 사진)")
                 print("  🔍 처리 방식: 다중 의류 아이템 감지 (상의/하의/신발/가방 등)")
             print(f"{'='*60}\n")
@@ -579,9 +509,9 @@ class ClothProcessingPipelineCloudRun:
                 worker.send_progress(cloth_id, user_id, "PROCESSING", "옷 영역 분석 중...", 30)
             print(f"  [30%] 옷 영역 분석 중...")
 
-            if use_u2net:
-                # U2NET 모델 사용 (단일 옷 이미지)
-                primary_item, all_detected_items = self.segment_clothing_u2net(removed_bg_image)
+            if use_u2net_api:
+                # U2NET API 사용 (단일 옷 이미지)
+                primary_item, all_detected_items = self.segment_clothing_u2net_api(removed_bg_image)
                 segmented_image = primary_item["cropped_image"]
 
                 # U2NET: fullsize 버전도 저장 (배경만 투명, 원본 크기 유지)
@@ -591,7 +521,7 @@ class ClothProcessingPipelineCloudRun:
                     fullsize_image.save(fullsize_path)
                     print(f"  💾 Fullsize 이미지 저장: {fullsize_path}")
             else:
-                # Segformer 모델 사용 (전신 사진) - CloudRun API 호출
+                # Segformer API 사용 (전신 사진)
                 segmentation_result = self.segment_clothing_api(removed_bg_image)
                 primary_item = segmentation_result
                 all_detected_items = segmentation_result.get("all_items", [primary_item])
@@ -695,7 +625,7 @@ class ClothProcessingPipelineCloudRun:
             print(f"  [98%] Result 딕셔너리 생성 완료")
             print(f"\n{'='*60}")
             print(f"✅ Processing completed: {suggested_category}")
-            print(f"   🤖 사용된 모델: {'U2NET' if use_u2net else 'Segformer (API)'}")
+            print(f"   🤖 사용된 모델: {'U2NET API' if use_u2net_api else 'Segformer API'}")
             print(f"   📸 이미지 타입: {image_type}")
             print(f"   🏷️  Category: {suggested_category} ({primary_item['label']})")
             print(f"   📦 감지된 아이템: {len(all_detected_items)}개")

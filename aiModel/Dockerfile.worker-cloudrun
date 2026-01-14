@@ -27,11 +27,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create model and output directories
-RUN mkdir -p model outputs/removed_bg outputs/segmented_clothes outputs/expanded outputs/inpainted logs
-
-# Download U2NET model for SINGLE_ITEM image type
-RUN python -c "import gdown; gdown.download('https://drive.google.com/uc?id=11xTBALOeUkyuaK3l60CpkYHLTmv7k3dY', 'model/cloth_segm.pth', quiet=False)"
+# Create output directories (NO model directory needed - uses APIs only)
+RUN mkdir -p outputs/removed_bg outputs/segmented_clothes outputs/expanded outputs/inpainted logs
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
