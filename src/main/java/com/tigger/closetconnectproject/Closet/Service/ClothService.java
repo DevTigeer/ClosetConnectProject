@@ -415,6 +415,8 @@ public class ClothService {
      * - READY_FOR_REVIEW: inpaintedImageUrl (AI 처리 완료된 이미지)
      * - PROCESSING: originalImageUrl (처리 중이므로 원본만 표시)
      * - FAILED: originalImageUrl
+     *
+     * @return 이미지 URL (null일 수 있음 - 프론트엔드에서 placeholder 처리)
      */
     private String getDisplayImageUrl(Cloth c) {
         // 최종 확정된 이미지가 있으면 사용
@@ -439,7 +441,15 @@ public class ClothService {
         }
 
         // 처리 중이거나 실패한 경우: 원본 이미지 표시
-        return c.getOriginalImageUrl();
+        String originalUrl = c.getOriginalImageUrl();
+
+        // null 체크 및 로깅 (디버깅용)
+        if (originalUrl == null) {
+            log.warn("[clothId={}] All image URLs are null! Status: {}, Name: {}",
+                c.getId(), c.getProcessingStatus(), c.getName());
+        }
+
+        return originalUrl;  // null일 수 있음 (프론트엔드에서 placeholder 처리)
     }
 }
 
