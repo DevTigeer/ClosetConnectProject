@@ -5,6 +5,8 @@ const ClothUploadContext = createContext();
 
 const STORAGE_KEY = 'cloth_active_uploads';
 const STORAGE_USER_KEY = 'cloth_active_uploads_userId';
+const DISMISSED_KEY = 'cloth_dismissed_uploads'; // 사용자가 삭제한 clothId 목록
+const DISMISSED_EXPIRY_MS = 60 * 60 * 1000; // 1시간 후 자동 정리
 
 export function ClothUploadProvider({ children }) {
   // localStorage에서 초기값 복구 (PROCESSING 상태만)
@@ -66,9 +68,51 @@ export function ClothUploadProvider({ children }) {
     }
   }, [activeUploads]);
 
+  // 다중 탭 동기화: storage 이벤트 리스너
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      // 다른 탭에서 activeUploads 변경 감지
+      if (e.key === STORAGE_KEY) {
+        console.log('🔄 다른 탭에서 activeUploads 변경 감지');
+        try {
+          const currentUserId = getCurrentUserId();
+          const savedUserId = localStorage.getItem(STORAGE_USER_KEY);
+
+          // 계정이 일치할 때만 동기화
+          if (savedUserId && currentUserId && savedUserId === String(currentUserId)) {
+            const newValue = e.newValue ? JSON.parse(e.newValue) : [];
+            setActiveUploads(newValue);
+            console.log('✅ 다른 탭과 동기화 완료:', newValue.length, '개 작업');
+          }
+        } catch (error) {
+          console.error('❌ 탭 간 동기화 실패:', error);
+        }
+      }
+
+      // Dismissed 항목 동기화
+      if (e.key === DISMISSED_KEY) {
+        console.log('🔄 다른 탭에서 dismissed 항목 변경 감지');
+        // getDismissedItems는 항상 최신 localStorage 값을 읽으므로 별도 처리 불필요
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   // 업로드 추가
   const addUpload = useCallback((clothId, userId) => {
     console.log('➕ addUpload 호출:', { clothId, userId });
+
+    // Dismissed 체크 (사용자가 삭제한 항목은 추가하지 않음)
+    if (isDismissed(clothId)) {
+      console.log('🚫 Dismissed 항목, 추가 무시:', clothId);
+      return;
+    }
+
     setActiveUploads(prev => {
       // 중복 체크
       if (prev.some(upload => upload.clothId === clothId)) {
@@ -86,7 +130,7 @@ export function ClothUploadProvider({ children }) {
       console.log('✅ 새 업로드 추가:', newUpload);
       return [...prev, newUpload];
     });
-  }, []);
+  }, [isDismissed]);
 
   // 진행도 업데이트
   const updateProgress = useCallback((clothId, progressData) => {
@@ -106,10 +150,60 @@ export function ClothUploadProvider({ children }) {
     });
   }, []);
 
-  // 업로드 제거 (완료 또는 실패)
-  const removeUpload = useCallback((clothId) => {
-    setActiveUploads(prev => prev.filter(upload => upload.clothId !== clothId));
+  // Dismissed 관리 함수들
+  const getDismissedItems = useCallback(() => {
+    try {
+      const saved = localStorage.getItem(DISMISSED_KEY);
+      if (!saved) return {};
+      const dismissed = JSON.parse(saved);
+
+      // 오래된 항목 정리 (1시간 경과)
+      const now = Date.now();
+      const cleaned = Object.entries(dismissed).reduce((acc, [id, timestamp]) => {
+        if (now - timestamp < DISMISSED_EXPIRY_MS) {
+          acc[id] = timestamp;
+        }
+        return acc;
+      }, {});
+
+      // 정리된 목록 저장
+      if (Object.keys(cleaned).length !== Object.keys(dismissed).length) {
+        localStorage.setItem(DISMISSED_KEY, JSON.stringify(cleaned));
+        console.log('🗑️  오래된 dismissed 항목 정리:', Object.keys(dismissed).length - Object.keys(cleaned).length, '개');
+      }
+
+      return cleaned;
+    } catch (error) {
+      console.error('❌ getDismissedItems 실패:', error);
+      return {};
+    }
   }, []);
+
+  const isDismissed = useCallback((clothId) => {
+    const dismissed = getDismissedItems();
+    return clothId in dismissed;
+  }, [getDismissedItems]);
+
+  const markDismissed = useCallback((clothId) => {
+    try {
+      const dismissed = getDismissedItems();
+      dismissed[clothId] = Date.now();
+      localStorage.setItem(DISMISSED_KEY, JSON.stringify(dismissed));
+      console.log('🚫 clothId를 dismissed로 표시:', clothId);
+    } catch (error) {
+      console.error('❌ markDismissed 실패:', error);
+    }
+  }, [getDismissedItems]);
+
+  // 업로드 제거 (완료 또는 실패)
+  const removeUpload = useCallback((clothId, markAsDismissed = false) => {
+    setActiveUploads(prev => prev.filter(upload => upload.clothId !== clothId));
+
+    // markAsDismissed=true면 재추가 방지
+    if (markAsDismissed) {
+      markDismissed(clothId);
+    }
+  }, [markDismissed]);
 
   // 완료 처리
   const completeUpload = useCallback((clothId) => {
@@ -128,7 +222,8 @@ export function ClothUploadProvider({ children }) {
     addUpload,
     updateProgress,
     removeUpload,
-    completeUpload
+    completeUpload,
+    isDismissed
   };
 
   return (

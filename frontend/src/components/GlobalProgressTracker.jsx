@@ -69,8 +69,9 @@ function GlobalProgressTracker() {
       : `옷 #${upload.clothId}을(를) 목록에서 제거하시겠습니까?`;
 
     if (window.confirm(confirmMessage)) {
-      removeUpload(upload.clothId);
-      console.log(`🗑️  사용자가 옷 #${upload.clothId} 제거`);
+      // markAsDismissed=true로 설정하여 재추가 방지
+      removeUpload(upload.clothId, true);
+      console.log(`🗑️  사용자가 옷 #${upload.clothId} 제거 (재추가 방지)`);
     }
   };
 
@@ -110,11 +111,20 @@ function GlobalProgressTracker() {
           console.log('📊 진행 상황 수신:', data);
           console.log('📊 현재 activeUploadsRef에 있는 clothId들:', activeUploadsRef.current.map(u => u.clothId));
 
-          // 현재 추적 중인 작업이 아니면 무시 (ref를 통해 항상 최신 activeUploads 참조)
+          // 현재 추적 중인 작업인지 확인
           const isTracking = activeUploadsRef.current.some(upload => upload.clothId === data.clothId);
+
+          // 추적 중이 아닌 작업이면 자동으로 추가 (타이밍 이슈 해결)
           if (!isTracking) {
-            console.log('⏭️  추적 중이 아닌 작업, 무시:', data.clothId);
-            return;
+            console.log('⚡ 추적 중이 아닌 작업 감지, 자동 추가:', data.clothId);
+            // userId가 일치하면 자동으로 activeUploads에 추가
+            if (data.userId === userId) {
+              addUpload(data.clothId, data.userId);
+              console.log('✅ activeUploads에 자동 추가 완료');
+            } else {
+              console.warn('⚠️  userId 불일치, 무시:', data.userId, 'vs', userId);
+              return;
+            }
           }
 
           // 진행도 업데이트
@@ -176,7 +186,7 @@ function GlobalProgressTracker() {
     return () => {
       client.deactivate();
     };
-  }, [userId, updateProgress, completeUpload]);
+  }, [userId, addUpload, updateProgress, completeUpload]);
 
   // 업로드가 없으면 UI만 숨김 (WebSocket은 유지)
   if (activeUploads.length === 0) {
