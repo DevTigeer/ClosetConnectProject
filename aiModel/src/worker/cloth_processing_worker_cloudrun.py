@@ -351,11 +351,38 @@ class ClothProcessingPipelineCloudRun:
 
         # U2NET API 호출
         try:
-            response = requests.post(
-                f"{U2NET_API_URL}/segment",
-                files={"file": ("image.png", img_byte_arr, "image/png")},
-                timeout=90  # U2NET은 시간이 걸릴 수 있음
-            )
+            # Cold Start를 고려한 재시도 로직
+            max_retries = 3
+            retry_delay = 10  # 초
+
+            for attempt in range(max_retries):
+                try:
+                    print(f"  🔄 U2NET API 호출 시도 {attempt + 1}/{max_retries}...")
+                    response = requests.post(
+                        f"{U2NET_API_URL}/segment",
+                        files={"file": ("image.png", img_byte_arr, "image/png")},
+                        timeout=120  # Cold Start 고려하여 2분으로 증가
+                    )
+                    response.raise_for_status()
+                    break  # 성공하면 루프 종료
+
+                except requests.exceptions.HTTPError as e:
+                    if e.response.status_code == 503 and attempt < max_retries - 1:
+                        # 503 에러이고 재시도 가능하면 대기 후 재시도
+                        print(f"  ⚠️  503 Service Unavailable (Cold Start 중?). {retry_delay}초 후 재시도...")
+                        time.sleep(retry_delay)
+                        img_byte_arr.seek(0)  # 파일 포인터 리셋
+                        continue
+                    else:
+                        raise
+                except requests.exceptions.Timeout as e:
+                    if attempt < max_retries - 1:
+                        print(f"  ⚠️  타임아웃. {retry_delay}초 후 재시도...")
+                        time.sleep(retry_delay)
+                        img_byte_arr.seek(0)
+                        continue
+                    else:
+                        raise
             response.raise_for_status()
             result = response.json()
 

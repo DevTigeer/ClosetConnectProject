@@ -48,26 +48,51 @@ U2NET_LABEL_MAP = {
 
 class U2NetSegmentationModel:
     def __init__(self):
+        print("="*60)
+        print("🚀 Initializing U2NET Segmentation API")
+        print("="*60)
+
+        # Device 확인
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(f"🚀 Initializing U2NET Segmentation API")
-        print(f"   Device: {self.device}")
+        print(f"✓ Device: {self.device}")
 
-        # U2NET 모델 로드
+        # 체크포인트 경로 확인
         checkpoint_path = Path(__file__).parent.parent.parent / "model" / "cloth_segm.pth"
-        print(f"   Checkpoint path: {checkpoint_path}")
+        print(f"✓ Checkpoint path: {checkpoint_path}")
+        print(f"✓ Path exists: {checkpoint_path.exists()}")
 
-        if not checkpoint_path.exists():
+        if checkpoint_path.exists():
+            import os
+            file_size = os.path.getsize(checkpoint_path)
+            print(f"✓ File size: {file_size / 1024 / 1024:.2f} MB")
+        else:
+            print("❌ Checkpoint file NOT found!")
+            # 디렉토리 내용 확인
+            model_dir = checkpoint_path.parent
+            if model_dir.exists():
+                print(f"📁 Contents of {model_dir}:")
+                for f in model_dir.iterdir():
+                    print(f"   - {f.name}")
+            else:
+                print(f"❌ Directory {model_dir} does NOT exist")
             raise FileNotFoundError(f"U2NET checkpoint not found: {checkpoint_path}")
 
-        print("   Loading U2NET model...")
-        self.model = load_seg_model(str(checkpoint_path), device=str(self.device))
-        self.palette = get_palette(4)
-        print("   ✅ U2NET model loaded successfully")
+        # 모델 로드
+        print("⏳ Loading U2NET model... (this may take 10-30 seconds)")
+        try:
+            self.model = load_seg_model(str(checkpoint_path), device=str(self.device))
+            self.palette = get_palette(4)
+            print("✅ U2NET model loaded successfully")
+        except Exception as e:
+            print(f"❌ Model loading failed: {e}")
+            raise
 
         # 출력 디렉토리 생성
         base_dir = Path(__file__).parent.parent.parent
         self.output_dir = base_dir / "outputs" / "u2net_segmented"
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        print(f"✓ Output directory: {self.output_dir}")
+        print("="*60)
 
     def segment_single_item(self, image: Image.Image):
         """
@@ -164,9 +189,25 @@ model = None
 async def startup_event():
     """서버 시작 시 모델 로드"""
     global model
+    print("="*60)
+    print("🚀 U2NET API Startup Event Started")
+    print("="*60)
+
     try:
+        print("📦 Initializing U2NetSegmentationModel...")
         model = U2NetSegmentationModel()
-        print("✅ U2NET API server ready")
+        print("✅ U2NET API server ready!")
+        print("="*60)
+    except FileNotFoundError as e:
+        print(f"❌ Model file not found: {e}")
+        traceback.print_exc()
+        print("💡 Hint: Check if 'model/cloth_segm.pth' exists")
+        raise
+    except ImportError as e:
+        print(f"❌ Import error: {e}")
+        traceback.print_exc()
+        print("💡 Hint: Check if u2net_process module is available")
+        raise
     except Exception as e:
         print(f"❌ Failed to load U2NET model: {e}")
         traceback.print_exc()

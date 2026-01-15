@@ -27,10 +27,14 @@ COPY . .
 RUN mkdir -p model outputs/u2net_segmented logs
 
 # Download U2NET model from Google Drive
-RUN python -c "import gdown; gdown.download('https://drive.google.com/uc?id=11xTBALOeUkyuaK3l60CpkYHLTmv7k3dY', 'model/cloth_segm.pth', quiet=False)"
+# Try gdown first, fallback to curl if it fails
+RUN python -c "import gdown; gdown.download('https://drive.google.com/uc?id=11xTBALOeUkyuaK3l60CpkYHLTmv7k3dY', 'model/cloth_segm.pth', quiet=False)" || \
+    (echo "gdown failed, trying alternative method..." && \
+     curl -L "https://drive.google.com/uc?export=download&id=11xTBALOeUkyuaK3l60CpkYHLTmv7k3dY" -o model/cloth_segm.pth)
 
-# Verify model file exists
-RUN ls -lh model/cloth_segm.pth
+# Verify model file exists and show size
+RUN ls -lh model/cloth_segm.pth && \
+    echo "Model file size: $(du -h model/cloth_segm.pth | cut -f1)"
 
 # Expose port
 EXPOSE 8004
