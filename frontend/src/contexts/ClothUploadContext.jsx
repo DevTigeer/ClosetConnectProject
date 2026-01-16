@@ -108,6 +108,51 @@ export function ClothUploadProvider({ children }) {
     };
   }, []);
 
+  // Dismissed 관리 함수들 (먼저 선언)
+  const getDismissedItems = useCallback(() => {
+    try {
+      const saved = localStorage.getItem(DISMISSED_KEY);
+      if (!saved) return {};
+      const dismissed = JSON.parse(saved);
+
+      // 오래된 항목 정리 (1시간 경과)
+      const now = Date.now();
+      const cleaned = Object.entries(dismissed).reduce((acc, [id, timestamp]) => {
+        if (now - timestamp < DISMISSED_EXPIRY_MS) {
+          acc[id] = timestamp;
+        }
+        return acc;
+      }, {});
+
+      // 정리된 목록 저장
+      if (Object.keys(cleaned).length !== Object.keys(dismissed).length) {
+        localStorage.setItem(DISMISSED_KEY, JSON.stringify(cleaned));
+        console.log('🗑️  오래된 dismissed 항목 정리:', Object.keys(dismissed).length - Object.keys(cleaned).length, '개');
+      }
+
+      return cleaned;
+    } catch (error) {
+      console.error('❌ getDismissedItems 실패:', error);
+      return {};
+    }
+  }, []);
+
+  const isDismissed = useCallback((clothId) => {
+    const dismissed = getDismissedItems();
+    return clothId in dismissed;
+  }, [getDismissedItems]);
+
+  const markDismissed = useCallback((clothId) => {
+    try {
+      const dismissed = getDismissedItems();
+      dismissed[clothId] = Date.now();
+      localStorage.setItem(DISMISSED_KEY, JSON.stringify(dismissed));
+      console.log('🚫 clothId를 dismissed로 표시:', clothId);
+    } catch (error) {
+      console.error('❌ markDismissed 실패:', error);
+    }
+  }, [getDismissedItems]);
+
   // 업로드 추가
   const addUpload = useCallback((clothId, userId) => {
     console.log('➕ addUpload 호출:', { clothId, userId });
@@ -154,51 +199,6 @@ export function ClothUploadProvider({ children }) {
       return updated;
     });
   }, []);
-
-  // Dismissed 관리 함수들
-  const getDismissedItems = useCallback(() => {
-    try {
-      const saved = localStorage.getItem(DISMISSED_KEY);
-      if (!saved) return {};
-      const dismissed = JSON.parse(saved);
-
-      // 오래된 항목 정리 (1시간 경과)
-      const now = Date.now();
-      const cleaned = Object.entries(dismissed).reduce((acc, [id, timestamp]) => {
-        if (now - timestamp < DISMISSED_EXPIRY_MS) {
-          acc[id] = timestamp;
-        }
-        return acc;
-      }, {});
-
-      // 정리된 목록 저장
-      if (Object.keys(cleaned).length !== Object.keys(dismissed).length) {
-        localStorage.setItem(DISMISSED_KEY, JSON.stringify(cleaned));
-        console.log('🗑️  오래된 dismissed 항목 정리:', Object.keys(dismissed).length - Object.keys(cleaned).length, '개');
-      }
-
-      return cleaned;
-    } catch (error) {
-      console.error('❌ getDismissedItems 실패:', error);
-      return {};
-    }
-  }, []);
-
-  const isDismissed = useCallback((clothId) => {
-    const dismissed = getDismissedItems();
-    return clothId in dismissed;
-  }, [getDismissedItems]);
-
-  const markDismissed = useCallback((clothId) => {
-    try {
-      const dismissed = getDismissedItems();
-      dismissed[clothId] = Date.now();
-      localStorage.setItem(DISMISSED_KEY, JSON.stringify(dismissed));
-      console.log('🚫 clothId를 dismissed로 표시:', clothId);
-    } catch (error) {
-      console.error('❌ markDismissed 실패:', error);
-    }
-  }, [getDismissedItems]);
 
   // 업로드 제거 (완료 또는 실패)
   const removeUpload = useCallback((clothId, markAsDismissed = false) => {

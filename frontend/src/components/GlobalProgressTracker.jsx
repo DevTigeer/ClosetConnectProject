@@ -10,7 +10,7 @@ import './GlobalProgressTracker.css';
 function GlobalProgressTracker() {
   console.log('🟢 GlobalProgressTracker 함수 호출됨');
 
-  const { activeUploads, updateProgress, completeUpload, removeUpload } = useClothUpload();
+  const { activeUploads, addUpload, updateProgress, completeUpload, removeUpload } = useClothUpload();
   console.log('🟢 activeUploads from context:', activeUploads);
 
   // useRef로 최신 activeUploads를 항상 참조 (클로저 문제 해결)
@@ -93,14 +93,19 @@ function GlobalProgressTracker() {
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
     const wsUrl = `${baseUrl}/ws`;
     console.log('🔵 WebSocket URL:', wsUrl);
-    const socket = new SockJS(wsUrl);
-    const client = new Client({
-      webSocketFactory: () => socket,
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
 
-      onConnect: () => {
+    let socket;
+    let client;
+
+    try {
+      socket = new SockJS(wsUrl);
+      client = new Client({
+        webSocketFactory: () => socket,
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+
+        onConnect: () => {
         console.log('✅ WebSocket 연결 성공');
         console.log('✅ 구독 경로:', `/queue/cloth/progress/${userId}`);
         setConnected(true);
@@ -172,21 +177,33 @@ function GlobalProgressTracker() {
       onStompError: (frame) => {
         console.error('❌ WebSocket 오류:', frame);
         console.error('❌ 오류 상세:', frame.headers, frame.body);
+        setConnected(false);
       },
-    });
+      });
 
-    client.activate();
-    setStompClient(client);
+      client.activate();
+      setStompClient(client);
 
-    // 알림 권한 요청
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+      // 알림 권한 요청
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    } catch (error) {
+      console.error('❌ WebSocket 초기화 실패 (백엔드 서버가 꺼져있을 수 있습니다):', error);
+      setConnected(false);
+      // 에러가 발생해도 페이지는 정상적으로 로드되어야 함
     }
 
     return () => {
-      client.deactivate();
+      try {
+        if (client) {
+          client.deactivate();
+        }
+      } catch (error) {
+        console.error('❌ WebSocket deactivate 실패:', error);
+      }
     };
-  }, [userId, addUpload, updateProgress, completeUpload]);
+  }, [userId, addUpload, updateProgress, completeUpload, removeUpload]);
 
   // 업로드가 없으면 UI만 숨김 (WebSocket은 유지)
   if (activeUploads.length === 0) {

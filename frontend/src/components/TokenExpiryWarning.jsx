@@ -63,9 +63,15 @@ function TokenExpiryWarning() {
     } catch (error) {
       console.error('❌ 세션 연장 실패:', error);
 
-      // 토큰이 이미 만료되었거나 API 호출 실패
-      alert('세션을 연장할 수 없습니다. 다시 로그인해주세요.');
-      handleLogout();
+      // 네트워크 에러인 경우 (백엔드 서버 다운)
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+        alert('서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+        setShowWarning(false); // 모달만 닫고 로그아웃은 하지 않음
+      } else {
+        // 토큰이 이미 만료되었거나 API 호출 실패
+        alert('세션을 연장할 수 없습니다. 다시 로그인해주세요.');
+        handleLogout();
+      }
     }
   }, []);
 
