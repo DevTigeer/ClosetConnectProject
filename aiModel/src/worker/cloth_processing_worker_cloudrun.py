@@ -563,18 +563,96 @@ class ClothProcessingPipelineCloudRun:
             print(f"  [50%] 옷 영역 분석 완료")
 
             # Step 3: Google AI Imagen 확장 (50% → 70%)
-            expanded_image = segmented_image  # 기본값: segmented 이미지 사용
-            expanded_path = segmented_path  # 기본값
-            if self.use_imagen:
-                if worker:
-                    worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 확장 중...", 55)
-                print(f"  [55%] Google Imagen으로 이미지 확장 중...")
-                expanded_image = self.imagen_service.expand_image(segmented_image)  # 새 변수에 저장
-                expanded_path = EXPANDED_DIR / f"{cloth_id}.png"
-                expanded_image.save(expanded_path)
-                print(f"  [70%] 이미지 확장 완료")
+            all_expanded_items = []
+
+            if image_type == "FULL_BODY":
+                # FULL_BODY: 모든 감지된 아이템을 Gemini로 확장
+                print(f"  [50%] 전신 사진 - 모든 아이템 확장 시작 (총 {len(all_detected_items)}개)")
+                progress = 50
+                progress_step = 20 / max(len(all_detected_items), 1)
+
+                for idx, item in enumerate(all_detected_items):
+                    item_image = item["cropped_image"]
+
+                    if self.use_imagen:
+                        if worker:
+                            worker.send_progress(
+                                cloth_id, user_id, "PROCESSING",
+                                f"아이템 확장 중... ({idx+1}/{len(all_detected_items)})",
+                                int(progress)
+                            )
+                        print(f"  [{int(progress)}%] Gemini로 아이템 확장 중... ({idx+1}/{len(all_detected_items)}): {item['label']}")
+
+                        # Gemini 확장
+                        expanded_item_image = self.imagen_service.expand_image(item_image)
+
+                        # 저장 경로 생성
+                        if idx == 0:  # primary item
+                            item_expanded_path = EXPANDED_DIR / f"{cloth_id}.png"
+                        else:
+                            item_expanded_path = EXPANDED_DIR / f"{cloth_id}_{item['label']}_{idx}.png"
+
+                        expanded_item_image.save(item_expanded_path)
+                        print(f"  [{int(progress)}%] 확장 이미지 저장: {item_expanded_path}")
+
+                        # base64 인코딩
+                        expanded_base64 = self.image_to_base64(expanded_item_image)
+
+                        all_expanded_items.append({
+                            "label": item["label"],
+                            "expandedPath": str(item_expanded_path.absolute()),
+                            "imageBase64": expanded_base64,
+                            "areaPixels": item["area_pixels"]
+                        })
+                    else:
+                        # Imagen 비활성화 시 segmented 이미지 사용
+                        print(f"  [{int(progress)}%] Imagen 비활성화 - 확장 건너뜀: {item['label']}")
+                        all_expanded_items.append({
+                            "label": item["label"],
+                            "expandedPath": str(segmented_path.absolute()),
+                            "imageBase64": item.get("image_base64", ""),
+                            "areaPixels": item["area_pixels"]
+                        })
+
+                    progress += progress_step
+
+                # primary item의 expanded_image 설정 (기존 코드 호환)
+                if all_expanded_items:
+                    expanded_path = Path(all_expanded_items[0]["expandedPath"])
+                    # expanded_image는 primary item의 이미지 (final_image 생성용)
+                    expanded_image = Image.open(expanded_path)
+                else:
+                    expanded_image = segmented_image
+                    expanded_path = segmented_path
+
+                print(f"  [70%] 전신 사진 - 모든 아이템 확장 완료 (총 {len(all_expanded_items)}개)")
+
             else:
-                print(f"  [55%] Imagen 비활성화 - 확장 건너뜀")
+                # SINGLE_ITEM: primary item만 확장 (기존 로직 유지)
+                print(f"  [50%] 단일 아이템 - primary item만 확장")
+                expanded_image = segmented_image
+                expanded_path = segmented_path
+
+                if self.use_imagen:
+                    if worker:
+                        worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 확장 중...", 55)
+                    print(f"  [55%] Gemini로 이미지 확장 중...")
+                    expanded_image = self.imagen_service.expand_image(segmented_image)
+                    expanded_path = EXPANDED_DIR / f"{cloth_id}.png"
+                    expanded_image.save(expanded_path)
+                    print(f"  [70%] 이미지 확장 완료")
+
+                    # base64 인코딩
+                    expanded_base64 = self.image_to_base64(expanded_image)
+
+                    all_expanded_items.append({
+                        "label": primary_item["label"],
+                        "expandedPath": str(expanded_path.absolute()),
+                        "imageBase64": expanded_base64,
+                        "areaPixels": primary_item["area_pixels"]
+                    })
+                else:
+                    print(f"  [55%] Imagen 비활성화 - 확장 건너뜀")
 
             if worker:
                 worker.send_progress(cloth_id, user_id, "PROCESSING", "이미지 확장 완료", 70)
@@ -638,15 +716,8 @@ class ClothProcessingPipelineCloudRun:
                     }
                     for item in all_detected_items
                 ],
-                # ✅ 수정: allExpandedItems에 primary item 추가
-                "allExpandedItems": [
-                    {
-                        "label": primary_item["label"],
-                        "expandedPath": str(expanded_path.absolute()),
-                        "imageBase64": expanded_base64,  # ✅ base64 데이터 추가
-                        "areaPixels": primary_item["area_pixels"]
-                    }
-                ]
+                # ✅ 수정: allExpandedItems에 모든 확장된 아이템 추가
+                "allExpandedItems": all_expanded_items
             }
 
             print(f"  [98%] Result 딕셔너리 생성 완료")
@@ -656,6 +727,7 @@ class ClothProcessingPipelineCloudRun:
             print(f"   📸 이미지 타입: {image_type}")
             print(f"   🏷️  Category: {suggested_category} ({primary_item['label']})")
             print(f"   📦 감지된 아이템: {len(all_detected_items)}개")
+            print(f"   🎨 Gemini 확장된 아이템: {len(all_expanded_items)}개")
             print(f"{'='*60}\n")
             print(f"  [99%] Returning result...")
             return result
