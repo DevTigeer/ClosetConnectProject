@@ -1,16 +1,25 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import './AuthPage.css';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState('');
+
+  // URL 파라미터에서 세션 만료 메시지 확인
+  useEffect(() => {
+    if (searchParams.get('session') === 'expired') {
+      setSessionExpiredMessage('세션이 만료되었습니다. 다시 로그인해주세요.');
+    }
+  }, [searchParams]);
 
   const handleChange = (e) => {
     setFormData({
@@ -29,7 +38,17 @@ function LoginPage() {
       const token = response.data.accessToken;
 
       localStorage.setItem('accessToken', token);
-      navigate('/closet');
+
+      // 로그인 후 복귀 경로 확인
+      const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+      if (redirectPath) {
+        console.log('✅ 로그인 성공 - 이전 페이지로 복귀:', redirectPath);
+        sessionStorage.removeItem('redirectAfterLogin');
+        navigate(redirectPath);
+      } else {
+        console.log('✅ 로그인 성공 - 기본 페이지로 이동');
+        navigate('/closet');
+      }
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || '로그인에 실패했습니다.');
@@ -42,6 +61,10 @@ function LoginPage() {
     <div className="auth-container">
       <div className="auth-wrap">
         <h1 className="auth-title">로그인</h1>
+
+        {sessionExpiredMessage && (
+          <div className="auth-warning">{sessionExpiredMessage}</div>
+        )}
 
         {error && <div className="auth-error">{error}</div>}
 

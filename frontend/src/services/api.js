@@ -27,12 +27,22 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      console.log('🚨 401 Unauthorized - 토큰 만료 또는 유효하지 않음');
+
+      // 현재 경로 저장 (로그인 후 돌아오기 위해)
+      const currentPath = window.location.pathname + window.location.search;
+      if (currentPath !== '/login' && currentPath !== '/signup' && currentPath !== '/home') {
+        sessionStorage.setItem('redirectAfterLogin', currentPath);
+        console.log('💾 로그인 후 복귀 경로 저장:', currentPath);
+      }
+
       localStorage.removeItem('accessToken');
 
       // 커스텀 이벤트 발송하여 UI 업데이트 트리거
       window.dispatchEvent(new Event('auth-logout'));
 
-      window.location.href = '/login';
+      // 로그인 페이지로 리다이렉트 (state로 메시지 전달)
+      window.location.href = '/login?session=expired';
     }
     return Promise.reject(error);
   }

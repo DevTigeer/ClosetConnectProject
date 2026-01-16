@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ClothUploadProvider } from './contexts/ClothUploadContext';
 import Layout from './components/Layout';
+import TokenExpiryWarning from './components/TokenExpiryWarning';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -33,6 +34,8 @@ function App() {
   return (
     <ClothUploadProvider>
       <BrowserRouter>
+        {/* 토큰 만료 경고 (전역) */}
+        <TokenExpiryWarning />
         <Routes>
         {/* 랜딩 페이지 (레이아웃 없음) */}
         <Route path="/home" element={<LandingPage />} />

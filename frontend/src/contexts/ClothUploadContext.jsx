@@ -70,6 +70,11 @@ export function ClothUploadProvider({ children }) {
 
   // 다중 탭 동기화: storage 이벤트 리스너
   useEffect(() => {
+    // 브라우저 환경이 아니면 실행하지 않음 (SSR 대응)
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const handleStorageChange = (e) => {
       // 다른 탭에서 activeUploads 변경 감지
       if (e.key === STORAGE_KEY) {
