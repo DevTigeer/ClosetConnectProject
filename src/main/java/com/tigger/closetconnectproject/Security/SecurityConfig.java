@@ -76,6 +76,10 @@ public class SecurityConfig {
         // Vercel 배포 환경: 모든 Vercel 도메인 허용
         config.addAllowedOriginPattern("https://*.vercel.app");
 
+        // Railway 배포 환경: Railway 도메인 허용
+        config.addAllowedOriginPattern("https://*.up.railway.app");
+        config.addAllowedOriginPattern("https://*.railway.app");
+
         // 커스텀 도메인이 있다면 여기에 추가
         // config.addAllowedOrigin("https://yourdomain.com");
 
