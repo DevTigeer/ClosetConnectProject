@@ -79,16 +79,19 @@ deploy_service() {
 # Deploy each service
 echo -e "\n${YELLOW}Starting deployment of all services...${NC}\n"
 
-# 1. Segmentation API
+# 1. Segmentation API (Segformer - FULL_BODY)
 deploy_service "closetconnect-segmentation" "Dockerfile.segmentation" "8002"
 
-# 2. Inpainting API
-deploy_service "closetconnect-inpainting" "Dockerfile.inpainting" "8003"
+# 2. U2NET API (SINGLE_ITEM)
+deploy_service "closetconnect-u2net-api" "Dockerfile.u2net-api" "8004"
 
-# 3. Try-on API
+# 3. Inpainting API (Stable Diffusion - 현재 미사용)
+# deploy_service "closetconnect-inpainting" "Dockerfile.inpainting" "8003"
+
+# 4. Try-on API (Gemini)
 deploy_service "closetconnect-tryon" "Dockerfile.tryon" "5001"
 
-# 4. Worker (if you want to deploy it)
+# 5. Worker (if you want to deploy it)
 # Note: Workers typically don't expose HTTP endpoints, so Cloud Run might not be ideal
 # Consider using Cloud Run Jobs or Google Kubernetes Engine (GKE) for workers
 # deploy_service "closetconnect-worker" "Dockerfile.worker" "8080"

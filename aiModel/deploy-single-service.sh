@@ -18,7 +18,7 @@ NC='\033[0m'
 # Check arguments
 if [ $# -eq 0 ]; then
     echo -e "${RED}Error: Please specify a service to deploy${NC}"
-    echo "Usage: $0 [segmentation|inpainting|tryon|worker]"
+    echo "Usage: $0 [segmentation|inpainting|tryon|u2net|worker]"
     exit 1
 fi
 
@@ -36,6 +36,11 @@ case $SERVICE in
         DOCKERFILE="Dockerfile.inpainting"
         PORT="8003"
         ;;
+    u2net)
+        SERVICE_NAME="closetconnect-u2net-api"
+        DOCKERFILE="Dockerfile.u2net-api"
+        PORT="8004"
+        ;;
     tryon)
         SERVICE_NAME="closetconnect-tryon"
         DOCKERFILE="Dockerfile.tryon"
@@ -50,7 +55,7 @@ case $SERVICE in
         ;;
     *)
         echo -e "${RED}Error: Invalid service name${NC}"
-        echo "Valid options: segmentation, inpainting, tryon, worker"
+        echo "Valid options: segmentation, inpainting, u2net, tryon, worker"
         exit 1
         ;;
 esac

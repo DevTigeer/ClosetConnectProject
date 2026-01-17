@@ -37,8 +37,9 @@ RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
 read -p "RabbitMQ Username: " RABBITMQ_USERNAME
 read -sp "RabbitMQ Password: " RABBITMQ_PASSWORD
 echo ""
-read -p "Segmentation API URL (https://...): " SEGMENTATION_API_URL
-read -p "Inpainting API URL (https://...): " INPAINTING_API_URL
+read -p "Segmentation API URL (Segformer, FULL_BODY용): " SEGMENTATION_API_URL
+read -p "U2NET API URL (SINGLE_ITEM용): " U2NET_API_URL
+read -p "REMBG API URL (Hugging Face Space, 선택): " REMBG_API_URL
 read -p "Google API Key (선택, Imagen 사용 시): " GOOGLE_API_KEY
 echo ""
 
@@ -71,10 +72,10 @@ gcloud run deploy ${SERVICE_NAME} \
   --region ${REGION} \
   --platform managed \
   --no-allow-unauthenticated \
-  --memory 2Gi \
+  --memory 512Mi \
   --cpu 1 \
   --timeout 900 \
-  --set-env-vars="RABBITMQ_HOST=${RABBITMQ_HOST},RABBITMQ_PORT=${RABBITMQ_PORT},RABBITMQ_USERNAME=${RABBITMQ_USERNAME},RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD},SEGMENTATION_API_URL=${SEGMENTATION_API_URL},INPAINTING_API_URL=${INPAINTING_API_URL},GOOGLE_API_KEY=${GOOGLE_API_KEY}"
+  --set-env-vars="RABBITMQ_HOST=${RABBITMQ_HOST},RABBITMQ_PORT=${RABBITMQ_PORT},RABBITMQ_USERNAME=${RABBITMQ_USERNAME},RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD},SEGMENTATION_API_URL=${SEGMENTATION_API_URL},U2NET_API_URL=${U2NET_API_URL},REMBG_API_URL=${REMBG_API_URL},GOOGLE_API_KEY=${GOOGLE_API_KEY}"
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ CloudRun 배포 완료!${NC}"

@@ -23,29 +23,18 @@ import java.util.List;
 @Configuration
 public class SwaggerConfig {
 
-    @Value("${swagger.server.url:http://localhost:8080}")
-    private String serverUrl;
-
-    @Value("${swagger.server.description:Local Development Server}")
-    private String serverDescription;
-
     @Bean
     public OpenAPI openAPI() {
         // JWT 인증 스키마 이름
         String securitySchemeName = "Bearer Authentication";
 
-        // 서버 정보 설정 (환경변수로 주입 가능)
+        // 서버 정보 설정
+        // 빈 서버 리스트 = SpringDoc이 자동으로 현재 요청의 서버 URL 사용
         List<Server> servers = new ArrayList<>();
+        // 상대 경로 사용 - 현재 도메인에서 API 호출
         servers.add(new Server()
-                .url(serverUrl)
-                .description(serverDescription));
-
-        // 로컬 개발 서버 추가 (프로덕션 환경에서도 참고용으로 표시)
-        if (!serverUrl.contains("localhost")) {
-            servers.add(new Server()
-                    .url("http://localhost:8080")
-                    .description("Local Development Server"));
-        }
+                .url("/")
+                .description("Current Server (자동 감지)"));
 
         return new OpenAPI()
                 // API 기본 정보
