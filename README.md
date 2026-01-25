@@ -2,6 +2,8 @@
 
 > AI 기반 스마트 옷장 관리 및 패션 커뮤니티 플랫폼
 
+배포 주소: https://closet-connect2.vercel.app/closet
+
 ## 📌 프로젝트 소개
 
 ClosetConnect는 사용자의 옷장을 디지털화하고, AI 기술을 활용하여 스타일링 추천, 가상 피팅, 날씨 기반 코디 제안 등을 제공하는 종합 패션 플랫폼입니다.
