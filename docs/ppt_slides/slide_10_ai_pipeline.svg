@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8f9fa"/>
+      <stop offset="100%" style="stop-color:#e9ecef"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8DABC4"/>
+      <stop offset="100%" style="stop-color:#28a745"/>
+    </linearGradient>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8DABC4"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="url(#bgGradient)"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="120" height="120" fill="#8DABC4"/>
+  <text x="160" y="50" font-family="Arial, sans-serif" font-size="18" fill="#8DABC4" font-weight="bold">Part 3</text>
+  <text x="160" y="90" font-family="Arial, sans-serif" font-size="36" fill="#2c3e50" font-weight="bold">AI 처리: 4단계 파이프라인</text>
+
+  <!-- Pipeline visualization -->
+  <rect x="100" y="160" width="1720" height="480" rx="20" fill="white" filter="url(#shadow)"/>
+
+  <!-- Progress bar at top -->
+  <rect x="150" y="190" width="1620" height="30" rx="15" fill="#e9ecef"/>
+  <rect x="150" y="190" width="400" height="30" rx="15" fill="#F5E0D8"/>
+  <rect x="540" y="190" width="400" height="30" fill="#E8EEF4"/>
+  <rect x="930" y="190" width="350" height="30" fill="#d4edda"/>
+  <rect x="1270" y="190" width="500" height="30" rx="15" fill="#8DABC4"/>
+  <text x="350" y="212" font-family="Arial, sans-serif" font-size="14" fill="#5a4a42" text-anchor="middle" font-weight="bold">25%</text>
+  <text x="740" y="212" font-family="Arial, sans-serif" font-size="14" fill="#4a5568" text-anchor="middle" font-weight="bold">50%</text>
+  <text x="1105" y="212" font-family="Arial, sans-serif" font-size="14" fill="#155724" text-anchor="middle" font-weight="bold">70%</text>
+  <text x="1520" y="212" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" font-weight="bold">95~100%</text>
+
+  <!-- Stage 1: Background Removal -->
+  <rect x="150" y="250" width="380" height="350" rx="15" fill="#F5E0D8"/>
+  <rect x="150" y="250" width="380" height="60" rx="15" fill="#d4a69a"/>
+  <rect x="150" y="295" width="380" height="15" fill="#d4a69a"/>
+  <circle cx="200" y="280" r="20" fill="white"/>
+  <text x="200" y="287" font-family="Arial, sans-serif" font-size="20" fill="#d4a69a" text-anchor="middle" font-weight="bold">1</text>
+  <text x="340" y="288" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">배경 제거</text>
+
+  <!-- Tech stack -->
+  <rect x="180" y="330" width="320" height="100" rx="10" fill="white"/>
+  <text x="200" y="360" font-family="Arial, sans-serif" font-size="14" fill="#2c3e50" font-weight="bold">기술</text>
+  <text x="200" y="385" font-family="monospace" font-size="13" fill="#6c757d">• rembg 라이브러리</text>
+  <text x="200" y="405" font-family="monospace" font-size="13" fill="#6c757d">• U2Net 모델</text>
+  <text x="200" y="425" font-family="monospace" font-size="13" fill="#6c757d">• Python FastAPI</text>
+
+  <!-- Output -->
+  <rect x="180" y="445" width="320" height="70" rx="10" fill="white"/>
+  <text x="200" y="475" font-family="Arial, sans-serif" font-size="14" fill="#2c3e50" font-weight="bold">결과물</text>
+  <text x="200" y="500" font-family="monospace" font-size="12" fill="#8DABC4">removedBgImageUrl</text>
+
+  <!-- Sample image placeholder -->
+  <rect x="180" y="525" width="140" height="60" rx="8" fill="#e9ecef" stroke="#d4a69a" stroke-width="2"/>
+  <text x="250" y="560" font-family="Arial, sans-serif" font-size="11" fill="#6c757d" text-anchor="middle">원본</text>
+  <text x="345" y="555" font-family="Arial, sans-serif" font-size="20" fill="#d4a69a">→</text>
+  <rect x="360" y="525" width="140" height="60" rx="8" fill="white" stroke="#d4a69a" stroke-width="2"/>
+  <text x="430" y="560" font-family="Arial, sans-serif" font-size="11" fill="#6c757d" text-anchor="middle">배경 제거됨</text>
+
+  <!-- Arrow to next stage -->
+  <polygon points="540,425 570,425 570,415 600,430 570,445 570,435 540,435" fill="#8DABC4"/>
+
+  <!-- Stage 2: Segmentation -->
+  <rect x="560" y="250" width="380" height="350" rx="15" fill="#E8EEF4"/>
+  <rect x="560" y="250" width="380" height="60" rx="15" fill="#a8c5d8"/>
+  <rect x="560" y="295" width="380" height="15" fill="#a8c5d8"/>
+  <circle cx="610" y="280" r="20" fill="white"/>
+  <text x="610" y="287" font-family="Arial, sans-serif" font-size="20" fill="#a8c5d8" text-anchor="middle" font-weight="bold">2</text>
+  <text x="750" y="288" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">세그멘테이션</text>
+
+  <rect x="590" y="330" width="320" height="100" rx="10" fill="white"/>
+  <text x="610" y="360" font-family="Arial, sans-serif" font-size="14" fill="#2c3e50" font-weight="bold">기술</text>
+  <text x="610" y="385" font-family="monospace" font-size="13" fill="#6c757d">• SegFormer B2</text>
+  <text x="610" y="405" font-family="monospace" font-size="13" fill="#6c757d">• Hugging Face</text>
+  <text x="610" y="425" font-family="monospace" font-size="13" fill="#6c757d">• 18개 의류 클래스</text>
+
+  <rect x="590" y="445" width="320" height="70" rx="10" fill="white"/>
+  <text x="610" y="475" font-family="Arial, sans-serif" font-size="14" fill="#2c3e50" font-weight="bold">결과물</text>
+  <text x="610" y="500" font-family="monospace" font-size="12" fill="#8DABC4">segmentedImageUrl + category</text>
+
+  <!-- Category badges -->
+  <rect x="590" y="525" width="70" height="30" rx="5" fill="#8DABC4"/>
+  <text x="625" y="545" font-family="Arial, sans-serif" font-size="11" fill="white" text-anchor="middle">상의</text>
+  <rect x="670" y="525" width="70" height="30" rx="5" fill="#e9ecef"/>
+  <text x="705" y="545" font-family="Arial, sans-serif" font-size="11" fill="#6c757d" text-anchor="middle">하의</text>
+  <rect x="750" y="525" width="70" height="30" rx="5" fill="#e9ecef"/>
+  <text x="785" y="545" font-family="Arial, sans-serif" font-size="11" fill="#6c757d" text-anchor="middle">신발</text>
+  <rect x="830" y="525" width="70" height="30" rx="5" fill="#e9ecef"/>
+  <text x="865" y="545" font-family="Arial, sans-serif" font-size="11" fill="#6c757d" text-anchor="middle">ACC</text>
+
+  <text x="750" y="585" font-family="Arial, sans-serif" font-size="11" fill="#6c757d" text-anchor="middle">mattmdjaga/segformer_b2_clothes</text>
+
+  <!-- Arrow to next stage -->
+  <polygon points="950,425 980,425 980,415 1010,430 980,445 980,435 950,435" fill="#8DABC4"/>
+
+  <!-- Stage 3: Image Expansion -->
+  <rect x="970" y="250" width="340" height="350" rx="15" fill="#d4edda"/>
+  <rect x="970" y="250" width="340" height="60" rx="15" fill="#7bc47f"/>
+  <rect x="970" y="295" width="340" height="15" fill="#7bc47f"/>
+  <circle cx="1020" y="280" r="20" fill="white"/>
+  <text x="1020" y="287" font-family="Arial, sans-serif" font-size="20" fill="#7bc47f" text-anchor="middle" font-weight="bold">3</text>
+  <text x="1140" y="288" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">이미지 확장</text>
+
+  <rect x="1000" y="330" width="280" height="100" rx="10" fill="white"/>
+  <text x="1020" y="360" font-family="Arial, sans-serif" font-size="14" fill="#2c3e50" font-weight="bold">기술</text>
+  <text x="1020" y="385" font-family="monospace" font-size="13" fill="#6c757d">• Google Imagen 3</text>
+  <text x="1020" y="405" font-family="monospace" font-size="13" fill="#6c757d">• Outpainting API</text>
+  <text x="1020" y="425" font-family="monospace" font-size="13" fill="#6c757d">• 크롭 영역 복원</text>
+
+  <rect x="1000" y="445" width="280" height="70" rx="10" fill="white"/>
+  <text x="1020" y="475" font-family="Arial, sans-serif" font-size="14" fill="#2c3e50" font-weight="bold">목적</text>
+  <text x="1020" y="500" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">세그멘테이션으로 잘린</text>
+  <text x="1020" y="515" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">부분 자연스럽게 확장</text>
+
+  <!-- Visual -->
+  <rect x="1020" y="535" width="60" height="50" rx="5" fill="#e9ecef"/>
+  <text x="1050" y="565" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">👕</text>
+  <text x="1095" y="565" font-family="Arial, sans-serif" font-size="16" fill="#7bc47f">→</text>
+  <rect x="1110" y="530" width="80" height="60" rx="5" fill="white" stroke="#7bc47f" stroke-width="2"/>
+  <text x="1150" y="565" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">👕</text>
+
+  <!-- Arrow to next stage -->
+  <polygon points="1320,425 1350,425 1350,415 1380,430 1350,445 1350,435 1320,435" fill="#8DABC4"/>
+
+  <!-- Stage 4: Inpainting -->
+  <rect x="1340" y="250" width="430" height="350" rx="15" fill="#8DABC4"/>
+  <rect x="1340" y="250" width="430" height="60" rx="15" fill="#6B8FA8"/>
+  <rect x="1340" y="295" width="430" height="15" fill="#6B8FA8"/>
+  <circle cx="1390" y="280" r="20" fill="white"/>
+  <text x="1390" y="287" font-family="Arial, sans-serif" font-size="20" fill="#6B8FA8" text-anchor="middle" font-weight="bold">4</text>
+  <text x="1555" y="288" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">인페인팅 (최종)</text>
+
+  <rect x="1370" y="330" width="370" height="100" rx="10" fill="white"/>
+  <text x="1390" y="360" font-family="Arial, sans-serif" font-size="14" fill="#2c3e50" font-weight="bold">기술</text>
+  <text x="1390" y="385" font-family="monospace" font-size="13" fill="#6c757d">• Stable Diffusion</text>
+  <text x="1390" y="405" font-family="monospace" font-size="13" fill="#6c757d">• LaMa Inpainting</text>
+  <text x="1390" y="425" font-family="monospace" font-size="13" fill="#6c757d">• FastAPI (Port 8003)</text>
+
+  <rect x="1370" y="445" width="370" height="70" rx="10" fill="white"/>
+  <text x="1390" y="475" font-family="Arial, sans-serif" font-size="14" fill="#2c3e50" font-weight="bold">결과물</text>
+  <text x="1390" y="500" font-family="monospace" font-size="12" fill="#28a745" font-weight="bold">inpaintedImageUrl (최종)</text>
+
+  <!-- Final result visual -->
+  <rect x="1380" y="525" width="350" height="60" rx="10" fill="#28a745" opacity="0.2"/>
+  <text x="1555" y="555" font-family="Arial, sans-serif" font-size="14" fill="#28a745" text-anchor="middle" font-weight="bold">✓ 4종 이미지 완성</text>
+  <text x="1555" y="575" font-family="Arial, sans-serif" font-size="11" fill="#6c757d" text-anchor="middle">원본 | 배경제거 | 세그먼트 | 인페인팅</text>
+
+  <!-- Summary table -->
+  <rect x="100" y="680" width="1720" height="180" rx="15" fill="white" filter="url(#shadow)"/>
+  <text x="960" y="720" font-family="Arial, sans-serif" font-size="20" fill="#2c3e50" text-anchor="middle" font-weight="bold">파이프라인 요약</text>
+
+  <!-- Table headers -->
+  <rect x="150" y="750" width="200" height="40" rx="5" fill="#8DABC4"/>
+  <text x="250" y="777" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" font-weight="bold">단계</text>
+  <rect x="350" y="750" width="400" height="40" rx="5" fill="#8DABC4"/>
+  <text x="550" y="777" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" font-weight="bold">기술</text>
+  <rect x="750" y="750" width="150" height="40" rx="5" fill="#8DABC4"/>
+  <text x="825" y="777" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" font-weight="bold">진행률</text>
+  <rect x="900" y="750" width="400" height="40" rx="5" fill="#8DABC4"/>
+  <text x="1100" y="777" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" font-weight="bold">결과물</text>
+  <rect x="1300" y="750" width="470" height="40" rx="5" fill="#8DABC4"/>
+  <text x="1535" y="777" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" font-weight="bold">WebSocket 메시지</text>
+
+  <!-- Row 1 -->
+  <rect x="150" y="790" width="200" height="35" fill="#f8f9fa"/>
+  <text x="250" y="813" font-family="Arial, sans-serif" font-size="12" fill="#2c3e50" text-anchor="middle">1. 배경 제거</text>
+  <rect x="350" y="790" width="400" height="35" fill="#f8f9fa"/>
+  <text x="550" y="813" font-family="Arial, sans-serif" font-size="12" fill="#6c757d" text-anchor="middle">rembg + U2Net</text>
+  <rect x="750" y="790" width="150" height="35" fill="#F5E0D8"/>
+  <text x="825" y="813" font-family="Arial, sans-serif" font-size="12" fill="#5a4a42" text-anchor="middle" font-weight="bold">25%</text>
+  <rect x="900" y="790" width="400" height="35" fill="#f8f9fa"/>
+  <text x="1100" y="813" font-family="monospace" font-size="11" fill="#6c757d" text-anchor="middle">removedBgImageUrl</text>
+  <rect x="1300" y="790" width="470" height="35" fill="#f8f9fa"/>
+  <text x="1535" y="813" font-family="monospace" font-size="11" fill="#6c757d" text-anchor="middle">cloth.progress (step: REMOVE_BG)</text>
+
+  <!-- Row 2 -->
+  <rect x="150" y="825" width="200" height="35" fill="white"/>
+  <text x="250" y="848" font-family="Arial, sans-serif" font-size="12" fill="#2c3e50" text-anchor="middle">2. 세그멘테이션</text>
+  <rect x="350" y="825" width="400" height="35" fill="white"/>
+  <text x="550" y="848" font-family="Arial, sans-serif" font-size="12" fill="#6c757d" text-anchor="middle">SegFormer B2 (Hugging Face)</text>
+  <rect x="750" y="825" width="150" height="35" fill="#E8EEF4"/>
+  <text x="825" y="848" font-family="Arial, sans-serif" font-size="12" fill="#4a5568" text-anchor="middle" font-weight="bold">50%</text>
+  <rect x="900" y="825" width="400" height="35" fill="white"/>
+  <text x="1100" y="848" font-family="monospace" font-size="11" fill="#6c757d" text-anchor="middle">segmentedImageUrl + category</text>
+  <rect x="1300" y="825" width="470" height="35" fill="white"/>
+  <text x="1535" y="848" font-family="monospace" font-size="11" fill="#6c757d" text-anchor="middle">cloth.progress (step: SEGMENT)</text>
+
+  <!-- Speaker notes -->
+  <rect x="100" y="900" width="1720" height="80" rx="10" fill="white" filter="url(#shadow)"/>
+  <text x="130" y="935" font-family="Arial, sans-serif" font-size="14" fill="#8DABC4" font-weight="bold">💬 발표 대본</text>
+  <text x="130" y="965" font-family="Arial, sans-serif" font-size="12" fill="#495057">AI 파이프라인은 4단계로 구성됩니다. 첫째 rembg로 배경 제거, 둘째 SegFormer로 세그멘테이션과 분류, 셋째 Imagen으로 이미지 확장, 넷째 인페인팅으로 최종 완성합니다.</text>
+</svg>

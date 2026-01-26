@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8f9fa"/>
+      <stop offset="100%" style="stop-color:#e9ecef"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="url(#bgGradient)"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="120" height="120" fill="#8DABC4"/>
+  <text x="160" y="50" font-family="Arial, sans-serif" font-size="18" fill="#8DABC4" font-weight="bold">Part 2</text>
+  <text x="160" y="90" font-family="Arial, sans-serif" font-size="36" fill="#2c3e50" font-weight="bold">누구를 위한 서비스인가</text>
+
+  <!-- Left section - Target audience -->
+  <rect x="100" y="180" width="800" height="600" rx="20" fill="white" filter="url(#shadow)"/>
+  <text x="500" y="230" font-family="Arial, sans-serif" font-size="24" fill="#2c3e50" text-anchor="middle" font-weight="bold">타겟층</text>
+
+  <!-- Primary target -->
+  <rect x="140" y="270" width="720" height="140" rx="15" fill="#F5E0D8"/>
+  <text x="180" y="310" font-family="Arial, sans-serif" font-size="18" fill="#5a4a42" font-weight="bold">주 타겟층</text>
+  <rect x="320" y="290" width="80" height="30" rx="15" fill="#8DABC4"/>
+  <text x="360" y="311" font-family="Arial, sans-serif" font-size="12" fill="white" text-anchor="middle">TBD</text>
+
+  <text x="180" y="350" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 예시: 옷 정리가 필요한 20~30대</text>
+  <text x="180" y="375" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 예시: 패션에 관심 있는 사용자</text>
+  <text x="180" y="400" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 예시: 디지털 옷장 관리가 필요한 사람</text>
+
+  <!-- Secondary target -->
+  <rect x="140" y="430" width="720" height="140" rx="15" fill="#E8EEF4"/>
+  <text x="180" y="470" font-family="Arial, sans-serif" font-size="18" fill="#4a5568" font-weight="bold">보조 타겟층</text>
+  <rect x="340" y="450" width="80" height="30" rx="15" fill="#8DABC4"/>
+  <text x="380" y="471" font-family="Arial, sans-serif" font-size="12" fill="white" text-anchor="middle">TBD</text>
+
+  <text x="180" y="510" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 예시: 중고 의류 판매자</text>
+  <text x="180" y="535" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 예시: OOTD 공유 원하는 사용자</text>
+  <text x="180" y="560" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 예시: 스타일 추천이 필요한 사용자</text>
+
+  <!-- Persona icon -->
+  <circle cx="780" y="350" r="50" fill="#8DABC4" opacity="0.2"/>
+  <text x="780" y="365" font-family="Arial, sans-serif" font-size="48" text-anchor="middle">👤</text>
+
+  <circle cx="780" y="500" r="50" fill="#8DABC4" opacity="0.2"/>
+  <text x="780" y="515" font-family="Arial, sans-serif" font-size="48" text-anchor="middle">👥</text>
+
+  <!-- Note -->
+  <rect x="140" y="590" width="720" height="60" rx="10" fill="#fff3cd"/>
+  <text x="500" y="627" font-family="Arial, sans-serif" font-size="14" fill="#856404" text-anchor="middle">※ 실제 타겟층은 사용자 조사 및 데이터 분석 후 구체화 예정</text>
+
+  <!-- Right section - Success criteria -->
+  <rect x="950" y="180" width="870" height="600" rx="20" fill="white" filter="url(#shadow)"/>
+  <text x="1385" y="230" font-family="Arial, sans-serif" font-size="24" fill="#2c3e50" text-anchor="middle" font-weight="bold">성공 기준</text>
+
+  <!-- Success metric 1 - UX -->
+  <rect x="990" y="270" width="790" height="100" rx="12" fill="#d4edda"/>
+  <rect x="990" y="270" width="8" height="100" rx="4" fill="#28a745"/>
+  <text x="1040" y="310" font-family="Arial, sans-serif" font-size="18" fill="#155724" font-weight="bold">UX 기준</text>
+  <text x="1040" y="340" font-family="Arial, sans-serif" font-size="14" fill="#155724">업로드 후 30초 내 결과 확인 가능</text>
+  <text x="1040" y="360" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">실시간 진행도로 사용자 대기 경험 개선</text>
+  <circle cx="1720" y="320" r="30" fill="#28a745" opacity="0.2"/>
+  <text x="1720" y="328" font-family="Arial, sans-serif" font-size="24" text-anchor="middle">✓</text>
+
+  <!-- Success metric 2 - Stability -->
+  <rect x="990" y="390" width="790" height="100" rx="12" fill="#d4edda"/>
+  <rect x="990" y="390" width="8" height="100" rx="4" fill="#28a745"/>
+  <text x="1040" y="430" font-family="Arial, sans-serif" font-size="18" fill="#155724" font-weight="bold">안정성 기준</text>
+  <text x="1040" y="460" font-family="Arial, sans-serif" font-size="14" fill="#155724">AI 처리 실패 시에도 서버 다운 없음</text>
+  <text x="1040" y="480" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">메시지 큐 버퍼링으로 장애 격리</text>
+  <circle cx="1720" y="440" r="30" fill="#28a745" opacity="0.2"/>
+  <text x="1720" y="448" font-family="Arial, sans-serif" font-size="24" text-anchor="middle">✓</text>
+
+  <!-- Success metric 3 - Cost -->
+  <rect x="990" y="510" width="790" height="100" rx="12" fill="#fff3cd"/>
+  <rect x="990" y="510" width="8" height="100" rx="4" fill="#ffc107"/>
+  <text x="1040" y="550" font-family="Arial, sans-serif" font-size="18" fill="#856404" font-weight="bold">비용 기준</text>
+  <rect x="1140" y="532" width="80" height="30" rx="15" fill="#8DABC4"/>
+  <text x="1180" y="553" font-family="Arial, sans-serif" font-size="12" fill="white" text-anchor="middle">TBD</text>
+  <text x="1040" y="580" font-family="Arial, sans-serif" font-size="14" fill="#856404">AI API 호출 최적화 수치 (추후 측정)</text>
+  <text x="1040" y="600" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">예: 세그멘테이션 다회 호출 → UI 선택으로 비용 절감</text>
+
+  <!-- Success metric 4 - Measurement -->
+  <rect x="990" y="630" width="790" height="100" rx="12" fill="#fff3cd"/>
+  <rect x="990" y="630" width="8" height="100" rx="4" fill="#ffc107"/>
+  <text x="1040" y="670" font-family="Arial, sans-serif" font-size="18" fill="#856404" font-weight="bold">측정 방법</text>
+  <rect x="1160" y="652" width="80" height="30" rx="15" fill="#8DABC4"/>
+  <text x="1200" y="673" font-family="Arial, sans-serif" font-size="12" fill="white" text-anchor="middle">TBD</text>
+  <text x="1040" y="700" font-family="Arial, sans-serif" font-size="14" fill="#856404">처리 성공률, 평균 처리 시간 등 (추후 기입)</text>
+  <text x="1040" y="720" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">모니터링 시스템 구축 후 측정 예정</text>
+
+  <!-- Speaker notes -->
+  <rect x="100" y="820" width="1720" height="160" rx="10" fill="white" filter="url(#shadow)"/>
+  <text x="130" y="860" font-family="Arial, sans-serif" font-size="14" fill="#8DABC4" font-weight="bold">💬 발표 대본</text>
+  <text x="130" y="895" font-family="Arial, sans-serif" font-size="13" fill="#495057">타겟층은 추후 구체화할 예정이지만, 기본적으로 옷 정리에 시간을 쓰기 싫은 사용자, 깔끔한 옷장 이미지를 원하는 사용자를 대상으로 합니다.</text>
+  <text x="130" y="925" font-family="Arial, sans-serif" font-size="13" fill="#495057">성공 기준으로는 첫째, 업로드 후 30초 내 결과를 볼 수 있어야 합니다. 둘째, AI 처리가 실패해도 전체 시스템이 멈추면 안 됩니다.</text>
+  <text x="130" y="955" font-family="Arial, sans-serif" font-size="13" fill="#495057">RabbitMQ가 메시지를 버퍼링하므로 Worker가 죽어도 재시작 후 처리가 이어집니다. 구체적인 비용 절감 수치나 사용자 반응은 추후 측정 후 기입하겠습니다.</text>
+</svg>
