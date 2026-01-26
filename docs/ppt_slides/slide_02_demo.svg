@@ -6,7 +6,7 @@
       <stop offset="100%" style="stop-color:#e9ecef"/>
     </linearGradient>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.1"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.1"/>
     </filter>
     <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" style="stop-color:#8DABC4"/>
@@ -17,117 +17,102 @@
   <!-- Background -->
   <rect width="1920" height="1080" fill="url(#bgGradient)"/>
 
-  <!-- Header section -->
+  <!-- Header -->
   <rect x="0" y="0" width="120" height="120" fill="#8DABC4"/>
   <text x="160" y="50" font-family="Arial, sans-serif" font-size="18" fill="#8DABC4" font-weight="bold">Part 1</text>
-  <text x="160" y="90" font-family="Arial, sans-serif" font-size="36" fill="#2c3e50" font-weight="bold">결과물: 옷 업로드 → AI 처리 → 확정까지 30초</text>
+  <text x="160" y="90" font-family="Arial, sans-serif" font-size="36" fill="#1a1a1a" font-weight="bold">결과물: 옷 업로드 → AI 처리 → 확정까지</text>
 
-  <!-- Main flow diagram -->
   <!-- Step 1 -->
-  <rect x="100" y="180" width="250" height="280" rx="15" fill="white" filter="url(#shadow)"/>
-  <rect x="100" y="180" width="250" height="60" rx="15" fill="#F5E0D8"/>
-  <rect x="100" y="225" width="250" height="15" fill="#F5E0D8"/>
-  <text x="225" y="218" font-family="Arial, sans-serif" font-size="18" fill="#5a4a42" text-anchor="middle" font-weight="bold">STEP 1</text>
-  <text x="225" y="280" font-family="Arial, sans-serif" font-size="16" fill="#2c3e50" text-anchor="middle" font-weight="bold">옷 사진 업로드</text>
+  <rect x="100" y="180" width="280" height="340" rx="15" fill="white" filter="url(#shadow)"/>
+  <rect x="100" y="180" width="280" height="60" rx="15" fill="#F5E0D8"/>
+  <rect x="100" y="225" width="280" height="15" fill="#F5E0D8"/>
+  <text x="240" y="218" font-family="Arial, sans-serif" font-size="20" fill="#1a1a1a" text-anchor="middle" font-weight="bold">STEP 1</text>
+  <text x="240" y="290" font-family="Arial, sans-serif" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="bold">옷 사진 업로드</text>
   <!-- Upload icon -->
-  <rect x="175" y="310" width="100" height="80" rx="8" fill="#e9ecef" stroke="#8DABC4" stroke-width="2" stroke-dasharray="5,5"/>
-  <text x="225" y="355" font-family="Arial, sans-serif" font-size="24" fill="#8DABC4" text-anchor="middle">📤</text>
-  <text x="225" y="420" font-family="Arial, sans-serif" font-size="14" fill="#6c757d" text-anchor="middle">Multipart</text>
-  <text x="225" y="440" font-family="Arial, sans-serif" font-size="14" fill="#6c757d" text-anchor="middle">최대 10MB</text>
+  <rect x="170" y="320" width="140" height="100" rx="10" fill="#e9ecef" stroke="#8DABC4" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="240" y="380" font-family="Arial, sans-serif" font-size="36" fill="#8DABC4" text-anchor="middle">📤</text>
+  <text x="240" y="460" font-family="Arial, sans-serif" font-size="14" fill="#1a1a1a" text-anchor="middle">Multipart 최대 10MB</text>
+  <text x="240" y="490" font-family="Arial, sans-serif" font-size="12" fill="#1a1a1a" text-anchor="middle">POST /api/v1/cloth/upload</text>
 
   <!-- Arrow 1 -->
-  <polygon points="370,320 400,320 400,310 430,325 400,340 400,330 370,330" fill="#8DABC4"/>
+  <polygon points="400,350 440,350 440,340 480,360 440,380 440,370 400,370" fill="#8DABC4"/>
 
   <!-- Step 2 -->
-  <rect x="450" y="180" width="250" height="280" rx="15" fill="white" filter="url(#shadow)"/>
-  <rect x="450" y="180" width="250" height="60" rx="15" fill="#E8EEF4"/>
-  <rect x="450" y="225" width="250" height="15" fill="#E8EEF4"/>
-  <text x="575" y="218" font-family="Arial, sans-serif" font-size="18" fill="#4a5568" text-anchor="middle" font-weight="bold">STEP 2</text>
-  <text x="575" y="280" font-family="Arial, sans-serif" font-size="16" fill="#2c3e50" text-anchor="middle" font-weight="bold">실시간 진행도</text>
+  <rect x="500" y="180" width="280" height="340" rx="15" fill="white" filter="url(#shadow)"/>
+  <rect x="500" y="180" width="280" height="60" rx="15" fill="#E8EEF4"/>
+  <rect x="500" y="225" width="280" height="15" fill="#E8EEF4"/>
+  <text x="640" y="218" font-family="Arial, sans-serif" font-size="20" fill="#1a1a1a" text-anchor="middle" font-weight="bold">STEP 2</text>
+  <text x="640" y="290" font-family="Arial, sans-serif" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="bold">실시간 진행도</text>
   <!-- Progress bar -->
-  <rect x="480" y="310" width="190" height="20" rx="10" fill="#e9ecef"/>
-  <rect x="480" y="310" width="140" height="20" rx="10" fill="url(#progressGradient)"/>
-  <text x="575" y="360" font-family="Arial, sans-serif" font-size="28" fill="#8DABC4" text-anchor="middle" font-weight="bold">70%</text>
-  <text x="575" y="400" font-family="Arial, sans-serif" font-size="12" fill="#6c757d" text-anchor="middle">25% → 50% → 70% → 95%</text>
-  <text x="575" y="440" font-family="Arial, sans-serif" font-size="14" fill="#8DABC4" text-anchor="middle">WebSocket 실시간 전송</text>
+  <rect x="540" y="330" width="200" height="24" rx="12" fill="#e9ecef"/>
+  <rect x="540" y="330" width="150" height="24" rx="12" fill="url(#progressGradient)"/>
+  <text x="640" y="400" font-family="Arial, sans-serif" font-size="48" fill="#8DABC4" text-anchor="middle" font-weight="bold">70%</text>
+  <text x="640" y="450" font-family="Arial, sans-serif" font-size="13" fill="#1a1a1a" text-anchor="middle">25% → 50% → 70% → 95% → 100%</text>
+  <text x="640" y="490" font-family="Arial, sans-serif" font-size="12" fill="#1a1a1a" text-anchor="middle">WebSocket 실시간 전송</text>
 
   <!-- Arrow 2 -->
-  <polygon points="720,320 750,320 750,310 780,325 750,340 750,330 720,330" fill="#8DABC4"/>
+  <polygon points="800,350 840,350 840,340 880,360 840,380 840,370 800,370" fill="#8DABC4"/>
 
   <!-- Step 3 -->
-  <rect x="800" y="180" width="250" height="280" rx="15" fill="white" filter="url(#shadow)"/>
-  <rect x="800" y="180" width="250" height="60" rx="15" fill="#8DABC4"/>
-  <rect x="800" y="225" width="250" height="15" fill="#8DABC4"/>
-  <text x="925" y="218" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">STEP 3</text>
-  <text x="925" y="280" font-family="Arial, sans-serif" font-size="16" fill="#2c3e50" text-anchor="middle" font-weight="bold">4종 이미지 생성</text>
+  <rect x="900" y="180" width="280" height="340" rx="15" fill="white" filter="url(#shadow)"/>
+  <rect x="900" y="180" width="280" height="60" rx="15" fill="#8DABC4"/>
+  <rect x="900" y="225" width="280" height="15" fill="#8DABC4"/>
+  <text x="1040" y="218" font-family="Arial, sans-serif" font-size="20" fill="white" text-anchor="middle" font-weight="bold">STEP 3</text>
+  <text x="1040" y="290" font-family="Arial, sans-serif" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="bold">4종 이미지 생성</text>
   <!-- 4 image grid -->
-  <rect x="830" y="305" width="80" height="60" rx="5" fill="#F5E0D8"/>
-  <text x="870" y="340" font-family="Arial, sans-serif" font-size="10" fill="#5a4a42" text-anchor="middle">원본</text>
-  <rect x="920" y="305" width="80" height="60" rx="5" fill="#E8EEF4"/>
-  <text x="960" y="340" font-family="Arial, sans-serif" font-size="10" fill="#4a5568" text-anchor="middle">배경제거</text>
-  <rect x="830" y="375" width="80" height="60" rx="5" fill="#E8EEF4"/>
-  <text x="870" y="410" font-family="Arial, sans-serif" font-size="10" fill="#4a5568" text-anchor="middle">세그먼트</text>
-  <rect x="920" y="375" width="80" height="60" rx="5" fill="#8DABC4" opacity="0.3"/>
-  <text x="960" y="410" font-family="Arial, sans-serif" font-size="10" fill="#4a5568" text-anchor="middle">인페인팅</text>
+  <rect x="930" y="315" width="100" height="70" rx="8" fill="#F5E0D8"/>
+  <text x="980" y="358" font-family="Arial, sans-serif" font-size="12" fill="#1a1a1a" text-anchor="middle">원본</text>
+  <rect x="1050" y="315" width="100" height="70" rx="8" fill="#E8EEF4"/>
+  <text x="1100" y="358" font-family="Arial, sans-serif" font-size="12" fill="#1a1a1a" text-anchor="middle">배경제거</text>
+  <rect x="930" y="395" width="100" height="70" rx="8" fill="#E8EEF4"/>
+  <text x="980" y="438" font-family="Arial, sans-serif" font-size="12" fill="#1a1a1a" text-anchor="middle">세그먼트</text>
+  <rect x="1050" y="395" width="100" height="70" rx="8" fill="#8DABC4" opacity="0.3"/>
+  <text x="1100" y="438" font-family="Arial, sans-serif" font-size="12" fill="#1a1a1a" text-anchor="middle">인페인팅</text>
+  <text x="1040" y="490" font-family="Arial, sans-serif" font-size="12" fill="#1a1a1a" text-anchor="middle">+ AI 카테고리 추천</text>
 
   <!-- Arrow 3 -->
-  <polygon points="1070,320 1100,320 1100,310 1130,325 1100,340 1100,330 1070,330" fill="#8DABC4"/>
+  <polygon points="1200,350 1240,350 1240,340 1280,360 1240,380 1240,370 1200,370" fill="#8DABC4"/>
 
   <!-- Step 4 -->
-  <rect x="1150" y="180" width="250" height="280" rx="15" fill="white" filter="url(#shadow)"/>
-  <rect x="1150" y="180" width="250" height="60" rx="15" fill="#F5E0D8"/>
-  <rect x="1150" y="225" width="250" height="15" fill="#F5E0D8"/>
-  <text x="1275" y="218" font-family="Arial, sans-serif" font-size="18" fill="#5a4a42" text-anchor="middle" font-weight="bold">STEP 4</text>
-  <text x="1275" y="280" font-family="Arial, sans-serif" font-size="16" fill="#2c3e50" text-anchor="middle" font-weight="bold">AI 카테고리 추천</text>
-  <!-- Category badges -->
-  <rect x="1200" y="310" width="70" height="35" rx="8" fill="#8DABC4"/>
-  <text x="1235" y="333" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle">상의</text>
-  <rect x="1280" y="310" width="70" height="35" rx="8" fill="#e9ecef"/>
-  <text x="1315" y="333" font-family="Arial, sans-serif" font-size="14" fill="#6c757d" text-anchor="middle">하의</text>
-  <rect x="1200" y="355" width="70" height="35" rx="8" fill="#e9ecef"/>
-  <text x="1235" y="378" font-family="Arial, sans-serif" font-size="14" fill="#6c757d" text-anchor="middle">신발</text>
-  <rect x="1280" y="355" width="70" height="35" rx="8" fill="#e9ecef"/>
-  <text x="1315" y="378" font-family="Arial, sans-serif" font-size="14" fill="#6c757d" text-anchor="middle">ACC</text>
-  <text x="1275" y="430" font-family="Arial, sans-serif" font-size="12" fill="#8DABC4" text-anchor="middle">SegFormer 18클래스</text>
-
-  <!-- Arrow 4 -->
-  <polygon points="1420,320 1450,320 1450,310 1480,325 1450,340 1450,330 1420,330" fill="#8DABC4"/>
-
-  <!-- Step 5 -->
-  <rect x="1500" y="180" width="320" height="280" rx="15" fill="white" filter="url(#shadow)"/>
-  <rect x="1500" y="180" width="320" height="60" rx="15" fill="#8DABC4"/>
-  <rect x="1500" y="225" width="320" height="15" fill="#8DABC4"/>
-  <text x="1660" y="218" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">STEP 5-6</text>
-  <text x="1660" y="280" font-family="Arial, sans-serif" font-size="16" fill="#2c3e50" text-anchor="middle" font-weight="bold">사용자 확정 → 옷장 저장</text>
+  <rect x="1300" y="180" width="520" height="340" rx="15" fill="white" filter="url(#shadow)"/>
+  <rect x="1300" y="180" width="520" height="60" rx="15" fill="#F5E0D8"/>
+  <rect x="1300" y="225" width="520" height="15" fill="#F5E0D8"/>
+  <text x="1560" y="218" font-family="Arial, sans-serif" font-size="20" fill="#1a1a1a" text-anchor="middle" font-weight="bold">STEP 4</text>
+  <text x="1560" y="290" font-family="Arial, sans-serif" font-size="18" fill="#1a1a1a" text-anchor="middle" font-weight="bold">사용자 확인 → 옷장 저장</text>
   <!-- Confirm button -->
-  <rect x="1580" y="320" width="160" height="50" rx="25" fill="#8DABC4"/>
-  <text x="1660" y="352" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">✓ 확정하기</text>
+  <rect x="1460" y="330" width="200" height="60" rx="30" fill="#8DABC4"/>
+  <text x="1560" y="368" font-family="Arial, sans-serif" font-size="20" fill="white" text-anchor="middle" font-weight="bold">✓ 확정하기</text>
   <!-- Status change -->
-  <text x="1660" y="410" font-family="Arial, sans-serif" font-size="14" fill="#6c757d" text-anchor="middle">READY_FOR_REVIEW</text>
-  <text x="1660" y="430" font-family="Arial, sans-serif" font-size="18" fill="#8DABC4" text-anchor="middle">↓</text>
-  <text x="1660" y="450" font-family="Arial, sans-serif" font-size="14" fill="#28a745" text-anchor="middle" font-weight="bold">CONFIRMED</text>
+  <text x="1560" y="440" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a" text-anchor="middle">READY_FOR_REVIEW</text>
+  <text x="1560" y="470" font-family="Arial, sans-serif" font-size="24" fill="#8DABC4" text-anchor="middle">↓</text>
+  <text x="1560" y="500" font-family="Arial, sans-serif" font-size="18" fill="#28a745" text-anchor="middle" font-weight="bold">CONFIRMED</text>
 
   <!-- Bottom section - Impact statement -->
-  <rect x="100" y="520" width="1720" height="100" rx="15" fill="#8DABC4" opacity="0.1"/>
-  <rect x="100" y="520" width="8" height="100" fill="#8DABC4"/>
-  <text x="140" y="580" font-family="Arial, sans-serif" font-size="28" fill="#2c3e50" font-style="italic">"업로드 한 번에 4종 이미지 + 자동 분류까지"</text>
+  <rect x="100" y="570" width="1720" height="120" rx="15" fill="#8DABC4" opacity="0.1"/>
+  <rect x="100" y="570" width="8" height="120" fill="#8DABC4"/>
+  <text x="160" y="645" font-family="Arial, sans-serif" font-size="32" fill="#1a1a1a" font-style="italic">"업로드 한 번에 4종 이미지 + 자동 분류까지, 약 20~30초"</text>
 
-  <!-- Screenshot hints -->
-  <text x="100" y="680" font-family="Arial, sans-serif" font-size="20" fill="#2c3e50" font-weight="bold">📸 필요 스크린샷</text>
-  <rect x="100" y="700" width="400" height="50" rx="8" fill="#F5E0D8"/>
-  <text x="120" y="732" font-family="Arial, sans-serif" font-size="14" fill="#5a4a42">1. 업로드 화면 (파일 선택 UI)</text>
-  <rect x="520" y="700" width="400" height="50" rx="8" fill="#E8EEF4"/>
-  <text x="540" y="732" font-family="Arial, sans-serif" font-size="14" fill="#4a5568">2. 진행도 표시 화면 (프로그레스 바)</text>
-  <rect x="940" y="700" width="400" height="50" rx="8" fill="#F5E0D8"/>
-  <text x="960" y="732" font-family="Arial, sans-serif" font-size="14" fill="#5a4a42">3. 결과 화면 (4종 이미지 타일)</text>
-  <rect x="1360" y="700" width="400" height="50" rx="8" fill="#E8EEF4"/>
-  <text x="1380" y="732" font-family="Arial, sans-serif" font-size="14" fill="#4a5568">4. 확정 전/후 상태 변화</text>
+  <!-- API Endpoints -->
+  <rect x="100" y="730" width="1720" height="200" rx="15" fill="white" filter="url(#shadow)"/>
+  <text x="160" y="780" font-family="Arial, sans-serif" font-size="20" fill="#1a1a1a" font-weight="bold">주요 API 엔드포인트</text>
 
-  <!-- Speaker notes hint -->
-  <rect x="100" y="800" width="1720" height="180" rx="10" fill="white" filter="url(#shadow)"/>
-  <text x="130" y="840" font-family="Arial, sans-serif" font-size="16" fill="#8DABC4" font-weight="bold">💬 발표 대본</text>
-  <text x="130" y="880" font-family="Arial, sans-serif" font-size="14" fill="#495057">먼저 결과물부터 보여드리겠습니다. 사용자가 옷 사진을 업로드하면, 화면에 실시간으로 진행률이 표시됩니다.</text>
-  <text x="130" y="910" font-family="Arial, sans-serif" font-size="14" fill="#495057">25%에서 배경 제거, 50%에서 세그멘테이션, 70%에서 이미지 확장, 95%에서 인페인팅이 완료됩니다.</text>
-  <text x="130" y="940" font-family="Arial, sans-serif" font-size="14" fill="#495057">최종적으로 4가지 버전의 이미지가 생성되고, AI가 "이건 상의입니다"라고 카테고리를 추천합니다.</text>
-  <text x="130" y="970" font-family="Arial, sans-serif" font-size="14" fill="#495057">사용자가 확인 버튼을 누르면 CONFIRMED 상태가 되어 옷장에 저장됩니다. 전체 프로세스는 약 20~30초 내외입니다.</text>
+  <rect x="160" y="810" width="380" height="100" rx="10" fill="#f8f9fa"/>
+  <text x="180" y="845" font-family="monospace" font-size="14" fill="#1a1a1a" font-weight="bold">POST /api/v1/cloth/upload</text>
+  <text x="180" y="875" font-family="Arial, sans-serif" font-size="13" fill="#1a1a1a">이미지 업로드 + 비동기 처리 시작</text>
+  <text x="180" y="895" font-family="Arial, sans-serif" font-size="12" fill="#666">Multipart/form-data</text>
+
+  <rect x="570" y="810" width="380" height="100" rx="10" fill="#f8f9fa"/>
+  <text x="590" y="845" font-family="monospace" font-size="14" fill="#1a1a1a" font-weight="bold">GET /api/v1/cloth/{id}/status</text>
+  <text x="590" y="875" font-family="Arial, sans-serif" font-size="13" fill="#1a1a1a">현재 처리 상태 조회</text>
+  <text x="590" y="895" font-family="Arial, sans-serif" font-size="12" fill="#666">processingStatus, progressPercentage</text>
+
+  <rect x="980" y="810" width="380" height="100" rx="10" fill="#f8f9fa"/>
+  <text x="1000" y="845" font-family="monospace" font-size="14" fill="#1a1a1a" font-weight="bold">POST /api/v1/cloth/{id}/confirm</text>
+  <text x="1000" y="875" font-family="Arial, sans-serif" font-size="13" fill="#1a1a1a">처리 결과 확정</text>
+  <text x="1000" y="895" font-family="Arial, sans-serif" font-size="12" fill="#666">status → CONFIRMED</text>
+
+  <rect x="1390" y="810" width="380" height="100" rx="10" fill="#f8f9fa"/>
+  <text x="1410" y="845" font-family="monospace" font-size="14" fill="#1a1a1a" font-weight="bold">WS /queue/cloth/progress/{userId}</text>
+  <text x="1410" y="875" font-family="Arial, sans-serif" font-size="13" fill="#1a1a1a">실시간 진행도 수신</text>
+  <text x="1410" y="895" font-family="Arial, sans-serif" font-size="12" fill="#666">STOMP + SockJS</text>
 </svg>

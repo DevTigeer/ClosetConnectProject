@@ -16,108 +16,90 @@
   <!-- Header -->
   <rect x="0" y="0" width="120" height="120" fill="#8DABC4"/>
   <text x="160" y="50" font-family="Arial, sans-serif" font-size="18" fill="#8DABC4" font-weight="bold">Part 2</text>
-  <text x="160" y="90" font-family="Arial, sans-serif" font-size="36" fill="#2c3e50" font-weight="bold">왜 만들었나: "옷장 관리"의 불편함</text>
+  <text x="160" y="90" font-family="Arial, sans-serif" font-size="36" fill="#1a1a1a" font-weight="bold">왜 만들었나: 문제 정의</text>
 
-  <!-- Problem cards -->
+  <!-- Problems Section -->
+  <rect x="100" y="180" width="850" height="700" rx="20" fill="white" filter="url(#shadow)"/>
+  <text x="525" y="235" font-family="Arial, sans-serif" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="bold">발견한 문제들</text>
+
   <!-- Problem 1 -->
-  <rect x="100" y="180" width="420" height="280" rx="15" fill="white" filter="url(#shadow)"/>
-  <rect x="100" y="180" width="420" height="60" rx="15" fill="#dc3545"/>
-  <rect x="100" y="225" width="420" height="15" fill="#dc3545"/>
-  <text x="145" y="218" font-family="Arial, sans-serif" font-size="24" fill="white" font-weight="bold">문제 1</text>
-
-  <!-- Problem icon -->
-  <circle cx="180" y="330" r="40" fill="#ffeaea"/>
-  <text x="180" y="342" font-family="Arial, sans-serif" font-size="36" text-anchor="middle">📸</text>
-
-  <text x="240" y="310" font-family="Arial, sans-serif" font-size="18" fill="#2c3e50" font-weight="bold">옷 사진 정리가 번거로움</text>
-  <text x="240" y="340" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 배경이 지저분함</text>
-  <text x="240" y="365" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 크기가 제각각</text>
-  <text x="240" y="390" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 분류가 수동</text>
-
-  <rect x="130" y="420" width="360" height="25" rx="5" fill="#ffeaea"/>
-  <text x="310" y="438" font-family="Arial, sans-serif" font-size="12" fill="#dc3545" text-anchor="middle">사용자가 직접 누끼 따고, 분류해야 함</text>
+  <rect x="150" y="280" width="750" height="130" rx="15" fill="#ffeaea"/>
+  <rect x="150" y="280" width="10" height="130" rx="5" fill="#dc3545"/>
+  <circle cx="210" y="345" r="30" fill="#dc3545"/>
+  <text x="210" y="355" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" font-weight="bold">1</text>
+  <text x="270" y="325" font-family="Arial, sans-serif" font-size="20" fill="#1a1a1a" font-weight="bold">옷 사진 정리가 번거로움</text>
+  <text x="270" y="360" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">배경이 지저분하고, 크기가 제각각</text>
+  <text x="270" y="390" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">직접 누끼 따고 분류하는 건 시간 낭비</text>
 
   <!-- Problem 2 -->
-  <rect x="550" y="180" width="420" height="280" rx="15" fill="white" filter="url(#shadow)"/>
-  <rect x="550" y="180" width="420" height="60" rx="15" fill="#fd7e14"/>
-  <rect x="550" y="225" width="420" height="15" fill="#fd7e14"/>
-  <text x="595" y="218" font-family="Arial, sans-serif" font-size="24" fill="white" font-weight="bold">문제 2</text>
-
-  <circle cx="630" y="330" r="40" fill="#fff3e0"/>
-  <text x="630" y="342" font-family="Arial, sans-serif" font-size="36" text-anchor="middle">⏱️</text>
-
-  <text x="690" y="310" font-family="Arial, sans-serif" font-size="18" fill="#2c3e50" font-weight="bold">AI 처리 시간이 길다</text>
-  <text x="690" y="340" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 배경제거: 2~5초</text>
-  <text x="690" y="365" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 세그멘테이션: 3~8초</text>
-  <text x="690" y="390" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 인페인팅: 5~15초</text>
-
-  <rect x="580" y="420" width="360" height="25" rx="5" fill="#fff3e0"/>
-  <text x="760" y="438" font-family="Arial, sans-serif" font-size="12" fill="#fd7e14" text-anchor="middle">동기 HTTP 방식 → 타임아웃 위험</text>
+  <rect x="150" y="430" width="750" height="130" rx="15" fill="#ffeaea"/>
+  <rect x="150" y="430" width="10" height="130" rx="5" fill="#dc3545"/>
+  <circle cx="210" y="495" r="30" fill="#dc3545"/>
+  <text x="210" y="505" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" font-weight="bold">2</text>
+  <text x="270" y="475" font-family="Arial, sans-serif" font-size="20" fill="#1a1a1a" font-weight="bold">AI 이미지 처리는 5초~30초 소요</text>
+  <text x="270" y="510" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">HTTP 동기 방식은 타임아웃 위험</text>
+  <text x="270" y="540" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">서버 응답 대기 중 사용자 이탈 가능성</text>
 
   <!-- Problem 3 -->
-  <rect x="1000" y="180" width="420" height="280" rx="15" fill="white" filter="url(#shadow)"/>
-  <rect x="1000" y="180" width="420" height="60" rx="15" fill="#ffc107"/>
-  <rect x="1000" y="225" width="420" height="15" fill="#ffc107"/>
-  <text x="1045" y="218" font-family="Arial, sans-serif" font-size="24" fill="white" font-weight="bold">문제 3</text>
-
-  <circle cx="1080" y="330" r="40" fill="#fffde7"/>
-  <text x="1080" y="342" font-family="Arial, sans-serif" font-size="36" text-anchor="middle">❓</text>
-
-  <text x="1140" y="310" font-family="Arial, sans-serif" font-size="18" fill="#2c3e50" font-weight="bold">진행 상황 알 수 없음</text>
-  <text x="1140" y="340" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• "지금 어디까지 됐지?"</text>
-  <text x="1140" y="365" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 무한 로딩 스피너</text>
-  <text x="1140" y="390" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 사용자 불안감</text>
-
-  <rect x="1030" y="420" width="360" height="25" rx="5" fill="#fffde7"/>
-  <text x="1210" y="438" font-family="Arial, sans-serif" font-size="12" fill="#856404" text-anchor="middle">사용자 이탈 유발</text>
+  <rect x="150" y="580" width="750" height="130" rx="15" fill="#ffeaea"/>
+  <rect x="150" y="580" width="10" height="130" rx="5" fill="#dc3545"/>
+  <circle cx="210" y="645" r="30" fill="#dc3545"/>
+  <text x="210" y="655" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" font-weight="bold">3</text>
+  <text x="270" y="625" font-family="Arial, sans-serif" font-size="20" fill="#1a1a1a" font-weight="bold">"지금 어디까지 됐지?" 불확실함</text>
+  <text x="270" y="660" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">처리 중 진행 상황 알 수 없음</text>
+  <text x="270" y="690" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">로딩 스피너만 돌아가는 답답한 UX</text>
 
   <!-- Problem 4 -->
-  <rect x="1450" y="180" width="380" height="280" rx="15" fill="white" filter="url(#shadow)"/>
-  <rect x="1450" y="180" width="380" height="60" rx="15" fill="#6c757d"/>
-  <rect x="1450" y="225" width="380" height="15" fill="#6c757d"/>
-  <text x="1495" y="218" font-family="Arial, sans-serif" font-size="24" fill="white" font-weight="bold">문제 4</text>
+  <rect x="150" y="730" width="750" height="130" rx="15" fill="#ffeaea"/>
+  <rect x="150" y="730" width="10" height="130" rx="5" fill="#dc3545"/>
+  <circle cx="210" y="795" r="30" fill="#dc3545"/>
+  <text x="210" y="805" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" font-weight="bold">4</text>
+  <text x="270" y="775" font-family="Arial, sans-serif" font-size="20" fill="#1a1a1a" font-weight="bold">AI 오분류 시 데이터 오염</text>
+  <text x="270" y="810" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">잘못 처리된 결과가 바로 저장되면 문제</text>
+  <text x="270" y="840" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">사용자 확인 없이 확정되는 위험</text>
 
-  <circle cx="1530" y="330" r="40" fill="#f5f5f5"/>
-  <text x="1530" y="342" font-family="Arial, sans-serif" font-size="36" text-anchor="middle">🗑️</text>
+  <!-- Solutions Section -->
+  <rect x="1000" y="180" width="820" height="700" rx="20" fill="white" filter="url(#shadow)"/>
+  <text x="1410" y="235" font-family="Arial, sans-serif" font-size="24" fill="#1a1a1a" text-anchor="middle" font-weight="bold">해결 방향</text>
 
-  <text x="1590" y="310" font-family="Arial, sans-serif" font-size="18" fill="#2c3e50" font-weight="bold">데이터 품질 저하</text>
-  <text x="1590" y="340" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• AI 오분류 발생</text>
-  <text x="1590" y="365" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 잘못된 결과 저장</text>
-  <text x="1590" y="390" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">• 수정이 어려움</text>
+  <!-- Solution 1 -->
+  <rect x="1050" y="280" width="720" height="130" rx="15" fill="#d4edda"/>
+  <rect x="1050" y="280" width="10" height="130" rx="5" fill="#28a745"/>
+  <circle cx="1110" y="345" r="30" fill="#28a745"/>
+  <text x="1110" y="355" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" font-weight="bold">✓</text>
+  <text x="1170" y="325" font-family="Arial, sans-serif" font-size="20" fill="#1a1a1a" font-weight="bold">AI 자동 처리</text>
+  <text x="1170" y="360" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">배경 제거, 세그멘테이션, 인페인팅 자동화</text>
+  <text x="1170" y="390" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">카테고리 자동 분류 (상의/하의/신발/ACC)</text>
 
-  <rect x="1480" y="420" width="320" height="25" rx="5" fill="#f5f5f5"/>
-  <text x="1640" y="438" font-family="Arial, sans-serif" font-size="12" fill="#6c757d" text-anchor="middle">사용자 확인 없이 바로 저장</text>
+  <!-- Solution 2 -->
+  <rect x="1050" y="430" width="720" height="130" rx="15" fill="#d4edda"/>
+  <rect x="1050" y="430" width="10" height="130" rx="5" fill="#28a745"/>
+  <circle cx="1110" y="495" r="30" fill="#28a745"/>
+  <text x="1110" y="505" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" font-weight="bold">✓</text>
+  <text x="1170" y="475" font-family="Arial, sans-serif" font-size="20" fill="#1a1a1a" font-weight="bold">비동기 처리 (RabbitMQ)</text>
+  <text x="1170" y="510" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">HTTP 요청 즉시 응답, 백그라운드 처리</text>
+  <text x="1170" y="540" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">타임아웃 없음, 장애 격리</text>
 
-  <!-- Solution arrow -->
-  <text x="960" y="520" font-family="Arial, sans-serif" font-size="48" fill="#8DABC4" text-anchor="middle">⬇</text>
+  <!-- Solution 3 -->
+  <rect x="1050" y="580" width="720" height="130" rx="15" fill="#d4edda"/>
+  <rect x="1050" y="580" width="10" height="130" rx="5" fill="#28a745"/>
+  <circle cx="1110" y="645" r="30" fill="#28a745"/>
+  <text x="1110" y="655" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" font-weight="bold">✓</text>
+  <text x="1170" y="625" font-family="Arial, sans-serif" font-size="20" fill="#1a1a1a" font-weight="bold">실시간 진행도 (WebSocket)</text>
+  <text x="1170" y="660" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">STOMP로 단계별 진행률 전송</text>
+  <text x="1170" y="690" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">사용자가 현재 상태를 항상 확인 가능</text>
 
-  <!-- Solution box -->
-  <rect x="300" y="560" width="1320" height="200" rx="20" fill="white" filter="url(#shadow)"/>
-  <rect x="300" y="560" width="1320" height="60" rx="20" fill="#28a745"/>
-  <rect x="300" y="605" width="1320" height="15" fill="#28a745"/>
-  <text x="960" y="600" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" font-weight="bold">해결 방향</text>
+  <!-- Solution 4 -->
+  <rect x="1050" y="730" width="720" height="130" rx="15" fill="#d4edda"/>
+  <rect x="1050" y="730" width="10" height="130" rx="5" fill="#28a745"/>
+  <circle cx="1110" y="795" r="30" fill="#28a745"/>
+  <text x="1110" y="805" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" font-weight="bold">✓</text>
+  <text x="1170" y="775" font-family="Arial, sans-serif" font-size="20" fill="#1a1a1a" font-weight="bold">사용자 확인 후 확정</text>
+  <text x="1170" y="810" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">READY_FOR_REVIEW → 사용자 확인 → CONFIRMED</text>
+  <text x="1170" y="840" font-family="Arial, sans-serif" font-size="16" fill="#1a1a1a">잘못된 결과는 확정 전에 걸러냄</text>
 
-  <!-- Solution items -->
-  <rect x="360" y="650" width="380" height="80" rx="10" fill="#d4edda"/>
-  <text x="550" y="685" font-family="Arial, sans-serif" font-size="16" fill="#155724" text-anchor="middle" font-weight="bold">비동기 처리</text>
-  <text x="550" y="710" font-family="Arial, sans-serif" font-size="13" fill="#155724" text-anchor="middle">RabbitMQ로 HTTP 타임아웃 회피</text>
-
-  <rect x="770" y="650" width="380" height="80" rx="10" fill="#d4edda"/>
-  <text x="960" y="685" font-family="Arial, sans-serif" font-size="16" fill="#155724" text-anchor="middle" font-weight="bold">실시간 진행도</text>
-  <text x="960" y="710" font-family="Arial, sans-serif" font-size="13" fill="#155724" text-anchor="middle">WebSocket으로 단계별 피드백</text>
-
-  <rect x="1180" y="650" width="380" height="80" rx="10" fill="#d4edda"/>
-  <text x="1370" y="685" font-family="Arial, sans-serif" font-size="16" fill="#155724" text-anchor="middle" font-weight="bold">사용자 확인 후 확정</text>
-  <text x="1370" y="710" font-family="Arial, sans-serif" font-size="13" fill="#155724" text-anchor="middle">READY_FOR_REVIEW → CONFIRMED</text>
-
-  <!-- Impact statement -->
-  <rect x="100" y="800" width="1720" height="80" rx="15" fill="#8DABC4" opacity="0.1"/>
-  <rect x="100" y="800" width="8" height="80" fill="#8DABC4"/>
-  <text x="140" y="850" font-family="Arial, sans-serif" font-size="28" fill="#2c3e50" font-style="italic">"동기 API의 한계를 비동기 + 이벤트 기반으로 극복"</text>
-
-  <!-- Speaker notes -->
-  <rect x="100" y="920" width="1720" height="100" rx="10" fill="white" filter="url(#shadow)"/>
-  <text x="130" y="955" font-family="Arial, sans-serif" font-size="14" fill="#8DABC4" font-weight="bold">💬 발표 대본</text>
-  <text x="130" y="985" font-family="Arial, sans-serif" font-size="12" fill="#495057">이 프로젝트를 시작한 이유입니다. 옷장 앱을 만들려면 사용자가 올린 사진을 깔끔하게 가공해야 합니다. 그런데 AI 처리는 5초에서 30초까지 걸릴 수 있습니다.</text>
-  <text x="130" y="1005" font-family="Arial, sans-serif" font-size="12" fill="#495057">일반적인 동기 API로 처리하면 프론트엔드 요청이 타임아웃 될 수 있고, 사용자는 "얼마나 기다려야 하지?"라는 불확실함을 느낍니다.</text>
+  <!-- Bottom summary -->
+  <rect x="100" y="920" width="1720" height="100" rx="15" fill="#8DABC4" opacity="0.1"/>
+  <rect x="100" y="920" width="10" height="100" rx="5" fill="#8DABC4"/>
+  <text x="160" y="980" font-family="Arial, sans-serif" font-size="28" fill="#1a1a1a" font-style="italic">"동기 API의 한계를 비동기 + 이벤트 기반 + 상태 머신으로 극복"</text>
 </svg>
