@@ -308,24 +308,31 @@ class ClothProcessingPipelineCloudRun:
 
             # 픽셀 크기순으로 정렬
             detected_items_sorted = sorted(detected_items, key=lambda x: x["area_pixels"], reverse=True)
-            primary_item = detected_items_sorted[0]
 
-            # base64 이미지 데이터에서 이미지 로드
-            if "image_base64" in primary_item:
-                # CloudRun API에서 base64로 반환한 이미지 사용
-                image_data = base64.b64decode(primary_item["image_base64"])
-                cropped_image = Image.open(io.BytesIO(image_data)).convert("RGBA")
-                print(f"  ✅ Loaded image from base64 ({len(image_data)} bytes)")
-            else:
-                # Fallback: 원본 이미지 사용
-                print(f"  ⚠️  No image_base64 in response, using original")
-                cropped_image = image.copy()
+            # 모든 아이템에 cropped_image 변환 추가
+            all_items_with_images = []
+            for item in detected_items_sorted:
+                if "image_base64" in item:
+                    image_data = base64.b64decode(item["image_base64"])
+                    item_cropped_image = Image.open(io.BytesIO(image_data)).convert("RGBA")
+                else:
+                    item_cropped_image = image.copy()
+
+                all_items_with_images.append({
+                    "label": item["label"],
+                    "area_pixels": item["area_pixels"],
+                    "cropped_image": item_cropped_image,
+                    "image_base64": item.get("image_base64", "")
+                })
+
+            primary_item = all_items_with_images[0]
+            print(f"  ✅ Loaded {len(all_items_with_images)} items with cropped images")
 
             return {
                 "label": primary_item["label"],
                 "area_pixels": primary_item["area_pixels"],
-                "cropped_image": cropped_image,
-                "all_items": detected_items_sorted
+                "cropped_image": primary_item["cropped_image"],
+                "all_items": all_items_with_images
             }
 
         except requests.exceptions.RequestException as e:
