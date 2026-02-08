@@ -26,17 +26,20 @@ public class GeminiTryonClient implements TryonClient {
     private final ObjectMapper objectMapper;
     private final String tryonApiUrl;
     private final String uploadsDir;
+    private final String backendBaseUrl;
 
     public GeminiTryonClient(
             RestTemplate restTemplate,
             ObjectMapper objectMapper,
             @Value("${tryon.api.url:http://localhost:5001}") String tryonApiUrl,
-            @Value("${file.upload-dir:./uploads}") String uploadsDir
+            @Value("${file.upload-dir:./uploads}") String uploadsDir,
+            @Value("${app.backend.base-url:http://localhost:8080}") String backendBaseUrl
     ) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         this.tryonApiUrl = tryonApiUrl;
         this.uploadsDir = uploadsDir;
+        this.backendBaseUrl = backendBaseUrl;
     }
 
     @Override
@@ -169,39 +172,75 @@ public class GeminiTryonClient implements TryonClient {
     }
 
     /**
-     * 이미지 파일을 Base64로 인코딩
+     * 이미지를 Base64로 인코딩 (URL 또는 로컬 파일 경로 지원)
      *
-     * @param imagePath 이미지 파일 경로 (상대 경로 또는 절대 경로)
+     * @param imagePathOrUrl 이미지 URL 또는 파일 경로
      * @return Base64 인코딩된 이미지 문자열 (data:image/png;base64,...)
      */
-    private String encodeImageToBase64(String imagePath) throws IOException {
-        // 파일 경로 처리
-        File imageFile;
+    private String encodeImageToBase64(String imagePathOrUrl) throws IOException {
+        byte[] imageBytes;
+        String mimeType = "image/png";
 
-        // uploads로 시작하는 상대 경로인 경우
-        if (imagePath.startsWith("uploads/") || imagePath.startsWith("/uploads/")) {
-            String relativePath = imagePath.replaceFirst("^/uploads/", "uploads/");
-            imageFile = new File(uploadsDir, relativePath.replace("uploads/", ""));
+        // 상대 경로(/uploads/...)를 절대 URL로 변환
+        String resolvedUrl = imagePathOrUrl;
+        if (imagePathOrUrl.startsWith("/uploads/") || imagePathOrUrl.startsWith("uploads/")) {
+            String path = imagePathOrUrl.startsWith("/") ? imagePathOrUrl : "/" + imagePathOrUrl;
+            resolvedUrl = backendBaseUrl + path;
+            log.info("상대 경로를 URL로 변환: {} -> {}", imagePathOrUrl, resolvedUrl);
+        }
+
+        // HTTP/HTTPS URL인 경우 다운로드
+        if (resolvedUrl.startsWith("http://") || resolvedUrl.startsWith("https://")) {
+            log.info("URL에서 이미지 다운로드: {}", resolvedUrl);
+            try {
+                java.net.URL url = new java.net.URL(resolvedUrl);
+                java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(30000);
+
+                if (connection.getResponseCode() != 200) {
+                    throw new IOException("이미지 다운로드 실패: HTTP " + connection.getResponseCode());
+                }
+
+                // Content-Type에서 MIME 타입 추출
+                String contentType = connection.getContentType();
+                if (contentType != null && contentType.startsWith("image/")) {
+                    mimeType = contentType.split(";")[0].trim();
+                }
+
+                try (java.io.InputStream is = connection.getInputStream();
+                     java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    while ((bytesRead = is.read(buffer)) != -1) {
+                        baos.write(buffer, 0, bytesRead);
+                    }
+                    imageBytes = baos.toByteArray();
+                }
+                log.info("이미지 다운로드 완료: {} bytes", imageBytes.length);
+            } catch (Exception e) {
+                throw new IOException("URL에서 이미지를 다운로드할 수 없습니다: " + resolvedUrl, e);
+            }
         } else {
-            imageFile = new File(imagePath);
-        }
+            // 로컬 파일 경로 처리
+            File imageFile = new File(resolvedUrl);
 
-        if (!imageFile.exists()) {
-            throw new IOException("이미지 파일을 찾을 수 없습니다: " + imagePath);
-        }
+            if (!imageFile.exists()) {
+                throw new IOException("이미지 파일을 찾을 수 없습니다: " + resolvedUrl);
+            }
 
-        // 파일을 바이트 배열로 읽기
-        byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
+            imageBytes = Files.readAllBytes(imageFile.toPath());
+
+            // MIME 타입 추론
+            String probedMimeType = Files.probeContentType(imageFile.toPath());
+            if (probedMimeType != null) {
+                mimeType = probedMimeType;
+            }
+        }
 
         // Base64 인코딩
         String base64 = Base64.getEncoder().encodeToString(imageBytes);
-
-        // MIME 타입 추론
-        String mimeType = Files.probeContentType(imageFile.toPath());
-        if (mimeType == null) {
-            mimeType = "image/png"; // 기본값
-        }
-
         return "data:" + mimeType + ";base64," + base64;
     }
 
